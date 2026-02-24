@@ -51,6 +51,13 @@ block content
               td= f.fkentext
               td= f.name
 
+    h2 Unternehmensinformationen (EVI)
+    iframe.evi-frame(
+      src=`https://www.evi.gv.at/f/${fnr}`
+      title="EVI Unternehmensinformationen"
+      loading="lazy"
+    )
+
     if urkunden && urkunden.length > 0
       h2 Urkunden
       table#urkunden-table

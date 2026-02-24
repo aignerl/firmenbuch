@@ -115,7 +115,7 @@ router.get('/firma/:fnr', async function (req, res) {
         : '',
       datumSort: u.stichtag || u.dokumentendatum || u.eingereicht || '',
     }));
-    res.render('firma', { title: `Firma ${fnr}`, firma, urkunden });
+    res.render('firma', { title: `Firma ${fnr}`, firma, urkunden, fnr });
   } catch (err) {
     res.locals.message = err.message;
     res.locals.error = req.app.get('env') === 'development' ? err : {};
