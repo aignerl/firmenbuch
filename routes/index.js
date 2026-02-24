@@ -81,7 +81,7 @@ router.get('/', function (req, res) {
 });
 
 router.post('/suchen', async function (req, res) {
-  const { firmenwortlaut, exaktesuche, suchbereich } = req.body;
+  const { firmenwortlaut, exaktesuche, suchbereich, nurAktiv } = req.body;
   if (!firmenwortlaut) {
     return res.render('index', { title: 'Firmenbuch Suche', error: 'Bitte Firmenwortlaut eingeben.' });
   }
@@ -91,6 +91,7 @@ router.post('/suchen', async function (req, res) {
       exaktesuche: exaktesuche === 'on',
       suchbereich: Number(suchbereich) || 1,
     });
+    if (nurAktiv === 'on') ergebnisse = ergebnisse.filter((e) => !e.status);
     res.render('suche-ergebnis', { title: 'Suchergebnisse', ergebnisse, firmenwortlaut });
   } catch (err) {
     res.render('index', { title: 'Firmenbuch Suche', error: err.message });

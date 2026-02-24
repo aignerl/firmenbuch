@@ -15,6 +15,10 @@ block content
         input(type="checkbox" name="exaktesuche")
         | Exakte Suche
     div.field
+      label.checkbox-label
+        input(type="checkbox" name="nurAktiv" checked)
+        | Nur aktive Firmen
+    div.field
       label(for="suchbereich") Suchbereich
       select#suchbereich(name="suchbereich")
         option(value="1") 1 – eingetragene und gelöschte Firmen

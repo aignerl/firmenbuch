@@ -4,17 +4,18 @@ const router = express.Router();
 const { sucheFirma, getAuszug, sucheUrkunde } = require('../../services/firmenbuch');
 
 router.get('/suchen', async (req, res) => {
-  const { name, exakt, suchbereich, gericht, rechtsform } = req.query;
+  const { name, exakt, suchbereich, gericht, rechtsform, nurAktiv } = req.query;
   if (!name) return res.status(400).json({ error: 'Parameter "name" fehlt' });
 
   try {
-    const ergebnisse = await sucheFirma({
+    let ergebnisse = await sucheFirma({
       firmenwortlaut: name,
       exaktesuche: exakt === 'true',
       suchbereich: Number(suchbereich) || 1,
       gericht: gericht || '',
       rechtsform: rechtsform || '',
     });
+    if (nurAktiv === 'true') ergebnisse = ergebnisse.filter((e) => !e.status);
     res.json(ergebnisse);
   } catch (err) {
     res.status(502).json({ error: err.message });
