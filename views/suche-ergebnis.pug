@@ -22,7 +22,12 @@ block content
             td= e.name
             td= e.sitz
             td= e.rechtsform
-            td= e.status
+            td
+              if e.status === 'gelöscht'
+                span.badge.badge--deleted= e.status
+              else if e.status === 'historisch'
+                span.badge.badge--history= e.status
+              else if e.status
+                span.badge.badge--active= e.status
 
-  p
-    a(href="/") Neue Suche
+  a.back-link(href="/") ← Neue Suche

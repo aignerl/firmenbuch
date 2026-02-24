@@ -1,8 +1,278 @@
-body {
-  padding: 50px;
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+/* ── Reset & base ─────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --md-primary:       #1a73e8;
+  --md-primary-dark:  #1557b0;
+  --md-primary-light: #e8f0fe;
+  --md-error:         #d93025;
+  --md-on-primary:    #ffffff;
+  --md-surface:       #ffffff;
+  --md-background:    #f8f9fa;
+  --md-on-surface:    #202124;
+  --md-secondary-text:#5f6368;
+  --md-divider:       #dadce0;
+  --md-shadow-1: 0 1px 2px rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15);
+  --md-shadow-2: 0 1px 3px rgba(60,64,67,.3), 0 4px 8px 3px rgba(60,64,67,.15);
+  --radius: 8px;
 }
 
+html { font-size: 16px; }
+
+body {
+  font-family: 'Roboto', sans-serif;
+  background: var(--md-background);
+  color: var(--md-on-surface);
+  line-height: 1.5;
+}
+
+/* ── App bar ──────────────────────────────────────────────────── */
+.app-bar {
+  background: var(--md-primary);
+  color: var(--md-on-primary);
+  height: 56px;
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  box-shadow: var(--md-shadow-1);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.app-bar__title {
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: inherit;
+  text-decoration: none;
+  letter-spacing: .0125em;
+}
+
+/* ── Layout container ─────────────────────────────────────────── */
+.container {
+  max-width: 960px;
+  margin: 32px auto;
+  padding: 0 24px;
+}
+
+/* ── Card ─────────────────────────────────────────────────────── */
+.card {
+  background: var(--md-surface);
+  border-radius: var(--radius);
+  box-shadow: var(--md-shadow-1);
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+/* ── Typography ───────────────────────────────────────────────── */
+h1 {
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: var(--md-on-surface);
+  margin-bottom: 24px;
+  letter-spacing: .0075em;
+}
+
+h2 {
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: var(--md-on-surface);
+  margin: 24px 0 12px;
+  letter-spacing: .0075em;
+}
+
+p { margin-bottom: 12px; }
+
 a {
-  color: #00B7FF;
+  color: var(--md-primary);
+  text-decoration: none;
+}
+a:hover { text-decoration: underline; }
+
+/* ── Search form ──────────────────────────────────────────────── */
+form {
+  background: var(--md-surface);
+  border-radius: var(--radius);
+  box-shadow: var(--md-shadow-1);
+  padding: 32px;
+  max-width: 560px;
+}
+
+.field { margin-bottom: 20px; }
+
+label {
+  display: block;
+  font-size: .875rem;
+  font-weight: 500;
+  color: var(--md-secondary-text);
+  margin-bottom: 6px;
+}
+
+input[type="text"],
+select {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--md-divider);
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: .9375rem;
+  color: var(--md-on-surface);
+  background: var(--md-surface);
+  transition: border-color .15s, box-shadow .15s;
+  outline: none;
+}
+
+input[type="text"]:focus,
+select:focus {
+  border-color: var(--md-primary);
+  box-shadow: 0 0 0 2px rgba(26,115,232,.2);
+}
+
+/* Checkbox row */
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: .9375rem;
+  color: var(--md-on-surface);
+  cursor: pointer;
+  font-weight: 400;
+}
+
+input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--md-primary);
+  cursor: pointer;
+}
+
+/* ── Buttons ──────────────────────────────────────────────────── */
+button,
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  padding: 0 24px;
+  border: none;
+  border-radius: 4px;
+  background: var(--md-primary);
+  color: var(--md-on-primary);
+  font-family: inherit;
+  font-size: .875rem;
+  font-weight: 500;
+  letter-spacing: .0892857em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background .15s, box-shadow .15s;
+  text-decoration: none;
+}
+
+button:hover,
+.btn:hover {
+  background: var(--md-primary-dark);
+  box-shadow: var(--md-shadow-1);
+  text-decoration: none;
+}
+
+/* ── Tables ───────────────────────────────────────────────────── */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--md-surface);
+  border-radius: var(--radius);
+  box-shadow: var(--md-shadow-1);
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+thead {
+  background: var(--md-primary);
+  color: var(--md-on-primary);
+}
+
+thead th {
+  padding: 14px 16px;
+  text-align: left;
+  font-size: .875rem;
+  font-weight: 500;
+  letter-spacing: .0071428em;
+  white-space: nowrap;
+}
+
+tbody tr {
+  border-bottom: 1px solid var(--md-divider);
+  transition: background .1s;
+}
+
+tbody tr:last-child { border-bottom: none; }
+
+tbody tr:hover { background: var(--md-primary-light); }
+
+td, th {
+  padding: 12px 16px;
+  font-size: .9375rem;
+  vertical-align: top;
+}
+
+/* Key-value table (firma detail) */
+.kv-table th {
+  width: 160px;
+  color: var(--md-secondary-text);
+  font-weight: 500;
+  font-size: .875rem;
+  background: none;
+  white-space: nowrap;
+}
+
+.kv-table thead { background: none; }
+.kv-table thead th { color: var(--md-on-surface); }
+
+/* ── Status badges ────────────────────────────────────────────── */
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: .75rem;
+  font-weight: 500;
+  letter-spacing: .02em;
+}
+
+.badge--active  { background: #e6f4ea; color: #137333; }
+.badge--deleted { background: #fce8e6; color: #c5221f; }
+.badge--history { background: #fef7e0; color: #b06000; }
+
+/* ── Error / info messages ────────────────────────────────────── */
+.error {
+  background: #fce8e6;
+  color: var(--md-error);
+  border-left: 4px solid var(--md-error);
+  border-radius: 4px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  font-size: .9375rem;
+}
+
+/* ── Breadcrumb / back link ───────────────────────────────────── */
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--md-primary);
+  font-size: .875rem;
+  font-weight: 500;
+  margin-top: 8px;
+}
+
+/* ── Address block ────────────────────────────────────────────── */
+.address { line-height: 1.7; }
+
+/* ── Responsive ───────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .container { padding: 0 16px; margin-top: 16px; }
+  form { padding: 20px; }
+  .app-bar { padding: 0 16px; }
+  table { font-size: .875rem; }
+  td, th { padding: 10px 12px; }
 }

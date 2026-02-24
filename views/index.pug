@@ -7,24 +7,18 @@ block content
     p.error= error
 
   form(method="POST" action="/suchen")
-    div
-      label(for="firmenwortlaut") Firmenwortlaut:
-      br
+    div.field
+      label(for="firmenwortlaut") Firmenwortlaut
       input#firmenwortlaut(type="text" name="firmenwortlaut" placeholder="z.B. Erste*" required autofocus)
-    br
-    div
-      label
+    div.field
+      label.checkbox-label
         input(type="checkbox" name="exaktesuche")
-        |  Exakte Suche
-    br
-    div
-      label(for="suchbereich") Suchbereich:
-      br
+        | Exakte Suche
+    div.field
+      label(for="suchbereich") Suchbereich
       select#suchbereich(name="suchbereich")
         option(value="1") 1 – eingetragene und gelöschte Firmen
         option(value="2") 2 – historische Firmenwortlaute
         option(value="3") 3 – keine Einschränkung
         option(value="4") 4 – eingetragene Firmenwortlaute
-    br
-    div
-      button(type="submit") Suchen
+    button(type="submit") Suchen
