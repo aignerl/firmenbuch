@@ -47,7 +47,7 @@ block content
             th Name
         tbody
           each f in firma.funktionen
-            tr
+            tr(class=f.fnr ? 'row-link' : '' onclick=f.fnr ? `window.location='/firma/${f.fnr}'` : undefined)
               td= f.fkentext
               td
                 | #{f.name}

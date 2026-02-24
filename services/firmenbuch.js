@@ -162,8 +162,17 @@ async function scrapeEviGesellschafter({ fnr }) {
     if (!$(this).text().includes('Gesellschafter')) return;
 
     $(this).parent().find('li').each(function () {
-      const name = $(this).find('p').first().text().trim();
-      if (name) result.push({ name, fkentext: 'GESELLSCHAFTER/IN', quelle: 'EVI' });
+      const firstP = $(this).find('p').first();
+      const link = firstP.find('a[href^="/f/"]');
+
+      if (link.length > 0) {
+        const name = link.text().trim();
+        const fnr = link.attr('href').replace('/f/', '');
+        if (name) result.push({ name, fnr, fkentext: 'GESELLSCHAFTER/IN', quelle: 'EVI' });
+      } else {
+        const name = firstP.text().trim();
+        if (name) result.push({ name, fkentext: 'GESELLSCHAFTER/IN', quelle: 'EVI' });
+      }
     });
   });
 

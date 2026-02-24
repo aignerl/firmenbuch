@@ -316,6 +316,10 @@ small { color: var(--md-secondary-text); font-size: .8125rem; }
 
 .source-badge:hover::after { opacity: 1; }
 
+/* ── Clickable table rows ─────────────────────────────────────── */
+tbody tr.row-link { cursor: pointer; }
+tbody tr.row-link:hover { background: var(--md-primary-light); }
+
 /* ── Responsive ───────────────────────────────────────────────── */
 @media (max-width: 600px) {
   .container { padding: 0 16px; margin-top: 16px; }
