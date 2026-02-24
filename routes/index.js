@@ -86,7 +86,7 @@ router.post('/suchen', async function (req, res) {
     return res.render('index', { title: 'Firmenbuch Suche', error: 'Bitte Firmenwortlaut eingeben.' });
   }
   try {
-    const ergebnisse = await sucheFirma({
+    let ergebnisse = await sucheFirma({
       firmenwortlaut,
       exaktesuche: exaktesuche === 'on',
       suchbereich: Number(suchbereich) || 1,
