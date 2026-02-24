@@ -217,7 +217,7 @@ td, th {
 }
 
 /* Key-value table (firma detail) */
-.kv-table th {
+.kv-table tbody th {
   width: 160px;
   color: var(--md-secondary-text);
   font-weight: 500;
@@ -225,9 +225,6 @@ td, th {
   background: none;
   white-space: nowrap;
 }
-
-.kv-table thead { background: none; }
-.kv-table thead th { color: var(--md-on-surface); }
 
 /* ── Status badges ────────────────────────────────────────────── */
 .badge {

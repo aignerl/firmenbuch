@@ -7,6 +7,10 @@ block content
     h1= firma.namen.join(' ') || firma.fnr
 
     table.kv-table
+      thead
+        tr
+          th Eigenschaft
+          th Wert
       tbody
         tr
           th FNR
@@ -23,17 +27,16 @@ block content
         tr
           th Rechtsform
           td= firma.rechtsform
-
-    if firma.adressen.length > 0
-      h2 Adresse
-      each a in firma.adressen
-        p.address
-          if a.strasse
-            | #{a.strasse} #{a.hausnummer}
-            br
-          | #{a.plz} #{a.ort}
-          if a.staat && a.staat !== 'AUT'
-            |  (#{a.staat})
+        each a in firma.adressen
+          tr
+            th Adresse
+            td.address
+              if a.strasse
+                | #{a.strasse} #{a.hausnummer}
+                br
+              | #{a.plz} #{a.ort}
+              if a.staat && a.staat !== 'AUT'
+                |  (#{a.staat})
 
     if firma.funktionen.length > 0
       h2 Funktionen
