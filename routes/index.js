@@ -1,7 +1,7 @@
 'use strict';
 var express = require('express');
 var router = express.Router();
-var { sucheFirma, getAuszug } = require('../services/firmenbuch');
+var { sucheFirma, getAuszug, sucheUrkunde, getUrkunde } = require('../services/firmenbuch');
 
 function toArr(v) {
   if (!v) return [];
@@ -103,6 +103,48 @@ router.get('/firma/:fnr', async function (req, res) {
     const raw = await getAuszug({ fnr });
     const firma = buildFirmaView(raw);
     res.render('firma', { title: `Firma ${fnr}`, firma });
+  } catch (err) {
+    res.locals.message = err.message;
+    res.locals.error = req.app.get('env') === 'development' ? err : {};
+    res.status(502);
+    res.render('error');
+  }
+});
+
+router.get('/firma/:fnr/urkunden', async function (req, res) {
+  const { fnr } = req.params;
+  try {
+    const raw = await sucheUrkunde({ fnr });
+    const urkunden = raw.map((u) => ({
+      ...u,
+      groesseFormatiert: u.groesse
+        ? u.groesse >= 1024 * 1024
+          ? `${(u.groesse / 1024 / 1024).toFixed(1)} MB`
+          : `${Math.ceil(u.groesse / 1024)} KB`
+        : '',
+    }));
+    res.render('urkunden', { title: `Urkunden ${fnr}`, urkunden, fnr });
+  } catch (err) {
+    res.locals.message = err.message;
+    res.locals.error = req.app.get('env') === 'development' ? err : {};
+    res.status(502);
+    res.render('error');
+  }
+});
+
+router.get('/urkunde/download', async function (req, res) {
+  const { key } = req.query;
+  if (!key) return res.status(400).send('Parameter "key" fehlt');
+
+  try {
+    const { contentType, extension, content } = await getUrkunde({ key });
+    const isPdf = contentType === 'application/pdf';
+    res.set('Content-Type', contentType);
+    res.set(
+      'Content-Disposition',
+      `${isPdf ? 'inline' : 'attachment'}; filename="urkunde.${extension}"`
+    );
+    res.send(content);
   } catch (err) {
     res.locals.message = err.message;
     res.locals.error = req.app.get('env') === 'development' ? err : {};

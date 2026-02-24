@@ -1,7 +1,7 @@
 'use strict';
 const express = require('express');
 const router = express.Router();
-const { sucheFirma, getAuszug } = require('../../services/firmenbuch');
+const { sucheFirma, getAuszug, sucheUrkunde } = require('../../services/firmenbuch');
 
 router.get('/suchen', async (req, res) => {
   const { name, exakt, suchbereich, gericht, rechtsform } = req.query;
@@ -32,6 +32,16 @@ router.get('/:fnr/auszug', async (req, res) => {
       umfang: umfang || 'Kurzinformation',
     });
     res.json(data);
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
+});
+
+router.get('/:fnr/urkunden', async (req, res) => {
+  const { fnr } = req.params;
+  try {
+    const ergebnisse = await sucheUrkunde({ fnr });
+    res.json(ergebnisse);
   } catch (err) {
     res.status(502).json({ error: err.message });
   }

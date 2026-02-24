@@ -92,4 +92,57 @@ async function getAuszug({ fnr, stichtag, umfang = 'Kurzinformation' }) {
   return soapBody['AUSZUG_V2_RESPONSE'];
 }
 
-module.exports = { sucheFirma, getAuszug };
+async function sucheUrkunde({ fnr, az }) {
+  const inner = fnr
+    ? `<FNR>${fnr}</FNR>`
+    : `<AZ>${az}</AZ>`;
+
+  const body = `<SUCHEURKUNDEREQUEST xmlns="ns://firmenbuch.justiz.gv.at/Abfrage/SucheUrkundeRequest">
+    ${inner}
+  </SUCHEURKUNDEREQUEST>`;
+
+  const soapBody = await postSoap(body);
+  const response = soapBody['SUCHEURKUNDERESPONSE'];
+
+  if (!response) return [];
+
+  let ergebnisse = response['ERGEBNIS'] || [];
+  if (!Array.isArray(ergebnisse)) ergebnisse = [ergebnisse];
+
+  return ergebnisse.map((e) => ({
+    key: e['KEY'],
+    fnr: e['FNR'],
+    az: e['AZ'],
+    dokumentart: (e['DOKUMENTART'] && e['DOKUMENTART']['TEXT']) || '',
+    dokumentendatum: e['DOKUMENTENDATUM'] || '',
+    contenttype: e['CONTENTTYPE'] || '',
+    dateiendung: e['DATEIENDUNG'] || '',
+    groesse: Number(e['GROESSE']) || 0,
+    bemerkung: e['BEMERKUNG'] || '',
+    stichtag: e['STICHTAG'] || '',
+    vnr: e['VNR'] || '',
+    eingereicht: e['EINGEREICHT'] || '',
+  }));
+}
+
+async function getUrkunde({ key }) {
+  const body = `<URKUNDEREQUEST xmlns="ns://firmenbuch.justiz.gv.at/Abfrage/UrkundeRequest">
+    <KEY>${key}</KEY>
+  </URKUNDEREQUEST>`;
+
+  const soapBody = await postSoap(body);
+  const response = soapBody['URKUNDERESPONSE'];
+
+  if (!response) throw new Error('Keine Urkunde gefunden');
+
+  const dokument = response['DOKUMENT'];
+  if (!dokument) throw new Error('Kein Dokumentinhalt verfügbar');
+
+  return {
+    contentType: dokument['CONTENTTYPE'],
+    extension: dokument['DATEIENDUNG'],
+    content: Buffer.from(dokument['CONTENT'], 'base64'),
+  };
+}
+
+module.exports = { sucheFirma, getAuszug, sucheUrkunde, getUrkunde };

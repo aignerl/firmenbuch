@@ -1,0 +1,35 @@
+extends layout
+
+block content
+  h1 Urkunden für #{fnr}
+
+  if urkunden.length === 0
+    p Keine Urkunden gefunden.
+  else
+    table
+      thead
+        tr
+          th Dokumentart
+          th Stichtag / Datum
+          th Eingereicht
+          th Typ
+          th Größe
+          th
+      tbody
+        each u in urkunden
+          tr
+            td
+              | #{u.dokumentart || '—'}
+              if u.bemerkung
+                br
+                small= u.bemerkung
+            td= u.stichtag || u.dokumentendatum || '—'
+            td= u.eingereicht || '—'
+            td
+              span.badge(class=u.dateiendung === 'pdf' ? 'badge--active' : 'badge--history')
+                = u.dateiendung.toUpperCase()
+            td= u.groesseFormatiert || '—'
+            td
+              a.btn(href=`/urkunde/download?key=${encodeURIComponent(u.key)}` target="_blank") Öffnen
+
+  a.back-link(href=`/firma/${fnr}`) ← Zurück zur Firma

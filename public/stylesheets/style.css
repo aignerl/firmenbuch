@@ -268,6 +268,11 @@ td, th {
 /* ── Address block ────────────────────────────────────────────── */
 .address { line-height: 1.7; }
 
+/* ── Table action column ──────────────────────────────────────── */
+td:last-child { white-space: nowrap; width: 1%; }
+
+small { color: var(--md-secondary-text); font-size: .8125rem; }
+
 /* ── Responsive ───────────────────────────────────────────────── */
 @media (max-width: 600px) {
   .container { padding: 0 16px; margin-top: 16px; }
