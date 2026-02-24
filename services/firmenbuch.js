@@ -1,6 +1,7 @@
 'use strict';
 const axios = require('axios');
 const xml2js = require('xml2js');
+const cheerio = require('cheerio');
 
 const ENDPOINT = 'https://justizonline.gv.at/jop/api/at.gv.justiz.fbw/ws';
 
@@ -145,4 +146,28 @@ async function getUrkunde({ key }) {
   };
 }
 
-module.exports = { sucheFirma, getAuszug, sucheUrkunde, getUrkunde };
+async function scrapeEviGesellschafter({ fnr }) {
+  const response = await axios.get(`https://www.evi.gv.at/f/${fnr}`, {
+    headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Firmenbuch-App/1.0)' },
+    validateStatus: () => true,
+    timeout: 10000,
+  });
+
+  if (response.status !== 200) return [];
+
+  const $ = cheerio.load(response.data);
+  const result = [];
+
+  $('#personen h3').each(function () {
+    if (!$(this).text().includes('Gesellschafter')) return;
+
+    $(this).parent().find('li').each(function () {
+      const name = $(this).find('p').first().text().trim();
+      if (name) result.push({ name, fkentext: 'GESELLSCHAFTER/IN', quelle: 'EVI' });
+    });
+  });
+
+  return result;
+}
+
+module.exports = { sucheFirma, getAuszug, sucheUrkunde, getUrkunde, scrapeEviGesellschafter };

@@ -49,14 +49,11 @@ block content
           each f in firma.funktionen
             tr
               td= f.fkentext
-              td= f.name
-
-    h2 Unternehmensinformationen (EVI)
-    iframe.evi-frame(
-      src=`https://www.evi.gv.at/f/${fnr}`
-      title="EVI Unternehmensinformationen"
-      loading="lazy"
-    )
+              td
+                | #{f.name}
+                if f.quelle === 'EVI'
+                  |
+                  span.source-badge(data-tooltip="Quelle: evi.gv.at – Elektronisches Unternehmensregister") EVI
 
     if urkunden && urkunden.length > 0
       h2 Urkunden

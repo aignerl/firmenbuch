@@ -1,7 +1,7 @@
 'use strict';
 var express = require('express');
 var router = express.Router();
-var { sucheFirma, getAuszug, sucheUrkunde, getUrkunde } = require('../services/firmenbuch');
+var { sucheFirma, getAuszug, sucheUrkunde, getUrkunde, scrapeEviGesellschafter } = require('../services/firmenbuch');
 
 function toArr(v) {
   if (!v) return [];
@@ -101,11 +101,13 @@ router.post('/suchen', async function (req, res) {
 router.get('/firma/:fnr', async function (req, res) {
   const { fnr } = req.params;
   try {
-    const [raw, urkundenRaw] = await Promise.all([
+    const [raw, urkundenRaw, eviGesellschafter] = await Promise.all([
       getAuszug({ fnr }),
       sucheUrkunde({ fnr }).catch(() => []),
+      scrapeEviGesellschafter({ fnr }).catch(() => []),
     ]);
     const firma = buildFirmaView(raw);
+    firma.funktionen.push(...eviGesellschafter);
     const urkunden = urkundenRaw.map((u) => ({
       ...u,
       groesseFormatiert: u.groesse
