@@ -266,6 +266,32 @@ td, th {
 /* ── Address block ────────────────────────────────────────────── */
 .address { line-height: 1.7; }
 
+/* ── Scrollable Urkunden table ────────────────────────────────── */
+.urkunden-scroll {
+  max-height: 385px;
+  overflow-y: auto;
+  border-radius: var(--radius);
+  box-shadow: var(--md-shadow-1);
+  margin-bottom: 24px;
+}
+
+.urkunden-scroll table {
+  box-shadow: none;
+  border-radius: 0;
+  margin-bottom: 0;
+  overflow: visible;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.urkunden-scroll thead th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--md-primary);
+  border-bottom: 1px solid var(--md-primary-dark);
+}
+
 /* ── Sortable table headers ───────────────────────────────────── */
 thead th.sortable {
   cursor: pointer;

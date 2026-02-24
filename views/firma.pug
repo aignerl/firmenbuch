@@ -57,31 +57,32 @@ block content
 
     if urkunden && urkunden.length > 0
       h2 Urkunden
-      table#urkunden-table
-        thead
-          tr
-            th.sortable(data-col="0") Stichtag / Datum
-            th.sortable(data-col="1") Dokumentart
-            th.sortable(data-col="2") Eingereicht
-            th.sortable(data-col="3") Typ
-            th.sortable(data-col="4") Größe
-            th
-        tbody
-          each u in urkunden
+      div.urkunden-scroll
+        table#urkunden-table
+          thead
             tr
-              td(data-sort=u.datumSort)= u.stichtag || u.dokumentendatum || '—'
-              td
-                | #{u.dokumentart || '—'}
-                if u.bemerkung
-                  br
-                  small= u.bemerkung
-              td(data-sort=u.eingereicht)= u.eingereicht || '—'
-              td
-                span.badge(class=u.dateiendung === 'pdf' ? 'badge--active' : 'badge--history')
-                  = u.dateiendung.toUpperCase()
-              td(data-sort=u.groesse)= u.groesseFormatiert || '—'
-              td
-                a.btn(href=`/urkunde/download?key=${encodeURIComponent(u.key)}` target="_blank") Öffnen
+              th.sortable(data-col="0") Stichtag / Datum
+              th.sortable(data-col="1") Dokumentart
+              th.sortable(data-col="2") Eingereicht
+              th.sortable(data-col="3") Typ
+              th.sortable(data-col="4") Größe
+              th
+          tbody
+            each u in urkunden
+              tr
+                td(data-sort=u.datumSort)= u.stichtag || u.dokumentendatum || '—'
+                td
+                  | #{u.dokumentart || '—'}
+                  if u.bemerkung
+                    br
+                    small= u.bemerkung
+                td(data-sort=u.eingereicht)= u.eingereicht || '—'
+                td
+                  span.badge(class=u.dateiendung === 'pdf' ? 'badge--active' : 'badge--history')
+                    = u.dateiendung.toUpperCase()
+                td(data-sort=u.groesse)= u.groesseFormatiert || '—'
+                td
+                  a.btn(href=`/urkunde/download?key=${encodeURIComponent(u.key)}` target="_blank") Öffnen
 
   a.back-link(href="/") ← Neue Suche
 
@@ -136,4 +137,15 @@ block content
 
       // initial sort: Stichtag descending
       sortTable(0, -1);
+
+      // set scroll container height to exactly 7 full rows
+      var wrapper = table.closest('.urkunden-scroll');
+      if (wrapper) {
+        var rows = Array.from(table.querySelectorAll('tbody tr'));
+        var h = table.querySelector('thead').offsetHeight;
+        for (var i = 0; i < Math.min(7, rows.length); i++) {
+          h += rows[i].offsetHeight;
+        }
+        wrapper.style.maxHeight = h + 'px';
+      }
     })();
