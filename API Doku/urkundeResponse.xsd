@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:fb="ns://firmenbuch.justiz.gv.at/Abfrage/UrkundeResponse" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="ns://firmenbuch.justiz.gv.at/Abfrage/UrkundeResponse" elementFormDefault="qualified" attributeFormDefault="qualified" version="0.1.0">
+	<xs:element name="URKUNDERESPONSE">
+		<xs:complexType>
+			<xs:annotation>
+				<xs:documentation>
+						"METADATEN": dienen dazu das Dokument zu identifizieren und eine Zuordnung zu einer Firmenbucheintragung oder zu Veröffentlichungszeitpunkt zu ermöglichen und beinhalten ergänzende Angaben
+						"DOKUMENT": die Urkunde selbst als PDF oder XML(Encoding laut XML-Deklaration, sonst ISO-8859-1), base64 kodiert
+						Attribute:
+							"STICHTAG" Datum zu dem der Urkundenauszug aus der Urkundensammlung erstellt wurde
+							
+						Veränderungen zu Version 0.0.0:
+							Bei "METADATEN" wird das Element "VON" und das Element "OEFFENTLICH" Pflicht.
+							Bei "DOKUMENT" im Element "CONTENT" werden XML-Daten laut XML-Deklaration-Encoding übertragen. Wenn Deklaration fehlt wird ISO-8859-1 verwendet.
+							"attributeFormDefault" von "unqualified" auf "qualified" geändert, damit es dbzgl. keine Validierungsfehler mehr gibt.
+							Bei "DOKUMENT" das Element "DOKUMENTART" nicht mehr Pflicht.
+							Das Root-Tag wurde von "URKUNDE" auf "URKUNDERESPONSE" geändert und der Namespace von "ns://firmenbuch.justiz.gv.at/Abfrage/Urkunde" auf "ns://firmenbuch.justiz.gv.at/Abfrage/UrkundeResponse"
+				</xs:documentation>
+			</xs:annotation>
+			<xs:sequence>
+				<xs:element name="METADATEN" type="fb:METADATEN_Typ"/>
+				<xs:element name="DOKUMENT" type="fb:DOKUMENT_Typ" minOccurs="0"/>
+			</xs:sequence>
+			<xs:attribute name="STICHTAG" type="xs:date"/>
+		</xs:complexType>
+	</xs:element>
+	<xs:complexType name="METADATEN_Typ">
+		<xs:sequence>
+			<xs:annotation>
+				<xs:documentation>
+					"KEY"
+						Schlüssel um die Urkunde eindeutig zu identifizieren, bestehend aus FNR, AZ, ZNR, PNR, FKEN, UNR, DKZ, URKID, ContentType(PDF/XML)
+						zB 123456_0070711512345_000_A_GF_001_00_1_XML
+					"URKID" Urkundennummer
+					"FNR" Firmenbuchnummer mit Prüfzeichen zB "160573m"
+					"AZ" Aktenzeichen mit dem die Urkunde ins Urkundenverzeichnis gestellt wurde zB "007 61 Fr 2164/15 w"
+					"DOKUMENTART" Art der Urkunde
+						"CODE" zB "48"
+						"TEXT" zB "Jahresabschluss"
+					"DOKUMENTENDATUM" Datum wann die Urkunde "errichtet" wurde
+					"ZNR" Nummer der Zweigniederlassung mit der diese Urkunde verknüpft wurde
+					"PNR" Kennung der Person mit der diese Urkunde verknüpft wurde zB "  A"
+					"FKEN" Kurzbezeichnung der Funktion der Person innerhalb der Firma mit der diese Urkunde verknüpft wurde zB "GF" (für Geschäftsführer)
+					"UNR" Nummer der Rechtstatsache mit der diese Urkunde verknüpft wurde "001"
+					"DKZ" Datengruppenkennzahl mit der diese Urkunde verknüpft wurde "30"
+					"VNR" Vollzugsnummer mit der diese Urkunde verknüpft wurde zB "001"
+					"BEMERKUNG" Weitere Erklärung, etwa den Urkundentyp betreffend
+					"STICHTAG" Jahres-/Konzernabschlussstichdatum
+					"GKL" Angabe über die Größenklassen (bei Jahres-/Konzernabschluss) zB "G"-gross
+					"VON" Datum mit dem dieser Stand der Urkunde ins Urkundenarchiv gestellt wurde
+					"OEFFENTLICH" ist diese Urkunde für die Öffentlichkeit bestimmt oder nur gerichtsintern zu verwenden?
+				</xs:documentation>
+			</xs:annotation>
+			<xs:element name="KEY" type="xs:string"/>
+			<xs:element name="URKID" type="xs:decimal"/>
+			<xs:element name="FNR" type="xs:string"/>
+			<xs:element name="AZ" type="xs:string"/>
+			<xs:element name="DOKUMENTART" type="fb:CODE_TEXT_Typ" minOccurs="0"/>
+			<xs:element name="DOKUMENTENDATUM" type="xs:date" minOccurs="0"/>
+			<xs:element name="ZNR" type="xs:string"/>
+			<xs:element name="PNR" type="xs:string"/>
+			<xs:element name="FKEN" type="xs:string"/>
+			<xs:element name="UNR" type="xs:string"/>
+			<xs:element name="DKZ" type="xs:string"/>
+			<xs:element name="VNR" type="xs:string"/>
+			<xs:element name="BEMERKUNG" type="xs:string" minOccurs="0"/>
+			<xs:element name="STICHTAG" type="xs:date" minOccurs="0"/>
+			<xs:element name="GKL" type="xs:string" minOccurs="0"/>
+			<xs:element name="VON" type="xs:date"/>
+			<xs:element name="OEFFENTLICH" type="xs:boolean"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DOKUMENT_Typ">
+		<xs:sequence>
+			<xs:annotation>
+				<xs:documentation>
+						"CONTENTTYPE" content-type der Urkunde (MIME-Type) zB "application/xml", "application/pdf", usw.
+						"DATEIENDUNG" Die Dateiendung der Urkunde falls man sie speichern möchte z.B "xml","pdf",usw.
+						"CONTENT" Binärdaten der Urkunde
+					</xs:documentation>
+			</xs:annotation>
+			<xs:element name="CONTENTTYPE" type="xs:string"/>
+			<xs:element name="DATEIENDUNG" type="xs:string"/>
+			<xs:element name="CONTENT" type="xs:base64Binary"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!-- =============================== allgemeine Unterstrukturen =============================== -->
+	<xs:complexType name="CODE_TEXT_Typ">
+		<xs:sequence>
+			<xs:element name="CODE" type="xs:string"/>
+			<xs:element name="TEXT" type="xs:string"/>
+		</xs:sequence>
+	</xs:complexType>
+</xs:schema>

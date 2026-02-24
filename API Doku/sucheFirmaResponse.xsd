@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--W3C Schema erstellt mit XMLSpy v2015 rel. 3 sp1 (http://www.altova.com)-->
+<xs:schema xmlns:fb="ns://firmenbuch.justiz.gv.at/Abfrage/SucheFirmaResponse" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="ns://firmenbuch.justiz.gv.at/Abfrage/SucheFirmaResponse" elementFormDefault="qualified" attributeFormDefault="qualified" version="0.1.0">
+	<xs:element name="SUCHEFIRMARESPONSE">
+		<xs:annotation>
+			<xs:documentation>
+				Veränderungen zu Version 0.0.0:
+					Das Element "STATUS" ist dazugekommen.
+					Das Element "SITZ" ersetzt das Element "ORTNR"
+			</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="ERGEBNIS" minOccurs="0" maxOccurs="unbounded">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:annotation>
+								<xs:documentation>
+									"FNR": Firmenbuchnummer samt Prüfbuchstaben zB "160573m"
+									"STATUS": zB: "historisch", "gelöscht", ""
+									"NAME": Firmenname, möglicherweise mehrzeilig, zB: 
+												"Bundesrechenzentrum Gesellschaft"
+												"mit beschränkter Haftung"
+									"SITZ": Sitz des Rechtsträgers zB "Hamburg", "Linz"
+									"RECHTSFORM": Rechtsformcode (auch der ausländische) und die ausgeschriebene Form
+										"CODE": zB "GES"
+										"TEXT": textuelle Entsprechung des Codes der Rechtsform zB "Gesellschaft mit beschränkter Haftung"
+									"RECHTSEIGENSCHAFT": Rechtseigenschaft der Firma zB "Versicherung"
+									"GERICHT": zuständiges Gericht
+										"CODE": zB "007"
+										"TEXT": textuelle Entsprechung des Gerichtscodes zB "Handelsgericht Wien"
+								</xs:documentation>
+							</xs:annotation>
+							<xs:element name="FNR" type="xs:string"/>
+							<xs:element name="STATUS" type="xs:string"/>
+							<xs:element name="NAME" type="xs:string" maxOccurs="unbounded"/>
+							<xs:element name="SITZ" type="xs:string"/>
+							<xs:element name="RECHTSFORM" type="fb:CODE_TEXT_Typ"/>
+							<xs:element name="RECHTSEIGENSCHAFT" type="xs:string"/>
+							<xs:element name="GERICHT" type="fb:CODE_TEXT_Typ"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+			<xs:attribute name="REQUEST_FIRMENWORTLAUT" type="xs:string"/>
+			<xs:attribute name="REQUEST_EXAKTESUCHE" type="xs:boolean"/>
+			<xs:attribute name="REQUEST_SUCHBEREICH" type="xs:integer"/>
+			<xs:attribute name="REQUEST_GERICHT" type="xs:string"/>
+			<xs:attribute name="REQUEST_RECHTSFORM" type="xs:string"/>
+			<xs:attribute name="REQUEST_RECHTSEIGENSCHAFT" type="xs:string"/>
+			<xs:attribute name="REQUEST_ORTNR" type="xs:string"/>
+		</xs:complexType>
+	</xs:element>
+	<xs:complexType name="CODE_TEXT_Typ">
+		<xs:sequence>
+			<xs:element name="CODE" type="xs:string"/>
+			<xs:element name="TEXT" type="xs:string"/>
+		</xs:sequence>
+	</xs:complexType>
+</xs:schema>

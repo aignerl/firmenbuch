@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--W3C Schema erstellt mit XMLSpy v2015 rel. 3 sp1 (http://www.altova.com)-->
+<xs:schema xmlns:fb="ns://firmenbuch.justiz.gv.at/Abfrage/v2/AuszugRequest" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="ns://firmenbuch.justiz.gv.at/Abfrage/v2/AuszugRequest" elementFormDefault="qualified" attributeFormDefault="qualified" version="2.0.0">
+	<xs:element name="AUSZUG_V2_REQUEST">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:annotation>
+					<xs:documentation>
+						"FNR" Firmenbuchnummer samt Prüfbuchstaben zB "000187a"
+						"STICHTAG" Datum zu dem der Firmenbuchauszug erstellt werden soll
+						"UMFANG" "aktueller Auszug", "historischer Auszug", "Kurzinformation" -> JustizOnline-HVD nur "Kurzinformation"
+							
+					Veränderungen zu Version 0.0.0:
+						"attributeFormDefault" von "unqualified" auf "qualified" geändert, damit es dbzgl. keine Validierungsfehler mehr gibt.
+					</xs:documentation>
+				</xs:annotation>
+				<xs:element name="FNR" type="xs:string"/>
+				<xs:element name="STICHTAG" type="xs:date"/>
+				<xs:element name="UMFANG" type="xs:string"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+</xs:schema>

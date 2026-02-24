@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:fb="ns://firmenbuch.justiz.gv.at/Abfrage/SucheUrkundeRequest" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="ns://firmenbuch.justiz.gv.at/Abfrage/SucheUrkundeRequest" elementFormDefault="qualified" attributeFormDefault="qualified" version="0.0.0">
+	<xs:element name="SUCHEURKUNDEREQUEST">
+		<xs:complexType>
+			<xs:annotation>
+				<xs:documentation>
+					"FNR": Firmenbuchnummer samt Prüfbuchstaben zB "160573m"
+					"AZ": Aktenzeichen mit dem der Antrag vollzogen wurde zB "007 61 Fr 2164/15 w"
+				</xs:documentation>
+			</xs:annotation>
+			<xs:sequence>
+				<xs:choice>
+					<xs:element name="FNR" type="xs:string"/>
+					<xs:element name="AZ" type="xs:string"/>
+				</xs:choice>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+</xs:schema>

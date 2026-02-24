@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--W3C Schema erstellt mit XMLSpy v2015 rel. 3 sp1 (http://www.altova.com)-->
+<xs:schema xmlns:fb="ns://firmenbuch.justiz.gv.at/Abfrage/VeraenderungenFirmaResponse" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="ns://firmenbuch.justiz.gv.at/Abfrage/VeraenderungenFirmaResponse" elementFormDefault="qualified" attributeFormDefault="qualified" version="1.0.0">
+	<xs:element name="VERAENDERUNGENFIRMARESPONSE">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:annotation>
+					<xs:documentation>
+						Veränderungen zu Version 0.0.0:
+							Bei "VERAENDERUNG" maxOccurs="unbounded"
+						Veränderungen zu Version 0.0.1:
+							NEU: "PNR, "FKEN", "FNR_UEBERNEHMENDE", "FNR_UEBERTRAGENDE"
+					</xs:documentation>
+				</xs:annotation>
+				<xs:element name="VERAENDERUNG" minOccurs="0" maxOccurs="unbounded">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:annotation>
+								<xs:documentation>
+									"FNR": Firmenbuchnummer samt Prüfbuchstaben zB "000187a"
+									"VNR": Vollzugsnummer zB "001"
+									"VOLLZUGSDATUM": Datum wann diese Eintragung im Firmenbuch vollzogen wurde
+									"ARTDERVERAENDERUNG": Gibt die Art der Veränderung eines Rechtsträgers an zB: "Neueintragung", "Änderung", "Löschung", "FIRMENBEZEICHNUNG", "FIRMENSITZ", "RECHTSFORM", 
+									"EINTRITT_IN_FUNKTION", "AUSSCHEIDEN_AUS_EINER_FUNKTION", "VERSCHMELZUNG", "UEBERTRAGENDE_UMWANDLUNG", "EINBRINGUNG", "ZUSAMMENSCHLUSS", "REALTEILUNG", "SPALTUNG",
+									 "KAPITALAENDERUNG_DER_FIRMA", "KAPITALAENDERUNG_EINES_GESELLSCHAFTERS"
+									"PNR": Personennummer der betroffenen Person zB "  A"
+									"FKEN": Funktionskennung zB "GF " für Geschäftsführer
+									"FNR_UEBERNEHMENDE" Firmenbuchnummer der übernehmenden Firma samt Prüfbuchstaben zB "000001b"
+									"FNR_UEBERTRAGENDE" Firmenbuchnummer der übertragenden Firma samt Prüfbuchstaben zB "000001b"
+								</xs:documentation>
+							</xs:annotation>
+							<xs:element name="FNR" type="xs:string"/>
+							<xs:element name="VNR" type="xs:string"/>
+							<xs:element name="VOLLZUGSDATUM" type="xs:date"/>
+							<xs:element name="ARTDERVERAENDERUNG" type="xs:string"/>
+							<xs:element name="DETAIL" type="fb:DETAIL_Typ" minOccurs="0" maxOccurs="unbounded"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+			<xs:attribute name="VON" type="xs:date"/>
+			<xs:attribute name="BIS" type="xs:date"/>
+			<xs:attribute name="GERICHT" type="xs:string"/>
+			<xs:attribute name="RECHTSFORM" type="xs:string"/>
+			<xs:attribute name="ARTDERVERAENDERUNG" type="xs:string"/>
+		</xs:complexType>
+	</xs:element>
+	<xs:complexType name="DETAIL_Typ">
+		<xs:sequence>
+			<xs:choice>
+				<xs:sequence minOccurs="0" maxOccurs="1">
+					<xs:element name="PNR" type="xs:string"/>
+					<xs:element name="FKEN" type="xs:string"/>
+				</xs:sequence>
+				<xs:sequence minOccurs="0" maxOccurs="1">
+					<xs:element name="FNR_UEBERNEHMENDE" type="xs:string"/>
+					<xs:element name="FNR_UEBERTRAGENDE" type="xs:string"/>
+				</xs:sequence>
+			</xs:choice>
+		</xs:sequence>
+	</xs:complexType>
+</xs:schema>

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:fb="ns://firmenbuch.justiz.gv.at/Abfrage/SucheUrkundeResponse" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="ns://firmenbuch.justiz.gv.at/Abfrage/SucheUrkundeResponse" elementFormDefault="qualified" attributeFormDefault="qualified" version="0.0.0">
+	<xs:element name="SUCHEURKUNDERESPONSE">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="ERGEBNIS" minOccurs="0" maxOccurs="unbounded">
+					<xs:complexType>
+						<xs:annotation>
+							<xs:documentation>
+								"KEY"
+									Schlüssel um die Urkunde eindeutig zu identifizieren, bestehend aus FNR, AZ, ZNR, PNR, FKEN, UNR, DKZ, URKID, ContentType(PDF/XML)
+									zB 123456_0070711512345_000_A_GF_001_00_1_XML
+								"FNR" Firmenbuchnummer mit Prüfzeichen zB "160573m"
+								"AZ" Aktenzeichen mit dem die Urkunde ins Urkundenverzeichnis gestellt wurde zB "007 61 Fr 2164/15 w"
+								"DOKUMENTART" Art der Urkunde
+									"CODE" zB "48"
+									"TEXT" zB "Jahresabschluss"
+								"DOKUMENTENDATUM" Datum wann die Urkunde "errichtet" wurde
+								"CONTENTTYPE" content-type der Urkunde (MIME-Type) zB "application/xml", "application/pdf", usw.
+								"DATEIENDUNG" Die Dateiendung der Urkunde falls man sie speichern möchte z.B "xml","pdf",usw.
+								"GROESSE" Größe des Dokuments in Byte.
+								"BEMERKUNG" Weitere Erklärung, etwa den Urkundentyp betreffend
+								"STICHTAG" Jahres-/Konzernabschlussstichdatum
+								"GKL" Angabe über die Größenklassen (bei Jahres-/Konzernabschluss) zB "G"-gross
+								"VNR" Vollzugsnummer mit der diese Urkunde verknüpft wurde zB "001"
+								"EINGEREICHT" eingereicht am, Datum wann das Dokument bei Gericht eingereicht wurde
+
+								Attribute:
+									"FNR" Firmenbuchnummer aus dem Request
+									"AZ" Aktenzeichen aus dem Request
+							</xs:documentation>
+						</xs:annotation>
+						<xs:sequence>
+							<xs:element name="KEY" type="xs:string"/>
+							<xs:element name="FNR" type="xs:string"/>
+							<xs:element name="AZ" type="xs:string"/>
+							<xs:element name="DOKUMENTART" type="fb:CODE_TEXT_Typ" minOccurs="0"/>
+							<xs:element name="DOKUMENTENDATUM" type="xs:date" minOccurs="0"/>
+							<xs:element name="CONTENTTYPE" type="xs:string"/>
+							<xs:element name="DATEIENDUNG" type="xs:string"/>
+							<xs:element name="GROESSE" type="xs:long" minOccurs="0"/>
+							<xs:element name="BEMERKUNG" type="xs:string" minOccurs="0"/>
+							<xs:element name="STICHTAG" type="xs:date" minOccurs="0"/>
+							<xs:element name="GKL" type="xs:string" minOccurs="0"/>
+							<xs:element name="VNR" type="xs:string" minOccurs="0"/>
+							<xs:element name="EINGEREICHT" type="xs:date" minOccurs="0"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+			<xs:attribute name="REQUEST_FNR" type="xs:string"/>
+			<xs:attribute name="REQUEST_AZ" type="xs:string"/>
+		</xs:complexType>
+	</xs:element>
+	<!-- =============================== allgemeine Unterstrukturen =============================== -->
+	<xs:complexType name="CODE_TEXT_Typ">
+		<xs:sequence>
+			<xs:element name="CODE" type="xs:string"/>
+			<xs:element name="TEXT" type="xs:string"/>
+		</xs:sequence>
+	</xs:complexType>
+</xs:schema>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--W3C Schema erstellt mit XMLSpy v2015 rel. 3 sp1 (http://www.altova.com)-->
+<xs:schema xmlns:fb="ns://firmenbuch.justiz.gv.at/Abfrage/VeraenderungenUrkundeRequest" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="ns://firmenbuch.justiz.gv.at/Abfrage/VeraenderungenUrkundeRequest" elementFormDefault="qualified" attributeFormDefault="qualified" version="0.0.0">
+	<xs:element name="VERAENDERUNGENURKUNDEREQUEST">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:annotation>
+					<xs:documentation>
+						"VON" Beginndatum des gewünschten Zeitraums
+						"BIS" Enddatum des gewünschten Zeitraums
+					</xs:documentation>
+				</xs:annotation>
+				<xs:element name="VON" type="xs:date"/>
+				<xs:element name="BIS" type="xs:date"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+</xs:schema>

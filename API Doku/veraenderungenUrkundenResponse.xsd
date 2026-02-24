@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--W3C Schema erstellt mit XMLSpy v2015 rel. 3 sp1 (http://www.altova.com)-->
+<xs:schema xmlns:fb="ns://firmenbuch.justiz.gv.at/Abfrage/VeraenderungenUrkundeResponse" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="ns://firmenbuch.justiz.gv.at/Abfrage/VeraenderungenUrkundeResponse" elementFormDefault="qualified" attributeFormDefault="qualified" version="0.0.1">
+	<xs:element name="VERAENDERUNGENURKUNDERESPONSE">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:annotation>
+					<xs:documentation>
+						Veränderungen zu Version 0.0.0:
+							Bei "VERAENDERUNG" maxOccurs="unbounded"
+					</xs:documentation>
+				</xs:annotation>
+				<xs:element name="VERAENDERUNG" minOccurs="0" maxOccurs="unbounded">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:annotation>
+								<xs:documentation>
+									"KEY" Schlüssel um die Urkunde eindeutig zu identifizieren, bestehend aus FNR, AZ, ZNR, PNR, FKEN, UNR, DKZ, URKID, ContentType(PDF/XML) (zB 123456_0070711512345_000_A_GF_001_00_1_XML)
+									"DOKUMENTART" Art der Urkunde
+										"CODE" zB "48"
+										"TEXT" zB "Jahresabschluss"
+									"VOLLZUGSDATUM" Datum wann diese Eintragung im Urkundenverzeichnis vollzogen wurde
+									"CONTENTTYPE" content-type der Urkunde (MIME-Type) zB "application/xml", "application/pdf", usw.
+									"DATEIENDUNG" Die Dateiendung der Urkunde falls man sie speichern möchte z.B "xml","pdf",usw.
+								</xs:documentation>
+							</xs:annotation>
+							<xs:element name="KEY" type="xs:string"/>
+							<xs:element name="DOKUMENTART" type="fb:CODE_TEXT_Typ" minOccurs="0"/>
+							<xs:element name="VOLLZUGSDATUM" type="xs:date"/>
+							<xs:element name="CONTENTTYPE" type="xs:string"/>
+							<xs:element name="DATEIENDUNG" type="xs:string"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+			<xs:attribute name="VON" type="xs:date"/>
+			<xs:attribute name="BIS" type="xs:date"/>
+		</xs:complexType>
+	</xs:element>
+	<!-- =============================== allgemeine Unterstrukturen =============================== -->
+	<xs:complexType name="CODE_TEXT_Typ">
+		<xs:sequence>
+			<xs:element name="CODE" type="xs:string"/>
+			<xs:element name="TEXT" type="xs:string"/>
+		</xs:sequence>
+	</xs:complexType>
+</xs:schema>

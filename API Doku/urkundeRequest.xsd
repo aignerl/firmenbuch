@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:fb="ns://firmenbuch.justiz.gv.at/Abfrage/UrkundeRequest" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="ns://firmenbuch.justiz.gv.at/Abfrage/UrkundeRequest" elementFormDefault="qualified" attributeFormDefault="qualified" version="0.1.0">
+	<xs:element name="URKUNDEREQUEST">
+		<xs:complexType>
+			<xs:annotation>
+				<xs:documentation>
+					"KEY"
+						Schlüssel um die Urkunde eindeutig zu identifizieren, bestehend aus FNR, AZ, ZNR, PNR, FKEN,UNR, DKZ, URKID, ContentType(PDF/XML)
+						zB 123456_0070711512345_000_00A_GF0_001_00_1_XML
+					"STICHTAG" Datum zu dem die Urkunde erstellt werden soll (wird NUR intern genutzt, für Externe besteht KEINE Möglichkeit das Datum zu verwenden).
+							
+					Veränderungen zu Version 0.0.0:
+						"attributeFormDefault" von "unqualified" auf "qualified" geändert, damit es dbzgl. keine Validierungsfehler mehr gibt.
+				</xs:documentation>
+			</xs:annotation>
+			<xs:sequence>
+				<xs:element name="KEY" type="xs:string"/>
+				<xs:element name="STICHTAG" type="xs:date" minOccurs="0"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+</xs:schema>

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--W3C Schema erstellt mit XMLSpy v2015 rel. 3 sp1 (http://www.altova.com)-->
+<xs:schema xmlns:fb="ns://firmenbuch.justiz.gv.at/Abfrage/VeraenderungenFirmaRequest" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="ns://firmenbuch.justiz.gv.at/Abfrage/VeraenderungenFirmaRequest" elementFormDefault="qualified" attributeFormDefault="qualified" version="1.0.0">
+	<xs:element name="VERAENDERUNGENFIRMAREQUEST">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:annotation>
+					<xs:documentation>
+						Veränderungen zu Version 0.0.0:
+							NEU: "ARTDERVERAENDERUNG"
+					</xs:documentation>
+					<xs:documentation>
+						"VON" Beginndatum des gewünschten Zeitraums
+						"BIS" Enddatum des gewünschten Zeitraums
+						"GERICHT" Zuständiges Gericht, 3stellig numerisch zB: "239" für LG Wiener Neustadt
+						"RECHTSFORM" Einschränkung auf eine bestimmte Rechtsform, 3stellig zB "GES" für Gesellschaft mit beschränkter Haftung
+						"ARTDERVERAENDERUNG" Bezeichnung der Veränderungsart, nach der selektiert werden soll zB: 
+						  "FIRMENBEZEICHNUNG", 
+						  "FIRMENSITZ", 
+						  "RECHTSFORM", 
+						  "EINTRITT_IN_FUNKTION", 
+						  "AUSSCHEIDEN_AUS_EINER_FUNKTION",
+						  "VERSCHMELZUNG",
+						  "UEBERTRAGENDE_UMWANDLUNG",
+						  "EINBRINGUNG",
+						  "ZUSAMMENSCHLUSS",
+						  "REALTEILUNG",
+						  "SPALTUNG",
+						  "KAPITALAENDERUNG_DER_FIRMA",
+						  "KAPITALAENDERUNG_EINES_GESELLSCHAFTERS",
+						  wenn das Element nicht vorhanden oder leer ist, dann werden alle "Neueintragungen", "Änderungen" und "Löschungen" geliefert (wie bisher).
+					</xs:documentation>
+				</xs:annotation>
+				<xs:element name="VON" type="xs:date"/>
+				<xs:element name="BIS" type="xs:date"/>
+				<xs:element name="GERICHT" type="xs:string" minOccurs="0"/>
+				<xs:element name="RECHTSFORM" type="xs:string" minOccurs="0"/>
+				<xs:element name="ARTDERVERAENDERUNG" type="xs:string" minOccurs="0"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+</xs:schema>

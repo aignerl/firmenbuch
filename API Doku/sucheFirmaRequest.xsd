@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--W3C Schema erstellt mit XMLSpy v2015 rel. 3 sp1 (http://www.altova.com)-->
+<xs:schema xmlns:fb="ns://firmenbuch.justiz.gv.at/Abfrage/SucheFirmaRequest" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="ns://firmenbuch.justiz.gv.at/Abfrage/SucheFirmaRequest" elementFormDefault="qualified" attributeFormDefault="qualified" version="0.0.0">
+	<xs:element name="SUCHEFIRMAREQUEST">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:annotation>
+					<xs:documentation>
+						"FIRMENWORTLAUT" Firmenwortlaut des gesuchten Rechtsträgers, ein Stern (*) am Beginn und/oder Ende identifiziert den Suchstring als Teil des Firmenwortlautes zB: "bundesrechen*"
+						"EXAKTESUCHE" Auswahl zwischen exakte Suche oder phonetische Suche
+						"SUCHBEREICH" 	1: eingetragene und gelöschte Firmen (keine Zweigniederlassungen)
+													2: historische Firmenwortlaute (keine Zweigniederlassungen)
+													3: keine Einschränkung
+													4: eingetragene Firmenwortlaute (Prüfung Firmenausschließlichkeit)
+													5: Firmen in Arbeitsversion
+													6: abgewiesene Neueintragungen
+						"GERICHT" Einschränkung auf ein zuständiges Gericht, 3stellig numerisch, zB: "239" für LG Wiener Neustadt, blank für "keine Einschränkung"
+						"RECHTSFORM" Einschränkung auf eine bestimmte Rechtsform, 3stellig zB "GES" für Gesellschaft mit beschränkter Haftung, blank für "keine Einschränkung"
+						"RECHTSEIGENSCHAFT" Einschränkung auf eine bestimmte Rechtseigenschaft, zB: "Kreditunternehmen" oder "Versicherung", blank für "keine Einschränkung"
+						"ORTNR"	Einschränkung auf eine Gemeinde oder einen Bezirk oder ein Bundesland, blank für "keine Einschränkung"
+										5-stellig: Einschränkung auf eine bestimmte Gemeinde zB "10707" für "Gols"
+										3-stellig: Einschränkung auf einen bestimmten Bezirk zB "620" für "Murtal"
+										1-stellig: Einschränkung auf ein bestimmtes Bundesland zB "4" für "Oberösterreich"
+					</xs:documentation>
+				</xs:annotation>
+				<xs:element name="FIRMENWORTLAUT" type="xs:string"/>
+				<xs:element name="EXAKTESUCHE" type="xs:boolean"/>
+				<xs:element name="SUCHBEREICH" type="xs:integer"/>
+				<xs:element name="GERICHT" type="xs:string"/>
+				<xs:element name="RECHTSFORM" type="xs:string"/>
+				<xs:element name="RECHTSEIGENSCHAFT" type="xs:string"/>
+				<xs:element name="ORTNR" type="xs:string"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+</xs:schema>

@@ -1,0 +1,613 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Mit XMLSpy v2017 rel. 3 sp1 (x64) (http://www.altova.com) von Franz Jambrich (Bundesrechenzentrum GmbH) bearbeitet -->
+<!--W3C Schema erstellt mit XMLSpy v2015 rel. 3 sp1 (http://www.altova.com)-->
+<xs:schema xmlns:fb="ns://firmenbuch.justiz.gv.at/Abfrage/v2/AuszugResponse" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="ns://firmenbuch.justiz.gv.at/Abfrage/v2/AuszugResponse" elementFormDefault="qualified" attributeFormDefault="qualified" version="2.0.0">
+	<xs:element name="AUSZUG_V2_RESPONSE" type="fb:AUSZUGRESPONSE_Typ"/>
+	<!-- =============================== HAUPTELEMENT ===================================== -->
+	<xs:complexType name="AUSZUGRESPONSE_Typ">
+		<xs:sequence>
+			<xs:annotation>
+				<xs:documentation>
+					Veränderungen zu Version 2.0.0:
+						"MULTI" mit "RTS_DKZ50_A_SubTyp" unter "RTS_DKZ50_A_Typ" eingebaut - Zusätzliche Felder AUSLHG, AUSLFN, BEHOERDE und FORM
+						"DKZ09" in "ZW_DKZ09_A_Typ" entfernt
+					Veränderungen zu Version 0.5.0:
+						"DATVON" in "FU_DKZ10_A_Typ" nillable
+						"AUSL_HG" in "PE_DKZ06_E_GES_Typ" maxOccurs="2" und FBString52
+						"AUSL_FN" in "PE_DKZ_A_Typ" maxOccurs="unbounded" entfernt
+						"TEXT" von "RTS_DKZ50_Typ" nach "RTS_DKZ50_A_Typ" übertragen
+					Veränderungen zu Version 0.3.0:
+						Neu: "RTS_CODE"
+					Veränderungen zu Version 0.2.0:
+						Neu: "KUR"
+					Veränderungen zu Version 0.1.0:
+						Bei "FU_DKZ11_Typ" und "FU_DKZ12_Typ" wir das Element "TEXT" hinzugefügt. Dieses Element wird bei den historischen Auszügen gebraucht.
+					Veränderungen zu Version 0.0.0:
+						Bei "PE_DKZ09_Typ" entfällt das Element "ART", weil es im Firmenbuch nicht aufscheint und es sonst (wenn man es weiterhin Bestandteil des xsd ist) zu Unterschieden in der Vollzugsübersicht ("VOLLZ") zum Firmenbuchauszug kommen kann.
+						Bei "VOLLZ_Typ" kann das Tag "ANTRAGSTEXT" mehrfach vorkommen
+						Funktionsblock vor Zweigniederlassungen
+						Bei "DKZ06_Typ" entfällt das Element "HG", weil es aus der Vollzugsübersicht ableitbar ist.
+						Bei "PE_DKZ02_Typ" enthält nun das Tag "NACHNAME" den gesamten Namen inklusive "TITEL" und "VORNAME"
+						"attributeFormDefault" von "unqualified" auf "qualified" geändert, damit es dbzgl. keine Validierungsfehler mehr gibt.
+						Das Root-Tag wurde von "AUSZUG" auf "AUSZUGRESPONSE" geändert und der Namespace von "ns://firmenbuch.justiz.gv.at/Abfrage/Auszug" auf "ns://firmenbuch.justiz.gv.at/Abfrage/v1/AuszugResponse"
+				</xs:documentation>
+			</xs:annotation>
+			<xs:element name="FIRMA" type="fb:FIRMA_Typ"/>
+			<xs:element name="FUN" type="fb:FUN_Typ" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="ZWL" type="fb:ZWL_Typ" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="PER" type="fb:PER_Typ" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="VOLLZ" type="fb:VOLLZ_Typ" maxOccurs="unbounded"/>
+			<xs:element name="IDENT" type="fb:IDENT_Typ" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="KUR" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>"KUR": Key des Unternehmensregisters zur Firmenbuchnummer</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="EUID" type="fb:EUID_Typ" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="FNR" type="xs:string"/>
+		<xs:attribute name="STICHTAG" type="xs:date"/>
+		<xs:attribute name="UMFANG" type="xs:string"/>
+		<xs:attribute name="PRUEFSUMME" type="xs:string"/>
+		<xs:attribute name="ABFRAGEZEITPUNKT" type="xs:dateTime"/>
+	</xs:complexType>
+	<!-- =============================== HAUPTNIEDERLASSUNG =============================== -->
+	<xs:complexType name="FIRMA_Typ">
+		<xs:sequence>
+			<xs:annotation>
+				<xs:documentation>
+					Aufteilung der Daten der Hauptniederlassung in einzelne Datengruppen
+				</xs:documentation>
+			</xs:annotation>
+			<xs:element name="FI_DKZ02" type="fb:FI_DKZ02_A_Typ" maxOccurs="unbounded"/>
+			<xs:element name="FI_DKZ03" type="fb:FI_DKZ03_A_Typ" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="FI_DKZ04" type="fb:FI_DKZ04_A_Typ" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="FI_DKZ05" type="fb:FI_DKZ05_A_Typ" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="FI_DKZ06" type="fb:FI_DKZ06_A_Typ" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="FI_DKZ07" type="fb:FI_DKZ07_A_Typ" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="FI_DKZ09" type="fb:FI_DKZ09_A_Typ" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="FI_DKZ14" type="fb:FI_DKZ14_A_Typ" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="FI_DKZ15" type="fb:FI_DKZ15_A_Typ" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="FI_DKZ16" type="fb:FI_DKZ16_A_Typ" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="FI_DKZ17" type="fb:FI_DKZ17_A_Typ" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="FI_DKZ20" type="fb:FI_DKZ20_A_Typ" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="FI_DKZ21" type="fb:FI_DKZ21_A_Typ" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="FI_DKZ22" type="fb:FI_DKZ22_A_Typ" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="FI_DKZ25" type="fb:FI_DKZ25_A_Typ" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="FI_DKZ30" type="fb:FI_DKZ30_A_Typ" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="FI_DKZ31" type="fb:FI_DKZ31_A_Typ" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="FI_DKZ32" type="fb:FI_DKZ32_A_Typ" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="FI_DKZ33" type="fb:FI_DKZ33_A_Typ" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="FI_DKZ34" type="fb:FI_DKZ34_A_Typ" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="FI_DKZ40" type="fb:FI_DKZ40_A_Typ" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="FI_DKZ41" type="fb:FI_DKZ41_A_Typ" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="FI_DKZ42" type="fb:FI_DKZ42_A_Typ" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="FI_DKZ43" type="fb:FI_DKZ43_A_Typ" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="FI_DKZ44" type="fb:FI_DKZ44_A_Typ" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="FI_DKZ45" type="fb:FI_DKZ45_A_Typ" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="RECHTSTATSACHE" type="fb:RECHTSTATSACHE_Typ" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!-- =============================== Hauptniederlassung SubTypen ====================== -->
+	<xs:complexType name="FI_DKZ02_A_Typ">
+		<xs:sequence>
+			<xs:element name="BEZEICHNUNG" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="AUSLAND" type="xs:string" minOccurs="0"/>
+		</xs:sequence>
+		<xs:attributeGroup ref="fb:ATTRIBUT_Group"/>
+	</xs:complexType>
+	<xs:complexType name="FI_DKZ03_A_Typ">
+		<xs:complexContent>
+			<xs:extension base="fb:DKZ03_A_Typ">
+				<xs:attributeGroup ref="fb:ATTRIBUT_Group"/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="FI_DKZ04_A_Typ">
+		<xs:complexContent>
+			<xs:extension base="fb:DKZ04_A_Typ">
+				<xs:attributeGroup ref="fb:ATTRIBUT_Group"/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="FI_DKZ05_A_Typ">
+		<xs:sequence>
+			<xs:element name="TEXT" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attributeGroup ref="fb:ATTRIBUT_Group"/>
+	</xs:complexType>
+	<xs:complexType name="FI_DKZ06_A_Typ">
+		<xs:complexContent>
+			<xs:extension base="fb:DKZ06_A_Typ">
+				<xs:attributeGroup ref="fb:ATTRIBUT_Group"/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="FI_DKZ07_A_Typ">
+		<xs:sequence>
+			<xs:element name="RECHTSFORM" type="fb:CODE_TEXT_Typ" minOccurs="0"/>
+		</xs:sequence>
+		<xs:attributeGroup ref="fb:ATTRIBUT_Group"/>
+	</xs:complexType>
+	<xs:complexType name="FI_DKZ09_A_Typ">
+		<xs:complexContent>
+			<xs:extension base="fb:DKZ09_A_Typ">
+				<xs:attributeGroup ref="fb:ATTRIBUT_Group"/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="FI_DKZ14_A_Typ">
+		<xs:sequence>
+			<xs:element name="ORGANISATIONSFORM" type="fb:CODE_TEXT_Typ" minOccurs="0"/>
+		</xs:sequence>
+		<xs:attributeGroup ref="fb:ATTRIBUT_Group"/>
+	</xs:complexType>
+	<xs:complexType name="FI_DKZ15_A_Typ">
+		<xs:sequence>
+			<xs:element name="RECHTSEIGENSCHAFT" type="fb:CODE_TEXT_Typ" minOccurs="0"/>
+		</xs:sequence>
+		<xs:attributeGroup ref="fb:ATTRIBUT_Group"/>
+	</xs:complexType>
+	<xs:complexType name="FI_DKZ16_A_Typ">
+		<xs:sequence>
+			<xs:element name="AUSLSTAT" type="fb:CODE_TEXT_Typ" minOccurs="0"/>
+		</xs:sequence>
+		<xs:attributeGroup ref="fb:ATTRIBUT_Group"/>
+	</xs:complexType>
+	<xs:complexType name="FI_DKZ17_A_Typ">
+		<xs:complexContent>
+			<xs:extension base="fb:DKZ17_A_Typ">
+				<xs:attributeGroup ref="fb:ATTRIBUT_Group"/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="FI_DKZ20_A_Typ">
+		<xs:complexContent>
+			<xs:extension base="fb:DKZ20_A_Typ">
+				<xs:attributeGroup ref="fb:ATTRIBUT_Group"/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="FI_DKZ21_A_Typ">
+		<xs:sequence>
+			<xs:element name="AKTANZ" type="xs:decimal" minOccurs="0"/>
+			<xs:element name="AKTART" type="xs:string" minOccurs="0"/>
+		</xs:sequence>
+		<xs:attributeGroup ref="fb:ATTRIBUT_Group"/>
+	</xs:complexType>
+	<xs:complexType name="FI_DKZ22_A_Typ">
+		<xs:sequence>
+			<xs:element name="BOERSE" type="xs:string" minOccurs="0"/>
+		</xs:sequence>
+		<xs:attributeGroup ref="fb:ATTRIBUT_Group"/>
+	</xs:complexType>
+	<xs:complexType name="FI_DKZ25_A_Typ">
+		<xs:sequence>
+			<xs:element name="HOMEPAGE" type="xs:string" minOccurs="0"/>
+		</xs:sequence>
+		<xs:attributeGroup ref="fb:ATTRIBUT_Group"/>
+	</xs:complexType>
+	<xs:complexType name="FI_DKZ30_A_Typ">
+		<xs:sequence>
+			<xs:element name="JJAM" type="xs:string" minOccurs="0"/>
+			<xs:element name="JJZUM" type="xs:string" minOccurs="0"/>
+		</xs:sequence>
+		<xs:attributeGroup ref="fb:ATTRIBUT_Group"/>
+	</xs:complexType>
+	<xs:complexType name="FI_DKZ31_A_Typ">
+		<xs:sequence>
+			<xs:element name="JJBILANZ" type="xs:string" minOccurs="0"/>
+		</xs:sequence>
+		<xs:attributeGroup ref="fb:ATTRIBUT_Group"/>
+	</xs:complexType>
+	<xs:complexType name="FI_DKZ32_A_Typ">
+		<xs:sequence>
+			<xs:element name="KOAM" type="xs:string" minOccurs="0"/>
+			<xs:element name="KOZUM" type="xs:string" minOccurs="0"/>
+		</xs:sequence>
+		<xs:attributeGroup ref="fb:ATTRIBUT_Group"/>
+	</xs:complexType>
+	<xs:complexType name="FI_DKZ33_A_Typ">
+		<xs:sequence>
+			<xs:element name="KOBILANZ" type="xs:string" minOccurs="0"/>
+		</xs:sequence>
+		<xs:attributeGroup ref="fb:ATTRIBUT_Group"/>
+	</xs:complexType>
+	<xs:complexType name="FI_DKZ34_A_Typ">
+		<xs:sequence>
+			<xs:element name="REVVON" type="xs:string" minOccurs="0"/>
+			<xs:element name="REVBIS" type="xs:string" minOccurs="0"/>
+			<xs:element name="REVJJJJ" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attributeGroup ref="fb:ATTRIBUT_Group"/>
+	</xs:complexType>
+	<xs:complexType name="FI_DKZ40_A_Typ">
+		<xs:sequence>
+			<xs:element name="TEXT" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attributeGroup ref="fb:ATTRIBUT_Group"/>
+	</xs:complexType>
+	<xs:complexType name="FI_DKZ41_A_Typ">
+		<xs:sequence>
+			<xs:element name="TEXT" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attributeGroup ref="fb:ATTRIBUT_Group"/>
+	</xs:complexType>
+	<xs:complexType name="FI_DKZ42_A_Typ">
+		<xs:sequence>
+			<xs:element name="TEXT" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attributeGroup ref="fb:ATTRIBUT_Group"/>
+	</xs:complexType>
+	<xs:complexType name="FI_DKZ43_A_Typ">
+		<xs:sequence>
+			<xs:element name="TEXT" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attributeGroup ref="fb:ATTRIBUT_Group"/>
+	</xs:complexType>
+	<xs:complexType name="FI_DKZ44_A_Typ">
+		<xs:sequence>
+			<xs:element name="TEXT" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attributeGroup ref="fb:ATTRIBUT_Group"/>
+	</xs:complexType>
+	<xs:complexType name="FI_DKZ45_A_Typ">
+		<xs:sequence>
+			<xs:element name="TEXT" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attributeGroup ref="fb:ATTRIBUT_Group"/>
+	</xs:complexType>
+	<!-- =============================== FUNKTIONEN =============================== -->
+	<xs:complexType name="FUN_Typ">
+		<xs:sequence>
+			<xs:annotation>
+				<xs:documentation>
+					Aufteilung der Daten der Funktionen in einzelne Datengruppen
+					Attribute:
+						"PNR" Personenkennung zB "  A"
+						"FKEN" Funktionskennung zB: GF (Geschäftsführer), GS (Gesellschafter), ...
+						"FKENTEXT" Langform der Funktionskennung im Auszugsformat zB "GESCHÄFTSFÜHRER/IN (handelsrechtlich)", "GESELLSCHAFTER/IN", ...
+				</xs:documentation>
+			</xs:annotation>
+			<xs:element name="FU_DKZ10" type="fb:FU_DKZ10_A_Typ" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="FU_DKZ11" type="fb:FU_DKZ11_A_Typ" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="FU_DKZ12" type="fb:FU_DKZ12_A_Typ" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="RECHTSTATSACHE" type="fb:RECHTSTATSACHE_Typ" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="PNR" type="xs:string"/>
+		<xs:attribute name="FKEN" type="xs:string"/>
+		<xs:attribute name="FKENTEXT" type="xs:string"/>
+	</xs:complexType>
+	<!-- =============================== Funktionen SubTypen ====================== -->
+	<xs:complexType name="FU_DKZ10_A_Typ">
+		<xs:sequence>
+			<xs:element name="DATVON" type="xs:string" minOccurs="0" nillable="true"/>
+			<xs:element name="DATBIS" type="xs:string" minOccurs="0"/>
+			<xs:element name="WHR" type="xs:string" minOccurs="0"/>
+			<xs:element name="KAPITAL" type="xs:decimal" minOccurs="0"/>
+			<xs:element name="BEZUGSPERSON" type="xs:string" minOccurs="0"/>
+			<xs:element name="VART" type="fb:CODE_TEXT_Typ" minOccurs="0"/>
+			<xs:element name="VSBEIDE" type="fb:CODE_TEXT_Typ" minOccurs="0"/>
+			<xs:element name="TXTVERTR" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="VERTRETUNGSBEFUGTNURFUER" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="TEXT" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attributeGroup ref="fb:ATTRIBUT_Group"/>
+	</xs:complexType>
+	<xs:complexType name="FU_DKZ11_A_Typ">
+		<xs:sequence>
+			<xs:element name="WHR" type="xs:string" minOccurs="0"/>
+			<xs:element name="EINBEZAHLT" type="xs:decimal" minOccurs="0"/>
+			<xs:element name="TEXT" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attributeGroup ref="fb:ATTRIBUT_Group"/>
+	</xs:complexType>
+	<xs:complexType name="FU_DKZ12_A_Typ">
+		<xs:sequence>
+			<xs:element name="WHR" type="xs:string" minOccurs="0"/>
+			<xs:element name="KAPITAL_PRIVILEG" type="xs:decimal" minOccurs="0"/>
+			<xs:element name="TEXT" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attributeGroup ref="fb:ATTRIBUT_Group"/>
+	</xs:complexType>
+	<!-- =============================== ZWEIGNIEDERLASSUNG =============================== -->
+	<xs:complexType name="ZWL_Typ">
+		<xs:sequence>
+			<xs:annotation>
+				<xs:documentation>
+					Aufteilung der Daten der Zweigniederlassungen in einzelne Datengruppen
+					Attribute:
+						"ZNR" Nummer der Zweigniederlassung zB "001"
+				</xs:documentation>
+			</xs:annotation>
+			<xs:element name="ZW_DKZ02" type="fb:ZW_DKZ02_A_Typ" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="ZW_DKZ03" type="fb:ZW_DKZ03_A_Typ" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="ZW_DKZ04" type="fb:ZW_DKZ04_A_Typ" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="ZW_DKZ05" type="fb:ZW_DKZ05_A_Typ" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="ZW_DKZ06" type="fb:ZW_DKZ06_A_Typ" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="ZW_DKZ09" type="fb:ZW_DKZ09_A_Typ" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="ZW_DKZ17" type="fb:ZW_DKZ17_A_Typ" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="RECHTSTATSACHE" type="fb:RECHTSTATSACHE_Typ" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="ZNR" type="xs:string"/>
+	</xs:complexType>
+	<!-- =============================== Zweigniederlassung SubTypen ====================== -->
+	<xs:complexType name="ZW_DKZ02_A_Typ">
+		<xs:sequence>
+			<xs:element name="BEZEICHNUNG" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attributeGroup ref="fb:ATTRIBUT_Group"/>
+	</xs:complexType>
+	<xs:complexType name="ZW_DKZ03_A_Typ">
+		<xs:complexContent>
+			<xs:extension base="fb:DKZ03_A_Typ">
+				<xs:attributeGroup ref="fb:ATTRIBUT_Group"/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="ZW_DKZ04_A_Typ">
+		<xs:complexContent>
+			<xs:extension base="fb:DKZ04_A_Typ">
+				<xs:attributeGroup ref="fb:ATTRIBUT_Group"/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="ZW_DKZ05_A_Typ">
+		<xs:sequence>
+			<xs:element name="TEXT" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attributeGroup ref="fb:ATTRIBUT_Group"/>
+	</xs:complexType>
+	<xs:complexType name="ZW_DKZ06_A_Typ">
+		<xs:complexContent>
+			<xs:extension base="fb:DKZ06_A_Typ">
+				<xs:attributeGroup ref="fb:ATTRIBUT_Group"/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="ZW_DKZ09_A_Typ">
+		<xs:complexContent>
+			<xs:extension base="fb:DKZ09_A_Typ">
+				<xs:attributeGroup ref="fb:ATTRIBUT_Group"/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="ZW_DKZ17_A_Typ">
+		<xs:complexContent>
+			<xs:extension base="fb:DKZ17_A_Typ">
+				<xs:attributeGroup ref="fb:ATTRIBUT_Group"/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<!-- =============================== PERSONEN =============================== -->
+	<xs:complexType name="PER_Typ">
+		<xs:sequence>
+			<xs:element name="PE_DKZ02" type="fb:PE_DKZ02_A_Typ" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="PE_DKZ03" type="fb:PE_DKZ03_A_Typ" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="PE_DKZ06" type="fb:PE_DKZ06_A_Typ" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="PE_DKZ09" type="fb:PE_DKZ09_A_Typ" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="PE_STAAT" type="fb:PE_STAAT_A_Typ" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="RECHTSTATSACHE" type="fb:RECHTSTATSACHE_Typ" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="PNR" type="xs:string"/>
+	</xs:complexType>
+	<!-- =============================== Personen SubTypen ====================== -->
+	<xs:complexType name="PE_DKZ02_A_Typ">
+		<xs:complexContent>
+			<xs:extension base="fb:PE_NAME_A_Typ">
+				<xs:attributeGroup ref="fb:ATTRIBUT_Group"/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="PE_DKZ03_A_Typ">
+		<xs:complexContent>
+			<xs:extension base="fb:DKZ03_A_Typ">
+				<xs:attributeGroup ref="fb:ATTRIBUT_Group"/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="PE_DKZ06_A_Typ">
+		<xs:sequence>
+			<xs:element name="AUSL_HG" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="AUSL_FN" type="xs:string" minOccurs="0"/>
+			<xs:element name="AUSL_SITZ" type="xs:string" minOccurs="0"/>
+			<xs:element name="AUSL_FORM" type="fb:CODE_TEXT_Typ" minOccurs="0"/>
+		</xs:sequence>
+		<xs:attributeGroup ref="fb:ATTRIBUT_Group"/>
+	</xs:complexType>
+	<xs:complexType name="PE_DKZ09_A_Typ">
+		<xs:sequence>
+			<xs:element name="PE_FNR" type="xs:string" minOccurs="0"/>
+		</xs:sequence>
+		<xs:attributeGroup ref="fb:ATTRIBUT_Group"/>
+	</xs:complexType>
+	<xs:complexType name="PE_STAAT_A_Typ">
+		<xs:sequence>
+			<xs:element name="STAATSBUERGERSCHAFT" type="xs:string" maxOccurs="unbounded"/>
+			<xs:element name="WOHNSITZSTAAT" type="xs:string"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!-- =============================== RECHTSTATSACHEN =============================== -->
+	<xs:complexType name="RECHTSTATSACHE_Typ">
+		<xs:sequence>
+			<xs:element name="RTS_DKZ50" type="fb:RTS_DKZ50_Typ" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="UNR" type="xs:string"/>
+	</xs:complexType>
+	<!-- =============================== Rechtstatsachen SubTypen ====================== -->
+	<xs:complexType name="RTS_DKZ50_Typ">
+		<xs:complexContent>
+			<xs:extension base="fb:RTS_DKZ50_A_Typ">
+				<xs:attributeGroup ref="fb:ATTRIBUT_Group"/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<!-- =============================== VOLLZUGSÜBERSICHT =============================== -->
+	<xs:complexType name="VOLLZ_Typ">
+		<xs:sequence>
+			<xs:annotation>
+				<xs:documentation>
+					Daten unter der Überschrift "VOLLZUGSÜBERSICHT" im Firmenbuchauszug
+					"VNR": Vollzugsnummer zB "001"
+					"VOLLZUGSDATUM": Datum wann diese Eintragung im Firmenbuch vollzogen wurde
+					"HG": Handelsgericht, das die Eintragung vorgenommen hat
+						zB	"CODE":"729"
+								"TEXT":"Landesgericht Klagenfurt"
+					"AZ": Aktenzeichen mit dem der Antrag vollzogen wurde zB "007 61 Fr 2164/15 w"
+					"ANTRAGSTEXT": Art des Antrags zB "Antrag auf Änderung"
+					"EINGELANGTAM": Datum wann der Antrag bei Gericht eingelangt ist
+				</xs:documentation>
+			</xs:annotation>
+			<xs:element name="VNR" type="xs:string"/>
+			<xs:element name="VOLLZUGSDATUM" type="xs:date"/>
+			<xs:element name="HG" type="fb:CODE_TEXT_Typ"/>
+			<xs:element name="AZ" type="xs:string"/>
+			<xs:element name="ANTRAGSTEXT" type="xs:string" maxOccurs="unbounded"/>
+			<xs:element name="EINGELANGTAM" type="xs:date" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!-- =============================== IDENTNUMMER =============================== -->
+	<xs:complexType name="IDENT_Typ">
+		<xs:sequence>
+			<xs:annotation>
+				<xs:documentation>
+					Daten unter der Überschrift "INFORMATION DER ÖSTERREICHISCHEN NATIONALBANK" im Firmenbuchauszug
+					"ZNR": Nummer der Zweigniederlassung zB "001" oder Hauptniederlassung (="000")
+					"IDENTNUMMER": Identnummer der Österreichischen Nationalbank
+						entweder gültig für die Hauptniederlassung (ZNR="000") oder für eine bestimmte Zweigniederlassung zB "1701630"
+				</xs:documentation>
+			</xs:annotation>
+			<xs:element name="ZNR" type="xs:string" minOccurs="0"/>
+			<xs:element name="IDENTNUMMER" type="xs:string"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<!-- =============================== EUID =============================== -->
+	<xs:complexType name="EUID_Typ">
+		<xs:sequence>
+			<xs:annotation>
+				<xs:documentation>
+					Daten unter der Überschrift "BUSINESS REGISTER INTERCONNECTION SYSTEM IDENTIFIKATION" im Firmenbuchauszug
+					"ZNR": Nummer der Zweigniederlassung zB "001" oder Hauptniederlassung (="000")
+					"EUID": European unique identifier
+					entweder gültig für die Hauptniederlassung (ZNR="000") oder für eine bestimmte Zweigniederlassung
+				</xs:documentation>
+			</xs:annotation>
+			<xs:element name="ZNR" type="xs:string" minOccurs="0"/>
+			<xs:element name="EUID" type="xs:string"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!-- =============================== allgemeine Unterstrukturen =============================== -->
+	<xs:attributeGroup name="ATTRIBUT_Group">
+		<xs:annotation>
+			<xs:documentation>
+				"VNR": Vollzugsnummer dieser Firmenbucheintragung zB "001"
+				"AUFRECHT": Ist diese Datengruppe noch aufrecht, oder wurde sie schon von einer neueren überschrieben?
+				"MIT_FIRMA_GELOESCHT_DURCH_VNR": Vollzugsnummer der Firmenlöschung mit der diese Datengruppe gelöscht wurde
+				"MIT_ZWL_GELOESCHT_DURCH_VNR": nur bei Zweigniederlassungen: Vollzugsnummer der Löschung der Zweigniederlassung mit der diese Datengruppe gelöscht wurde
+			</xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="VNR" type="xs:string" use="optional"/>
+		<xs:attribute name="AUFRECHT" type="xs:boolean" use="optional"/>
+		<xs:attribute name="MIT_FIRMA_GELOESCHT_DURCH_VNR" type="xs:string" use="optional"/>
+		<xs:attribute name="MIT_ZWL_GELOESCHT_DURCH_VNR" type="xs:string" use="optional"/>
+	</xs:attributeGroup>
+	<!-- =============================== Rechtstatsachen ========================================== -->
+	<xs:complexType name="RTS_DKZ50_A_Typ">
+		<xs:sequence>
+			<xs:element name="CODE" type="xs:string"/>
+			<xs:element name="DATUM_VOM" type="xs:date" minOccurs="0"/>
+			<xs:element name="ZEICHEN" type="xs:string" minOccurs="0"/>
+			<xs:element name="MULTI" type="fb:RTS_DKZ50_A_SubTyp" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="TEXT" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="RTS_DKZ50_A_SubTyp">
+		<xs:sequence>
+			<xs:element name="TXTZUS" type="xs:string" minOccurs="0"/>
+			<xs:element name="ABSCDE" type="xs:string" minOccurs="0"/>
+			<xs:element name="RTS_NAME" type="fb:PE_NAME_A_Typ" minOccurs="0"/>
+			<xs:element name="RTS_ADRESSE" type="fb:DKZ03_A_Typ" minOccurs="0"/>
+			<xs:element name="RTS" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="AUSLHG" type="xs:string" minOccurs="0"/>
+			<xs:element name="AUSLFN" type="xs:string" minOccurs="0"/>
+			<xs:element name="BEHOERDE" type="xs:string" minOccurs="0"/>
+			<xs:element name="FORM" type="xs:string" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!-- =============================== allgemeine Unterstrukturen =============================== -->
+	<xs:complexType name="DKZ03_A_Typ">
+		<xs:sequence>
+			<xs:choice>
+				<xs:element name="STELLE" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:sequence>
+					<xs:element name="ZUSTELLANWEISUNG"  type="xs:string" minOccurs="0"/>
+					<xs:element name="STRASSE" type="xs:string" minOccurs="0"/>
+					<xs:element name="HAUSNUMMER" type="xs:string" minOccurs="0"/>
+					<xs:element name="STIEGE" type="xs:string" minOccurs="0"/>
+					<xs:element name="TUERNUMMER" type="xs:string" minOccurs="0"/>
+				</xs:sequence>
+			</xs:choice>
+			<xs:element name="STAAT" type="xs:string" minOccurs="0"/>
+			<xs:element name="PLZ" type="xs:string" minOccurs="0"/>
+			<xs:element name="ORT" type="xs:string" minOccurs="0"/>
+			<xs:element name="ZUSTELLBAR" type="xs:boolean" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DKZ04_A_Typ">
+		<xs:sequence>
+			<xs:element name="VON" type="xs:string" minOccurs="0"/>
+			<xs:element name="BIS" type="xs:string" minOccurs="0"/>
+			<xs:element name="TEXT" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DKZ06_A_Typ">
+		<xs:sequence>
+			<xs:element name="ORTNR" type="fb:CODE_TEXT_Typ" minOccurs="0"/>
+			<xs:element name="SITZ" type="xs:string" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DKZ09_A_Typ">
+		<xs:sequence>
+			<xs:element name="HRAHRB" type="xs:string" minOccurs="0"/>
+			<xs:element name="HGALT" type="fb:CODE_TEXT_Typ" minOccurs="0"/>
+			<xs:element name="BGALT" type="fb:CODE_TEXT_Typ" minOccurs="0"/>
+			<xs:element name="DATERST" type="xs:string" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DKZ17_A_Typ">
+		<xs:sequence>
+			<xs:element name="AUSL_SITZ" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="AUSL_FN" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DKZ20_A_Typ">
+		<xs:sequence>
+			<xs:element name="WHR" type="xs:string" minOccurs="0"/>
+			<xs:element name="KAPITAL" type="xs:decimal" minOccurs="0"/>
+			<xs:element name="PRIVILEG" type="xs:boolean" minOccurs="0"/>
+			<xs:element name="GSMIN" type="xs:string"  minOccurs="0"/>
+			<xs:element name="ZAHLBAR" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="TEXT" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="PE_NAME_A_Typ">
+		<xs:choice>
+			<xs:sequence>
+				<xs:element name="TITELVOR" type="xs:string" minOccurs="0"/>
+				<xs:element name="VORNAME" type="xs:string" minOccurs="0"/>
+				<xs:element name="NACHNAME" type="xs:string" minOccurs="0"/>
+				<xs:element name="TITELNACH" type="xs:string" minOccurs="0"/>
+				<xs:element name="NAME_FORMATIERT" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element name="GEBURTSDATUM" type="xs:string" minOccurs="0"/>
+			</xs:sequence>
+			<xs:element name="BEZEICHNUNG" type="xs:string" maxOccurs="unbounded"/>
+		</xs:choice>
+	</xs:complexType>
+	<xs:complexType name="CODE_TEXT_Typ">
+		<xs:sequence>
+			<xs:element name="CODE" type="xs:string"/>
+			<xs:element name="TEXT" type="xs:string"/>
+		</xs:sequence>
+	</xs:complexType>
+</xs:schema>
