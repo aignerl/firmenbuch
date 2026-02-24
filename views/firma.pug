@@ -1,0 +1,51 @@
+extends layout
+
+block content
+  if !firma
+    p Keine Daten gefunden.
+  else
+    h1= firma.namen.join(' ') || firma.fnr
+
+    table
+      tr
+        th FNR
+        td= firma.fnr
+      tr
+        th Stichtag
+        td= firma.stichtag
+      tr
+        th Umfang
+        td= firma.umfang
+      tr
+        th Sitz
+        td= firma.sitz
+      tr
+        th Rechtsform
+        td= firma.rechtsform
+
+    if firma.adressen.length > 0
+      h2 Adresse
+      each a in firma.adressen
+        p
+          if a.strasse
+            | #{a.strasse} #{a.hausnummer}
+            br
+          | #{a.plz} #{a.ort}
+          if a.staat
+            |  (#{a.staat})
+
+    if firma.funktionen.length > 0
+      h2 Funktionen
+      table
+        thead
+          tr
+            th Funktion
+            th Name
+        tbody
+          each f in firma.funktionen
+            tr
+              td= f.fkentext
+              td= f.name
+
+  p
+    a(href="/") Neue Suche

@@ -1,5 +1,30 @@
 extends layout
 
 block content
-  h1= title
-  p Welcome to #{title}
+  h1 Firmenbuch Suche
+
+  if error
+    p.error= error
+
+  form(method="POST" action="/suchen")
+    div
+      label(for="firmenwortlaut") Firmenwortlaut:
+      br
+      input#firmenwortlaut(type="text" name="firmenwortlaut" placeholder="z.B. Erste*" required autofocus)
+    br
+    div
+      label
+        input(type="checkbox" name="exaktesuche")
+        |  Exakte Suche
+    br
+    div
+      label(for="suchbereich") Suchbereich:
+      br
+      select#suchbereich(name="suchbereich")
+        option(value="1") 1 – eingetragene und gelöschte Firmen
+        option(value="2") 2 – historische Firmenwortlaute
+        option(value="3") 3 – keine Einschränkung
+        option(value="4") 4 – eingetragene Firmenwortlaute
+    br
+    div
+      button(type="submit") Suchen

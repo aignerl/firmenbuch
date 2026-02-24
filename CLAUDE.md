@@ -1,3 +1,4 @@
+
 # CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
@@ -27,9 +28,23 @@ This is an Express.js web application (Node.js) intended to integrate with the A
 3. `routes/` — Route handlers mounted in `app.js`
 4. `views/` — Pug templates rendered by route handlers
 
-**Current routes (placeholder stubs):**
-- `GET /` → renders `views/index.pug`
+**Routes:**
+- `GET /` → renders `views/index.pug` (search form)
+- `POST /suchen` → calls `sucheFirma`, renders `views/suche-ergebnis.pug`
+- `GET /firma/:fnr` → calls `getAuszug`, renders `views/firma.pug`
+- `GET /api/firma/suchen?name=` → JSON search results
+- `GET /api/firma/:fnr/auszug?umfang=Kurzinformation` → JSON company extract
 - `GET /users` → plain text response
+
+**Services:**
+- `services/firmenbuch.js` — SOAP 1.2 client for JustizOnline HVD
+  - `sucheFirma({ firmenwortlaut, exaktesuche, suchbereich, gericht, rechtsform })` → array of results
+  - `getAuszug({ fnr, stichtag, umfang })` → raw parsed `AUSZUG_V2_RESPONSE`
+  - SOAP endpoint: `https://justizonline.gv.at/jop/api/at.gv.justiz.fbw/ws`
+  - Auth: `X-API-KEY` header from `process.env.FIRMENBUCH_API_KEY`
+
+**Environment:**
+- Copy `.env` and set `FIRMENBUCH_API_KEY=<your_key>` before starting
 
 ## External Web Service (Firmenbuch HVD)
 

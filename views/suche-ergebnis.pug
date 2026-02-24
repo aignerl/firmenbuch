@@ -1,0 +1,28 @@
+extends layout
+
+block content
+  h1 Suchergebnisse für "#{firmenwortlaut}"
+
+  if ergebnisse.length === 0
+    p Keine Ergebnisse gefunden.
+  else
+    table
+      thead
+        tr
+          th FNR
+          th Name
+          th Sitz
+          th Rechtsform
+          th Status
+      tbody
+        each e in ergebnisse
+          tr
+            td
+              a(href=`/firma/${e.fnr}`)= e.fnr
+            td= e.name
+            td= e.sitz
+            td= e.rechtsform
+            td= e.status
+
+  p
+    a(href="/") Neue Suche
