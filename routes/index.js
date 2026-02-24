@@ -101,9 +101,21 @@ router.post('/suchen', async function (req, res) {
 router.get('/firma/:fnr', async function (req, res) {
   const { fnr } = req.params;
   try {
-    const raw = await getAuszug({ fnr });
+    const [raw, urkundenRaw] = await Promise.all([
+      getAuszug({ fnr }),
+      sucheUrkunde({ fnr }).catch(() => []),
+    ]);
     const firma = buildFirmaView(raw);
-    res.render('firma', { title: `Firma ${fnr}`, firma });
+    const urkunden = urkundenRaw.map((u) => ({
+      ...u,
+      groesseFormatiert: u.groesse
+        ? u.groesse >= 1024 * 1024
+          ? `${(u.groesse / 1024 / 1024).toFixed(1)} MB`
+          : `${Math.ceil(u.groesse / 1024)} KB`
+        : '',
+      datumSort: u.stichtag || u.dokumentendatum || u.eingereicht || '',
+    }));
+    res.render('firma', { title: `Firma ${fnr}`, firma, urkunden });
   } catch (err) {
     res.locals.message = err.message;
     res.locals.error = req.app.get('env') === 'development' ? err : {};

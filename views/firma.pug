@@ -26,7 +26,6 @@ block content
 
     if firma.adressen.length > 0
       h2 Adresse
-
       each a in firma.adressen
         p.address
           if a.strasse
@@ -49,6 +48,85 @@ block content
               td= f.fkentext
               td= f.name
 
-    a.btn(href=`/firma/${firma.fnr}/urkunden`) Urkunden ansehen
+    if urkunden && urkunden.length > 0
+      h2 Urkunden
+      table#urkunden-table
+        thead
+          tr
+            th.sortable(data-col="0") Stichtag / Datum
+            th.sortable(data-col="1") Dokumentart
+            th.sortable(data-col="2") Eingereicht
+            th.sortable(data-col="3") Typ
+            th.sortable(data-col="4") Größe
+            th
+        tbody
+          each u in urkunden
+            tr
+              td(data-sort=u.datumSort)= u.stichtag || u.dokumentendatum || '—'
+              td
+                | #{u.dokumentart || '—'}
+                if u.bemerkung
+                  br
+                  small= u.bemerkung
+              td(data-sort=u.eingereicht)= u.eingereicht || '—'
+              td
+                span.badge(class=u.dateiendung === 'pdf' ? 'badge--active' : 'badge--history')
+                  = u.dateiendung.toUpperCase()
+              td(data-sort=u.groesse)= u.groesseFormatiert || '—'
+              td
+                a.btn(href=`/urkunde/download?key=${encodeURIComponent(u.key)}` target="_blank") Öffnen
 
   a.back-link(href="/") ← Neue Suche
+
+  script.
+    (function () {
+      var table = document.getElementById('urkunden-table');
+      if (!table) return;
+
+      var sortCol = 0;
+      var sortDir = -1; // -1 = descending, 1 = ascending
+
+      var headers = table.querySelectorAll('thead th.sortable');
+
+      function sortTable(col, dir) {
+        var tbody = table.querySelector('tbody');
+        var rows = Array.from(tbody.querySelectorAll('tr'));
+
+        rows.sort(function (a, b) {
+          var aVal = a.cells[col].dataset.sort !== undefined
+            ? a.cells[col].dataset.sort
+            : a.cells[col].textContent.trim();
+          var bVal = b.cells[col].dataset.sort !== undefined
+            ? b.cells[col].dataset.sort
+            : b.cells[col].textContent.trim();
+
+          var aNum = parseFloat(aVal);
+          var bNum = parseFloat(bVal);
+          if (!isNaN(aNum) && !isNaN(bNum)) return (aNum - bNum) * dir;
+
+          if (aVal < bVal) return -1 * dir;
+          if (aVal > bVal) return 1 * dir;
+          return 0;
+        });
+
+        rows.forEach(function (r) { tbody.appendChild(r); });
+
+        headers.forEach(function (h) { h.classList.remove('sort-asc', 'sort-desc'); });
+        headers[col].classList.add(dir === 1 ? 'sort-asc' : 'sort-desc');
+      }
+
+      headers.forEach(function (th, i) {
+        th.addEventListener('click', function () {
+          if (sortCol === i) {
+            sortDir *= -1;
+          } else {
+            sortCol = i;
+            sortDir = -1;
+          }
+          sortTable(sortCol, sortDir);
+        });
+      });
+
+      // initial sort: Stichtag descending
+      sortTable(0, -1);
+    })();
