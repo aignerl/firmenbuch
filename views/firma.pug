@@ -53,7 +53,7 @@ block content
                 | #{f.name}
                 if f.quelle === 'EVI'
                   |
-                  span.source-badge(data-tooltip="Quelle: evi.gv.at – Elektronisches Unternehmensregister") EVI
+                  a.source-badge(href="https://www.evi.gv.at/f/" + firma.fnr.replace(/ /g, '') target="_blank" rel="noopener" onclick="event.stopPropagation()" data-tooltip="Auf evi.gv.at öffnen") EVI
 
     if urkunden && urkunden.length > 0
       h2 Urkunden

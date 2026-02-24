@@ -290,7 +290,8 @@ small { color: var(--md-secondary-text); font-size: .8125rem; }
   background: var(--md-primary-light);
   color: var(--md-primary);
   border-radius: 4px;
-  cursor: help;
+  cursor: pointer;
+  text-decoration: none;
   position: relative;
   vertical-align: middle;
 }
