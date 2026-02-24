@@ -214,6 +214,7 @@ td, th {
   padding: 12px 16px;
   font-size: .9375rem;
   vertical-align: top;
+  text-align: left;
 }
 
 /* Key-value table (firma detail) */
