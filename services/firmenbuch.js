@@ -2,6 +2,38 @@
 const axios = require('axios');
 const xml2js = require('xml2js');
 const cheerio = require('cheerio');
+const fs = require('fs');
+const path = require('path');
+
+// ── Persistent Gesellschafter cache ────────────────────────────
+const GS_CACHE_FILE = path.join(__dirname, '../cache/gesellschafter.json');
+let _gsCache = null;
+
+function loadGsCache() {
+  if (_gsCache) return _gsCache;
+  try { _gsCache = JSON.parse(fs.readFileSync(GS_CACHE_FILE, 'utf8')); }
+  catch (e) { _gsCache = {}; }
+  return _gsCache;
+}
+
+function persistToCache(fnr, name, gesellschafter) {
+  const cache = loadGsCache();
+  cache[fnr] = { name, gesellschafter, cachedAt: new Date().toISOString() };
+  try { fs.writeFileSync(GS_CACHE_FILE, JSON.stringify(cache, null, 2), 'utf8'); }
+  catch (e) { /* ignore write errors */ }
+}
+
+function getTochtergesellschaften(fnr) {
+  const cache = loadGsCache();
+  const tochter = [];
+  for (const [compFnr, entry] of Object.entries(cache)) {
+    if (compFnr === fnr || !Array.isArray(entry.gesellschafter)) continue;
+    if (entry.gesellschafter.some(g => g.fnr && g.fnr.replace(/ /g, '') === fnr)) {
+      tochter.push({ fnr: compFnr, name: entry.name || compFnr });
+    }
+  }
+  return tochter;
+}
 
 const ENDPOINT = 'https://justizonline.gv.at/jop/api/at.gv.justiz.fbw/ws';
 
@@ -254,6 +286,9 @@ async function getOwnershipTree(rootFnr) {
       });
     }
 
+    // Persist name + EVI Gesellschafter to file cache
+    persistToCache(normFnr, name, eviGesellschafter);
+
     // Build children from EVI Gesellschafter
     const children = [];
     for (const g of eviGesellschafter) {
@@ -273,7 +308,7 @@ async function getOwnershipTree(rootFnr) {
       }
     }
 
-    return { id: normFnr, name, fnr: normFnr, type: 'firma', children, geschaeftsfuehrer, vorstand };
+    return { id: normFnr, name, fnr: normFnr, type: 'firma', children, geschaeftsfuehrer, vorstand, tochter: getTochtergesellschaften(normFnr) };
   }
 
   return buildNode(rootFnr);

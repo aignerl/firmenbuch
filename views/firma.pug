@@ -225,6 +225,40 @@ block scripts
             function (d) { return d.y; },
             nodeW, tooltip);
 
+          // ── Tochtergesellschaften (from cache) below root ──
+          var tochter = data.tochter || [];
+          if (tochter.length > 0) {
+            var subW = nodeW;
+            var neededSubW = tochter.length * (subW + H_GAP) - H_GAP;
+            if (neededSubW > containerW) {
+              subW = Math.max(MIN_W, Math.floor((containerW + H_GAP) / tochter.length) - H_GAP);
+            }
+            var subY = NODE_H + V_GAP; // center y below root (root center = 0)
+            var totalSubW = tochter.length * (subW + H_GAP) - H_GAP;
+            var subStartX = root.x - totalSubW / 2;
+            var subLink = d3.linkVertical().x(function (n) { return n.x; }).y(function (n) { return n.y; });
+            svg.attr('height', svgH + V_GAP + NODE_H);
+            var maxCharsT = Math.max(8, Math.floor(subW / 7.5));
+
+            tochter.forEach(function (t, i) {
+              var tx = subStartX + i * (subW + H_GAP) + subW / 2;
+              g.append('path').attr('class', 'org-link')
+                .attr('d', subLink({ source: { x: root.x, y: NODE_H / 2 }, target: { x: tx, y: subY - NODE_H / 2 } }));
+              var nodeG = g.append('g')
+                .attr('class', 'org-node org-node--firma org-node--tochter')
+                .attr('transform', 'translate(' + tx + ',' + subY + ')');
+              if (t.fnr) {
+                nodeG.style('cursor', 'pointer')
+                  .on('click', function () { window.location = '/firma/' + t.fnr; });
+              }
+              nodeG.append('rect')
+                .attr('x', -subW / 2).attr('y', -NODE_H / 2)
+                .attr('width', subW).attr('height', NODE_H).attr('rx', 6);
+              nodeG.append('text').attr('text-anchor', 'middle').attr('dy', '0.35em')
+                .text(t.name.length > maxCharsT ? t.name.slice(0, maxCharsT - 1) + '\u2026' : t.name);
+            });
+          }
+
         } else {
           // ── Stacked layout: root on right, shareholders stacked left ──
           var LEVEL_W = STD_W + H_GAP;

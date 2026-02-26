@@ -1,0 +1,60 @@
+{
+  "364915s": {
+    "name": "EVN-WIEN ENERGIE Windparkentwicklungs-",
+    "gesellschafter": [
+      {
+        "name": "EVN Naturkraft GmbH",
+        "fnr": "139569z",
+        "fkentext": "GESELLSCHAFTER/IN",
+        "quelle": "EVI"
+      },
+      {
+        "name": "WIEN ENERGIE GmbH",
+        "fnr": "215854h",
+        "fkentext": "GESELLSCHAFTER/IN",
+        "quelle": "EVI"
+      }
+    ],
+    "cachedAt": "2026-02-26T10:02:41.860Z"
+  },
+  "139569z": {
+    "name": "EVN Naturkraft GmbH",
+    "gesellschafter": [
+      {
+        "name": "EVN AG",
+        "fnr": "72000h",
+        "fkentext": "GESELLSCHAFTER/IN",
+        "quelle": "EVI"
+      }
+    ],
+    "cachedAt": "2026-02-26T10:02:42.183Z"
+  },
+  "72000h": {
+    "name": "EVN AG",
+    "gesellschafter": [],
+    "cachedAt": "2026-02-26T10:02:42.889Z"
+  },
+  "215854h": {
+    "name": "WIEN ENERGIE GmbH",
+    "gesellschafter": [
+      {
+        "name": "WIENER STADTWERKE GmbH",
+        "fnr": "127783t",
+        "fkentext": "GESELLSCHAFTER/IN",
+        "quelle": "EVI"
+      }
+    ],
+    "cachedAt": "2026-02-26T10:02:43.381Z"
+  },
+  "127783t": {
+    "name": "WIENER STADTWERKE GmbH",
+    "gesellschafter": [
+      {
+        "name": "Stadt Wien",
+        "fkentext": "GESELLSCHAFTER/IN",
+        "quelle": "EVI"
+      }
+    ],
+    "cachedAt": "2026-02-26T10:02:43.710Z"
+  }
+}
