@@ -198,6 +198,35 @@ block scripts
 
         var tooltip = d3.select(container).append('div').attr('class', 'org-tooltip');
 
+        // Zoom hint: shown briefly when scrolling without Ctrl
+        var zoomHint = d3.select(container).append('div').attr('class', 'org-zoom-hint')
+          .text('Strg + Scrollen zum Zoomen');
+        var hintTimer;
+        container.addEventListener('wheel', function (e) {
+          if (!e.ctrlKey) {
+            zoomHint.classed('org-zoom-hint--visible', true);
+            clearTimeout(hintTimer);
+            hintTimer = setTimeout(function () { zoomHint.classed('org-zoom-hint--visible', false); }, 1500);
+          }
+        }, { passive: true });
+
+        // Shared hover helper for GF / Vorstand tooltip
+        function attachHover(sel, gf, vs) {
+          if (!((gf && gf.length) || (vs && vs.length))) return;
+          sel.on('mouseover', function (event) {
+            var parts = [];
+            if (gf && gf.length) parts.push('<strong>Gesch\u00e4ftsf\u00fchrung</strong><br>' + gf.join('<br>'));
+            if (vs && vs.length) parts.push('<strong>Vorstand</strong><br>' + vs.join('<br>'));
+            tooltip.html(parts.join('<br><br>')).classed('org-tooltip--visible', true);
+          })
+          .on('mousemove', function (event) {
+            var rect = container.getBoundingClientRect();
+            tooltip.style('left', (event.clientX - rect.left + 14) + 'px')
+                   .style('top',  (event.clientY - rect.top  - 10) + 'px');
+          })
+          .on('mouseout', function () { tooltip.classed('org-tooltip--visible', false); });
+        }
+
         if (!stacked) {
           // ── Normal layout: root at bottom, shareholders fanning upward ──
           d3.tree().nodeSize([nodeW + H_GAP, NODE_H + V_GAP])(root);
@@ -251,6 +280,7 @@ block scripts
               nG.append('rect').attr('x', -nodeW / 2).attr('y', -NODE_H / 2).attr('width', nodeW).attr('height', NODE_H).attr('rx', 6);
               nG.append('text').attr('text-anchor', 'middle').attr('dy', '0.35em')
                 .text(t.name.length > maxChars ? t.name.slice(0, maxChars - 1) + '\u2026' : t.name);
+              attachHover(nG, t.geschaeftsfuehrer, t.vorstand);
             });
           }
 
@@ -278,6 +308,7 @@ block scripts
               cgG.append('rect').attr('x', -nodeW / 2).attr('y', -NODE_H / 2).attr('width', nodeW).attr('height', NODE_H).attr('rx', 6);
               cgG.append('text').attr('text-anchor', 'middle').attr('dy', '0.35em')
                 .text(cg.name.length > maxChars ? cg.name.slice(0, maxChars - 1) + '\u2026' : cg.name);
+              attachHover(cgG, cg.geschaeftsfuehrer, cg.vorstand);
             });
           });
 
@@ -299,6 +330,7 @@ block scripts
                 nG.append('rect').attr('x', -nodeW / 2).attr('y', -NODE_H / 2).attr('width', nodeW).attr('height', NODE_H).attr('rx', 6);
                 nG.append('text').attr('text-anchor', 'middle').attr('dy', '0.35em')
                   .text(s.name.length > maxChars ? s.name.slice(0, maxChars - 1) + '\u2026' : s.name);
+                attachHover(nG, s.geschaeftsfuehrer, s.vorstand);
               });
             });
 
@@ -306,7 +338,9 @@ block scripts
             svg.attr('width', maxExtraX + offsetX + PAD);
           }
 
-          svg.call(d3.zoom().scaleExtent([0.25, 4])
+          svg.call(d3.zoom()
+            .filter(function (event) { return event.type === 'wheel' ? event.ctrlKey : true; })
+            .scaleExtent([0.25, 4])
             .on('zoom', function (event) { zoomG.attr('transform', event.transform); }));
 
         } else {
@@ -336,7 +370,9 @@ block scripts
 
           drawNodes(g, nodes, gx, gy, STD_W, tooltip);
 
-          svg.call(d3.zoom().scaleExtent([0.25, 4])
+          svg.call(d3.zoom()
+            .filter(function (event) { return event.type === 'wheel' ? event.ctrlKey : true; })
+            .scaleExtent([0.25, 4])
             .on('zoom', function (event) { zoomG.attr('transform', event.transform); }));
         }
 
@@ -366,21 +402,9 @@ block scripts
             return d.data.type === 'firma' && (
               (d.data.geschaeftsfuehrer && d.data.geschaeftsfuehrer.length > 0) ||
               (d.data.vorstand && d.data.vorstand.length > 0));
-          })
-            .on('mouseover', function (event, d) {
-              var parts = [];
-              if (d.data.geschaeftsfuehrer && d.data.geschaeftsfuehrer.length > 0)
-                parts.push('<strong>Gesch\u00e4ftsf\u00fchrung</strong><br>' + d.data.geschaeftsfuehrer.join('<br>'));
-              if (d.data.vorstand && d.data.vorstand.length > 0)
-                parts.push('<strong>Vorstand</strong><br>' + d.data.vorstand.join('<br>'));
-              tooltip.html(parts.join('<br><br>')).classed('org-tooltip--visible', true);
-            })
-            .on('mousemove', function (event) {
-              var rect = container.getBoundingClientRect();
-              tooltip.style('left', (event.clientX - rect.left + 14) + 'px')
-                     .style('top',  (event.clientY - rect.top  - 10) + 'px');
-            })
-            .on('mouseout', function () { tooltip.classed('org-tooltip--visible', false); });
+          }).each(function (d) {
+            attachHover(d3.select(this), d.data.geschaeftsfuehrer, d.data.vorstand);
+          });
 
           // Click: navigate
           node.filter(function (d) { return d.data.type === 'firma' && d.data.fnr && d.data.fnr !== fnr; })

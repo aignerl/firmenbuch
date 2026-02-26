@@ -15,7 +15,12 @@
         "quelle": "EVI"
       }
     ],
-    "cachedAt": "2026-02-26T10:39:54.338Z"
+    "geschaeftsfuehrer": [
+      "Dipl.Ing. Helwig Überacker",
+      "Dipl.-Ing. Nicola Kofler"
+    ],
+    "vorstand": [],
+    "cachedAt": "2026-02-26T17:36:55.907Z"
   },
   "139569z": {
     "name": "EVN Naturkraft GmbH",
@@ -27,12 +32,23 @@
         "quelle": "EVI"
       }
     ],
-    "cachedAt": "2026-02-26T14:26:18.829Z"
+    "geschaeftsfuehrer": [
+      "Dipl.Ing. Helwig Überacker",
+      "Dipl.-Ing. Dr. Gerhard Kampichler"
+    ],
+    "vorstand": [],
+    "cachedAt": "2026-02-26T17:36:56.315Z"
   },
   "72000h": {
     "name": "EVN AG",
     "gesellschafter": [],
-    "cachedAt": "2026-02-26T14:26:19.797Z"
+    "geschaeftsfuehrer": [],
+    "vorstand": [
+      "Mag. Stefan Szyszkowitz",
+      "Dipl.-Ing. Stefan Stallinger, MBA",
+      "Mag. (FH) Alexandra Wittmann"
+    ],
+    "cachedAt": "2026-02-26T17:36:57.159Z"
   },
   "215854h": {
     "name": "WIEN ENERGIE GmbH",
@@ -44,7 +60,12 @@
         "quelle": "EVI"
       }
     ],
-    "cachedAt": "2026-02-26T14:27:44.183Z"
+    "geschaeftsfuehrer": [
+      "Dipl.Ing. Karl Gruber",
+      "Mag. Alma Kahler"
+    ],
+    "vorstand": [],
+    "cachedAt": "2026-02-26T17:40:37.535Z"
   },
   "127783t": {
     "name": "WIENER STADTWERKE GmbH",
@@ -55,7 +76,13 @@
         "quelle": "EVI"
       }
     ],
-    "cachedAt": "2026-02-26T14:27:44.611Z"
+    "geschaeftsfuehrer": [
+      "Mag. Roman Fuchs",
+      "Dipl. Ing. Peter Weinelt",
+      "KommR. Mag.ª Monika Unterholzner"
+    ],
+    "vorstand": [],
+    "cachedAt": "2026-02-26T17:40:37.986Z"
   },
   "174300z": {
     "name": "WIENER NETZE GmbH",
@@ -73,7 +100,13 @@
         "quelle": "EVI"
       }
     ],
-    "cachedAt": "2026-02-26T10:30:35.287Z"
+    "geschaeftsfuehrer": [
+      "Dipl.Ing. Gerhard Fida",
+      "Ilse Hirt",
+      "Dipl.Ing.Dr. Thomas Angerer"
+    ],
+    "vorstand": [],
+    "cachedAt": "2026-02-26T17:37:55.023Z"
   },
   "174296v": {
     "name": "WIENER LINIEN GmbH",
@@ -85,7 +118,13 @@
         "quelle": "EVI"
       }
     ],
-    "cachedAt": "2026-02-26T10:29:26.800Z"
+    "geschaeftsfuehrer": [
+      "MMag. Petra Hums",
+      "Mag. Alexandra Reinagl",
+      "Dipl.-Ing. Mag. Gudrun Senk"
+    ],
+    "vorstand": [],
+    "cachedAt": "2026-02-26T17:37:44.876Z"
   },
   "303825b": {
     "name": "WIENER STADTWERKE Vermögensverwaltung",
@@ -97,7 +136,11 @@
         "quelle": "EVI"
       }
     ],
-    "cachedAt": "2026-02-26T10:30:35.777Z"
+    "geschaeftsfuehrer": [
+      "Dr. Norbert Pannagl"
+    ],
+    "vorstand": [],
+    "cachedAt": "2026-02-26T17:37:55.768Z"
   },
   "137127h": {
     "name": "Merten Maschinenbau u. Vertriebs GmbH",
@@ -109,7 +152,7 @@
         "quelle": "EVI"
       }
     ],
-    "cachedAt": "2026-02-26T10:40:07.551Z"
+    "cachedAt": "2026-02-26T17:29:30.614Z"
   },
   "65773a": {
     "name": "Peter MERTEN Gesellschaft m.b.H.",
@@ -130,7 +173,7 @@
         "quelle": "EVI"
       }
     ],
-    "cachedAt": "2026-02-26T15:15:28.120Z"
+    "cachedAt": "2026-02-26T17:29:51.960Z"
   },
   "607421t": {
     "name": "Merten Präzisionstechnik GmbH",
@@ -142,7 +185,7 @@
         "quelle": "EVI"
       }
     ],
-    "cachedAt": "2026-02-26T15:15:27.963Z"
+    "cachedAt": "2026-02-26T17:29:51.710Z"
   },
   "627276s": {
     "name": "Neuro Dynamics e.U.",
@@ -197,5 +240,60 @@
     "name": "Post 101 Beteiligungs GmbH",
     "gesellschafter": [],
     "cachedAt": "2026-02-26T15:20:25.578Z"
+  },
+  "312731z": {
+    "name": "A. Ö. Krankenhaus des Deutschen Ordens",
+    "gesellschafter": [
+      {
+        "name": "DOKH Unterstützungs- und Fördergesellschaft mbH",
+        "fnr": "416148h",
+        "fkentext": "GESELLSCHAFTER/IN",
+        "quelle": "EVI"
+      },
+      {
+        "name": "MMag. Bernhard Tschrepitsch",
+        "fkentext": "GESELLSCHAFTER/IN",
+        "quelle": "EVI"
+      },
+      {
+        "name": "Dipl.-Ing. Dr. Heinz G. Paar",
+        "fkentext": "GESELLSCHAFTER/IN",
+        "quelle": "EVI"
+      }
+    ],
+    "cachedAt": "2026-02-26T17:30:03.529Z"
+  },
+  "416148h": {
+    "name": "DOKH Unterstützungs- und Förder-",
+    "gesellschafter": [
+      {
+        "name": "MMag. Bernhard Tschrepitsch",
+        "fkentext": "GESELLSCHAFTER/IN",
+        "quelle": "EVI"
+      },
+      {
+        "name": "I.P.M. Consulting GmbH Nfg. KG",
+        "fnr": "296215k",
+        "fkentext": "GESELLSCHAFTER/IN",
+        "quelle": "EVI"
+      },
+      {
+        "name": "Wolfgang Müller, MAS",
+        "fkentext": "GESELLSCHAFTER/IN",
+        "quelle": "EVI"
+      }
+    ],
+    "cachedAt": "2026-02-26T17:30:03.858Z"
+  },
+  "296215k": {
+    "name": "I.P.M. Consulting GmbH Nfg. KG",
+    "gesellschafter": [
+      {
+        "name": "DI Dr. Heinz Paar",
+        "fkentext": "GESELLSCHAFTER/IN",
+        "quelle": "EVI"
+      }
+    ],
+    "cachedAt": "2026-02-26T17:30:04.118Z"
   }
 }

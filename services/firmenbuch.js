@@ -16,13 +16,13 @@ function loadGsCache() {
   return _gsCache;
 }
 
-function persistToCache(fnr, name, gesellschafter) {
+function persistToCache(fnr, name, gesellschafter, geschaeftsfuehrer, vorstand) {
   // Always read fresh from disk before writing to avoid overwriting entries
   // added by other processes (e.g. parallel node commands or future workers)
   let onDisk = {};
   try { onDisk = JSON.parse(fs.readFileSync(GS_CACHE_FILE, 'utf8')); } catch (e) {}
   const merged = Object.assign(onDisk, _gsCache || {});
-  merged[fnr] = { name, gesellschafter, cachedAt: new Date().toISOString() };
+  merged[fnr] = { name, gesellschafter, geschaeftsfuehrer: geschaeftsfuehrer || [], vorstand: vorstand || [], cachedAt: new Date().toISOString() };
   _gsCache = merged;
   try { fs.writeFileSync(GS_CACHE_FILE, JSON.stringify(merged, null, 2), 'utf8'); }
   catch (e) { /* ignore write errors */ }
@@ -37,8 +37,12 @@ function getTochtergesellschaften(fnr) {
       // Include co-Gesellschafter (other owners besides the querying company)
       const coGs = entry.gesellschafter
         .filter(g => g.fnr && g.fnr.replace(/ /g, '') !== fnr)
-        .map(g => ({ fnr: g.fnr.replace(/ /g, ''), name: g.name }));
-      tochter.push({ fnr: compFnr, name: entry.name || compFnr, coGesellschafter: coGs });
+        .map(g => {
+          const coFnr = g.fnr.replace(/ /g, '');
+          const coEntry = cache[coFnr] || {};
+          return { fnr: coFnr, name: g.name, geschaeftsfuehrer: coEntry.geschaeftsfuehrer || [], vorstand: coEntry.vorstand || [] };
+        });
+      tochter.push({ fnr: compFnr, name: entry.name || compFnr, coGesellschafter: coGs, geschaeftsfuehrer: entry.geschaeftsfuehrer || [], vorstand: entry.vorstand || [] });
     }
   }
   return tochter;
@@ -296,7 +300,7 @@ async function getOwnershipTree(rootFnr) {
     }
 
     // Persist name + EVI Gesellschafter to file cache
-    persistToCache(normFnr, name, eviGesellschafter);
+    persistToCache(normFnr, name, eviGesellschafter, geschaeftsfuehrer, vorstand);
 
     // Build children from EVI Gesellschafter
     const children = [];
