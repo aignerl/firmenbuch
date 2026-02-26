@@ -176,6 +176,48 @@ button:hover,
   text-decoration: none;
 }
 
+/* ── Floating back button ─────────────────────────────────────── */
+.back-fab {
+  position: fixed;
+  bottom: 28px;
+  left: 28px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--md-primary);
+  color: var(--md-on-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--md-shadow-2);
+  text-decoration: none;
+  transition: background .15s, box-shadow .15s, transform .15s;
+  z-index: 200;
+}
+.back-fab:hover {
+  background: var(--md-primary-dark);
+  box-shadow: 0 4px 12px rgba(60,64,67,.4);
+  transform: scale(1.08);
+  text-decoration: none;
+}
+.back-fab::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: calc(100% + 12px);
+  top: 50%;
+  transform: translateY(-50%);
+  background: #202124;
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: .78rem;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .15s;
+}
+.back-fab:hover::after { opacity: 1; }
+
 /* ── Tables ───────────────────────────────────────────────────── */
 table {
   width: 100%;
@@ -249,17 +291,6 @@ td, th {
   padding: 12px 16px;
   margin-bottom: 20px;
   font-size: .9375rem;
-}
-
-/* ── Breadcrumb / back link ───────────────────────────────────── */
-.back-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  color: var(--md-primary);
-  font-size: .875rem;
-  font-weight: 500;
-  margin-top: 8px;
 }
 
 /* ── Address block ────────────────────────────────────────────── */
