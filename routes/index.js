@@ -1,7 +1,7 @@
 'use strict';
 var express = require('express');
 var router = express.Router();
-var { sucheFirma, getAuszug, sucheUrkunde, getUrkunde, scrapeEviGesellschafter } = require('../services/firmenbuch');
+var { sucheFirma, getAuszug, sucheUrkunde, getUrkunde, scrapeEviGesellschafter, getOwnershipTree } = require('../services/firmenbuch');
 
 function toArr(v) {
   if (!v) return [];
@@ -146,6 +146,7 @@ router.get('/firma/:fnr/urkunden', async function (req, res) {
     res.render('error');
   }
 });
+
 
 router.get('/urkunde/download', async function (req, res) {
   const { key } = req.query;

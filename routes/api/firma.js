@@ -1,7 +1,7 @@
 'use strict';
 const express = require('express');
 const router = express.Router();
-const { sucheFirma, getAuszug, sucheUrkunde } = require('../../services/firmenbuch');
+const { sucheFirma, getAuszug, sucheUrkunde, getOwnershipTree } = require('../../services/firmenbuch');
 
 router.get('/suchen', async (req, res) => {
   const { name, exakt, suchbereich, gericht, rechtsform, nurAktiv } = req.query;
@@ -43,6 +43,15 @@ router.get('/:fnr/urkunden', async (req, res) => {
   try {
     const ergebnisse = await sucheUrkunde({ fnr });
     res.json(ergebnisse);
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
+});
+
+router.get('/:fnr/baum', async (req, res) => {
+  try {
+    const tree = await getOwnershipTree(req.params.fnr);
+    res.json(tree);
   } catch (err) {
     res.status(502).json({ error: err.message });
   }

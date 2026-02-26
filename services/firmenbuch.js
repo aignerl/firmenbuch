@@ -179,4 +179,102 @@ async function scrapeEviGesellschafter({ fnr }) {
   return result;
 }
 
-module.exports = { sucheFirma, getAuszug, sucheUrkunde, getUrkunde, scrapeEviGesellschafter };
+async function getOwnershipTree(rootFnr) {
+  function toArr(v) {
+    if (!v) return [];
+    return Array.isArray(v) ? v : [v];
+  }
+
+  const auszugCache = {};
+  const eviCache = {};
+  const visited = new Set();
+
+  async function getAuszugCached(fnr) {
+    const key = fnr.replace(/ /g, '');
+    if (!auszugCache[key]) {
+      auszugCache[key] = getAuszug({ fnr, umfang: 'Kurzinformation' }).catch(() => null);
+    }
+    return auszugCache[key];
+  }
+
+  async function getEviCached(fnr) {
+    const key = fnr.replace(/ /g, '');
+    if (!eviCache[key]) {
+      eviCache[key] = scrapeEviGesellschafter({ fnr }).catch(() => []);
+    }
+    return eviCache[key];
+  }
+
+  async function buildNode(fnr) {
+    const normFnr = fnr.replace(/ /g, '');
+    if (visited.has(normFnr)) return null;
+    visited.add(normFnr);
+
+    // Fetch SOAP and EVI data in parallel
+    const [auszug, eviGesellschafter] = await Promise.all([
+      getAuszugCached(normFnr),
+      getEviCached(normFnr),
+    ]);
+
+    // Extract firm name from SOAP
+    let name = normFnr;
+    let geschaeftsfuehrer = [];
+
+    if (auszug) {
+      const firma = auszug['FIRMA'] || {};
+      const namen = toArr(firma['FI_DKZ02'])
+        .flatMap((d) => toArr(d['BEZEICHNUNG']))
+        .filter(Boolean);
+      if (namen[0]) name = namen[0];
+
+      // Build person map for Geschäftsführer from SOAP
+      const perMap = {};
+      toArr(auszug['PER']).forEach((p) => {
+        const pnr = ((p['$'] && p['$']['PNR']) || '').trim();
+        if (!pnr) return;
+        const dkz02 = toArr(p['PE_DKZ02'])[0];
+        let personName = '';
+        if (dkz02) {
+          const nameFormatiert = toArr(dkz02['NAME_FORMATIERT']).filter(Boolean).join(' ');
+          const parts = [dkz02['TITELVOR'], dkz02['VORNAME'], dkz02['NACHNAME'], dkz02['TITELNACH']].filter(Boolean).join(' ');
+          const bezeichnung = toArr(dkz02['BEZEICHNUNG']).join(', ');
+          personName = nameFormatiert || parts || bezeichnung || '';
+        }
+        perMap[pnr] = personName;
+      });
+
+      toArr(auszug['FUN']).forEach((f) => {
+        const a = f['$'] || {};
+        if ((a['FKEN'] || '').trim() === 'GF') {
+          const name = perMap[(a['PNR'] || '').trim()];
+          if (name && !geschaeftsfuehrer.includes(name)) geschaeftsfuehrer.push(name);
+        }
+      });
+    }
+
+    // Build children from EVI Gesellschafter
+    const children = [];
+    for (const g of eviGesellschafter) {
+      if (g.fnr) {
+        const childFnr = g.fnr.replace(/ /g, '');
+        const child = await buildNode(childFnr);
+        if (child) children.push(child);
+      } else {
+        children.push({
+          id: 'person:' + g.name + ':' + normFnr,
+          name: g.name || '(unbekannt)',
+          fnr: null,
+          type: 'person',
+          children: [],
+          geschaeftsfuehrer: [],
+        });
+      }
+    }
+
+    return { id: normFnr, name, fnr: normFnr, type: 'firma', children, geschaeftsfuehrer };
+  }
+
+  return buildNode(rootFnr);
+}
+
+module.exports = { sucheFirma, getAuszug, sucheUrkunde, getUrkunde, scrapeEviGesellschafter, getOwnershipTree };

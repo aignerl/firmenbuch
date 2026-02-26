@@ -84,6 +84,9 @@ block content
                 td
                   a.btn(href=`/urkunde/download?key=${encodeURIComponent(u.key)}` target="_blank") Öffnen
 
+    h2 Organigramm
+    div#org-chart.org-chart
+
   a.back-link(href="/") ← Neue Suche
 
   script.
@@ -147,5 +150,129 @@ block content
           h += rows[i].offsetHeight;
         }
         wrapper.style.maxHeight = h + 'px';
+      }
+    })();
+
+block scripts
+  script(src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js")
+  script.
+    (function () {
+      var fnr = !{JSON.stringify(firma ? firma.fnr.replace(/ /g, '') : '')};
+      var container = document.getElementById('org-chart');
+      if (!container || !fnr) return;
+
+      container.innerHTML = '<p class="org-loading">Lade Organigramm\u2026</p>';
+
+      fetch('/api/firma/' + encodeURIComponent(fnr) + '/baum')
+        .then(function (r) { return r.json(); })
+        .then(function (data) { renderTree(data); })
+        .catch(function () {
+          container.innerHTML = '<p class="org-error">Organigramm konnte nicht geladen werden.</p>';
+        });
+
+      function renderTree(data) {
+        container.innerHTML = '';
+
+        var NODE_W = 190, NODE_H = 44, H_GAP = 30, V_GAP = 70;
+
+        var root = d3.hierarchy(data);
+        d3.tree().nodeSize([NODE_W + H_GAP, NODE_H + V_GAP])(root);
+
+        // Flip vertically: root at bottom, shareholders going up
+        root.each(function (d) { d.y = -d.y; });
+
+        var nodes = root.descendants();
+        var xs = nodes.map(function (d) { return d.x; });
+        var ys = nodes.map(function (d) { return d.y; });
+        var minX = Math.min.apply(null, xs);
+        var maxX = Math.max.apply(null, xs);
+        var minY = Math.min.apply(null, ys);
+        var maxY = Math.max.apply(null, ys);
+
+        var pad = 16;
+        var svgW = Math.max(maxX - minX + NODE_W + pad * 2, container.offsetWidth);
+        var svgH = maxY - minY + NODE_H + pad * 2;
+        var offsetX = -minX + (svgW - (maxX - minX + NODE_W)) / 2;
+        var offsetY = -minY + pad;
+
+        var svg = d3.select(container).append('svg')
+          .attr('width', svgW)
+          .attr('height', svgH);
+
+        var g = svg.append('g')
+          .attr('transform', 'translate(' + offsetX + ',' + offsetY + ')');
+
+        // Links
+        g.selectAll('.org-link')
+          .data(root.links())
+          .join('path')
+          .attr('class', 'org-link')
+          .attr('d', function (d) {
+            return d3.linkVertical()
+              .x(function (n) { return n.x; })
+              .y(function (n) { return n.y; })(d);
+          });
+
+        // Tooltip
+        var tooltip = d3.select(container).append('div')
+          .attr('class', 'org-tooltip');
+
+        // Node groups
+        var node = g.selectAll('.org-node')
+          .data(nodes)
+          .join('g')
+          .attr('class', function (d) {
+            var cls = 'org-node org-node--' + d.data.type;
+            if (d.data.fnr === fnr) cls += ' org-node--current';
+            return cls;
+          })
+          .attr('transform', function (d) {
+            return 'translate(' + d.x + ',' + d.y + ')';
+          });
+
+        // Box
+        node.append('rect')
+          .attr('x', -NODE_W / 2)
+          .attr('y', -NODE_H / 2)
+          .attr('width', NODE_W)
+          .attr('height', NODE_H)
+          .attr('rx', 6);
+
+        // Label
+        node.append('text')
+          .attr('text-anchor', 'middle')
+          .attr('dy', '0.35em')
+          .text(function (d) {
+            var n = d.data.name;
+            return n.length > 26 ? n.slice(0, 25) + '\u2026' : n;
+          });
+
+        // Hover: show Geschäftsführer
+        node.filter(function (d) {
+          return d.data.type === 'firma' && d.data.geschaeftsfuehrer && d.data.geschaeftsfuehrer.length > 0;
+        })
+          .on('mouseover', function (event, d) {
+            tooltip
+              .html('<strong>Gesch\u00e4ftsf\u00fchrung</strong><br>' + d.data.geschaeftsfuehrer.join('<br>'))
+              .classed('org-tooltip--visible', true);
+          })
+          .on('mousemove', function (event) {
+            var rect = container.getBoundingClientRect();
+            tooltip
+              .style('left', (event.clientX - rect.left + 14) + 'px')
+              .style('top', (event.clientY - rect.top - 10) + 'px');
+          })
+          .on('mouseout', function () {
+            tooltip.classed('org-tooltip--visible', false);
+          });
+
+        // Click: navigate to other firm pages
+        node.filter(function (d) {
+          return d.data.type === 'firma' && d.data.fnr && d.data.fnr !== fnr;
+        })
+          .style('cursor', 'pointer')
+          .on('click', function (event, d) {
+            window.location = '/firma/' + d.data.fnr;
+          });
       }
     })();

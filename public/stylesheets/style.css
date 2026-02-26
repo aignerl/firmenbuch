@@ -347,6 +347,78 @@ small { color: var(--md-secondary-text); font-size: .8125rem; }
 tbody tr.row-link { cursor: pointer; }
 tbody tr.row-link:hover { background: var(--md-primary-light); }
 
+/* ── Organigramm ──────────────────────────────────────────────── */
+.org-chart {
+  overflow-x: auto;
+  background: var(--md-surface);
+  border-radius: var(--radius);
+  box-shadow: var(--md-shadow-1);
+  padding: 8px;
+  margin-bottom: 24px;
+  min-height: 80px;
+}
+
+.org-loading, .org-error {
+  padding: 24px;
+  color: var(--md-secondary-text);
+  font-size: .9375rem;
+}
+
+.org-svg { display: block; }
+
+.org-link {
+  fill: none;
+  stroke: var(--md-divider);
+  stroke-width: 1.5px;
+}
+
+/* Firma node */
+.org-node--firma rect {
+  fill: var(--md-primary-light);
+  stroke: var(--md-primary);
+  stroke-width: 1px;
+}
+.org-node--firma text {
+  fill: var(--md-primary);
+  font-size: .8rem;
+  font-weight: 500;
+}
+
+/* Current firm: subtle border highlight */
+.org-node--current rect {
+  stroke: var(--md-primary);
+  stroke-width: 2.5px;
+  fill: var(--md-primary-light);
+}
+
+/* Person node (leaf / Kopfbahnhof) */
+.org-node--person rect {
+  fill: #f1f3f4;
+  stroke: var(--md-divider);
+  stroke-width: 1px;
+}
+.org-node--person text {
+  fill: var(--md-secondary-text);
+  font-size: .78rem;
+}
+
+/* Hover tooltip */
+.org-tooltip {
+  position: absolute;
+  background: #202124;
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: .8rem;
+  line-height: 1.6;
+  pointer-events: none;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity .12s;
+  z-index: 30;
+}
+.org-tooltip--visible { opacity: 1; }
+
 /* ── Responsive ───────────────────────────────────────────────── */
 @media (max-width: 600px) {
   .container { padding: 0 16px; margin-top: 16px; }
