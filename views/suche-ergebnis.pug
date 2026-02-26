@@ -16,7 +16,7 @@ block content
           th Status
       tbody
         each e in ergebnisse
-          tr
+          tr.row-link(onclick=`window.location='/firma/${e.fnr}'`)
             td
               a(href=`/firma/${e.fnr}`)= e.fnr
             td= e.name

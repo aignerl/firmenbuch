@@ -69,7 +69,7 @@ block content
               th
           tbody
             each u in urkunden
-              tr
+              tr.row-link(onclick="if(!event.target.closest('a'))this.querySelector('a.btn').click()")
                 td(data-sort=u.datumSort)= u.stichtag || u.dokumentendatum || '—'
                 td
                   | #{u.dokumentart || '—'}
