@@ -15,7 +15,7 @@
         "quelle": "EVI"
       }
     ],
-    "cachedAt": "2026-02-26T10:02:41.860Z"
+    "cachedAt": "2026-02-26T10:39:54.338Z"
   },
   "139569z": {
     "name": "EVN Naturkraft GmbH",
@@ -27,12 +27,12 @@
         "quelle": "EVI"
       }
     ],
-    "cachedAt": "2026-02-26T10:02:42.183Z"
+    "cachedAt": "2026-02-26T10:39:54.605Z"
   },
   "72000h": {
     "name": "EVN AG",
     "gesellschafter": [],
-    "cachedAt": "2026-02-26T10:02:42.889Z"
+    "cachedAt": "2026-02-26T10:39:55.250Z"
   },
   "215854h": {
     "name": "WIEN ENERGIE GmbH",
@@ -44,7 +44,7 @@
         "quelle": "EVI"
       }
     ],
-    "cachedAt": "2026-02-26T10:02:43.381Z"
+    "cachedAt": "2026-02-26T10:39:55.731Z"
   },
   "127783t": {
     "name": "WIENER STADTWERKE GmbH",
@@ -55,6 +55,93 @@
         "quelle": "EVI"
       }
     ],
-    "cachedAt": "2026-02-26T10:02:43.710Z"
+    "cachedAt": "2026-02-26T10:39:56.107Z"
+  },
+  "174300z": {
+    "name": "WIENER NETZE GmbH",
+    "gesellschafter": [
+      {
+        "name": "WIENER STADTWERKE GmbH",
+        "fnr": "127783t",
+        "fkentext": "GESELLSCHAFTER/IN",
+        "quelle": "EVI"
+      },
+      {
+        "name": "WIENER STADTWERKE Vermögensverwaltung GmbH",
+        "fnr": "303825b",
+        "fkentext": "GESELLSCHAFTER/IN",
+        "quelle": "EVI"
+      }
+    ],
+    "cachedAt": "2026-02-26T10:30:35.287Z"
+  },
+  "174296v": {
+    "name": "WIENER LINIEN GmbH",
+    "gesellschafter": [
+      {
+        "name": "WIENER STADTWERKE GmbH",
+        "fnr": "127783t",
+        "fkentext": "GESELLSCHAFTER/IN",
+        "quelle": "EVI"
+      }
+    ],
+    "cachedAt": "2026-02-26T10:29:26.800Z"
+  },
+  "303825b": {
+    "name": "WIENER STADTWERKE Vermögensverwaltung",
+    "gesellschafter": [
+      {
+        "name": "WIENER STADTWERKE GmbH",
+        "fnr": "127783t",
+        "fkentext": "GESELLSCHAFTER/IN",
+        "quelle": "EVI"
+      }
+    ],
+    "cachedAt": "2026-02-26T10:30:35.777Z"
+  },
+  "137127h": {
+    "name": "Merten Maschinenbau u. Vertriebs GmbH",
+    "gesellschafter": [
+      {
+        "name": "Peter MERTEN Gesellschaft m.b.H.",
+        "fnr": "65773a",
+        "fkentext": "GESELLSCHAFTER/IN",
+        "quelle": "EVI"
+      }
+    ],
+    "cachedAt": "2026-02-26T10:40:07.551Z"
+  },
+  "65773a": {
+    "name": "Peter MERTEN Gesellschaft m.b.H.",
+    "gesellschafter": [
+      {
+        "name": "Peter Merten",
+        "fkentext": "GESELLSCHAFTER/IN",
+        "quelle": "EVI"
+      },
+      {
+        "name": "Gabriele Merten",
+        "fkentext": "GESELLSCHAFTER/IN",
+        "quelle": "EVI"
+      },
+      {
+        "name": "Ing. Peter Merten",
+        "fkentext": "GESELLSCHAFTER/IN",
+        "quelle": "EVI"
+      }
+    ],
+    "cachedAt": "2026-02-26T10:40:15.818Z"
+  },
+  "607421t": {
+    "name": "Merten Präzisionstechnik GmbH",
+    "gesellschafter": [
+      {
+        "name": "Peter MERTEN Gesellschaft m.b.H.",
+        "fnr": "65773a",
+        "fkentext": "GESELLSCHAFTER/IN",
+        "quelle": "EVI"
+      }
+    ],
+    "cachedAt": "2026-02-26T10:40:15.653Z"
   }
 }

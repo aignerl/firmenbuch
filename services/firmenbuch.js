@@ -17,9 +17,14 @@ function loadGsCache() {
 }
 
 function persistToCache(fnr, name, gesellschafter) {
-  const cache = loadGsCache();
-  cache[fnr] = { name, gesellschafter, cachedAt: new Date().toISOString() };
-  try { fs.writeFileSync(GS_CACHE_FILE, JSON.stringify(cache, null, 2), 'utf8'); }
+  // Always read fresh from disk before writing to avoid overwriting entries
+  // added by other processes (e.g. parallel node commands or future workers)
+  let onDisk = {};
+  try { onDisk = JSON.parse(fs.readFileSync(GS_CACHE_FILE, 'utf8')); } catch (e) {}
+  const merged = Object.assign(onDisk, _gsCache || {});
+  merged[fnr] = { name, gesellschafter, cachedAt: new Date().toISOString() };
+  _gsCache = merged;
+  try { fs.writeFileSync(GS_CACHE_FILE, JSON.stringify(merged, null, 2), 'utf8'); }
   catch (e) { /* ignore write errors */ }
 }
 
@@ -29,7 +34,11 @@ function getTochtergesellschaften(fnr) {
   for (const [compFnr, entry] of Object.entries(cache)) {
     if (compFnr === fnr || !Array.isArray(entry.gesellschafter)) continue;
     if (entry.gesellschafter.some(g => g.fnr && g.fnr.replace(/ /g, '') === fnr)) {
-      tochter.push({ fnr: compFnr, name: entry.name || compFnr });
+      // Include co-Gesellschafter (other owners besides the querying company)
+      const coGs = entry.gesellschafter
+        .filter(g => g.fnr && g.fnr.replace(/ /g, '') !== fnr)
+        .map(g => ({ fnr: g.fnr.replace(/ /g, ''), name: g.name }));
+      tochter.push({ fnr: compFnr, name: entry.name || compFnr, coGesellschafter: coGs });
     }
   }
   return tochter;

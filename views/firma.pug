@@ -225,38 +225,82 @@ block scripts
             function (d) { return d.y; },
             nodeW, tooltip);
 
-          // ── Tochtergesellschaften (from cache) below root ──
-          var tochter = data.tochter || [];
-          if (tochter.length > 0) {
-            var subW = nodeW;
-            var neededSubW = tochter.length * (subW + H_GAP) - H_GAP;
-            if (neededSubW > containerW) {
-              subW = Math.max(MIN_W, Math.floor((containerW + H_GAP) / tochter.length) - H_GAP);
-            }
-            var subY = NODE_H + V_GAP; // center y below root (root center = 0)
-            var totalSubW = tochter.length * (subW + H_GAP) - H_GAP;
-            var subStartX = root.x - totalSubW / 2;
-            var subLink = d3.linkVertical().x(function (n) { return n.x; }).y(function (n) { return n.y; });
-            svg.attr('height', svgH + V_GAP + NODE_H);
-            var maxCharsT = Math.max(8, Math.floor(subW / 7.5));
+          // ── Extra nodes: Töchter of root (below) + sisters of tree nodes (right) ──
+          var extraLink = d3.linkVertical().x(function (n) { return n.x; }).y(function (n) { return n.y; });
 
+          // Track which FNRs are already rendered to avoid duplicates
+          var rendered = new Set();
+          nodes.forEach(function (d) { if (d.data.fnr) rendered.add(d.data.fnr); });
+
+          // nextSisterX / maxSisterX are shared by both Tochter co-owners and sister blocks
+          var treeMaxX = Math.max.apply(null, nodes.map(function (d) { return d.x; })) + nodeW / 2;
+          var nextSisterX = treeMaxX + H_GAP;
+          var maxSisterX = treeMaxX;
+
+          // Root's own Töchter → centered below root
+          var tochter = (data.tochter || []).filter(function (t) { return t.fnr && !rendered.has(t.fnr); });
+          if (tochter.length > 0) {
+            svg.attr('height', svgH + V_GAP + NODE_H);
+            var subY = NODE_H + V_GAP;
+            var totalSubW = tochter.length * (nodeW + H_GAP) - H_GAP;
+            var subStartX = root.x - totalSubW / 2;
             tochter.forEach(function (t, i) {
-              var tx = subStartX + i * (subW + H_GAP) + subW / 2;
+              rendered.add(t.fnr);
+              var tx = subStartX + i * (nodeW + H_GAP) + nodeW / 2;
               g.append('path').attr('class', 'org-link')
-                .attr('d', subLink({ source: { x: root.x, y: NODE_H / 2 }, target: { x: tx, y: subY - NODE_H / 2 } }));
-              var nodeG = g.append('g')
-                .attr('class', 'org-node org-node--firma org-node--tochter')
+                .attr('d', extraLink({ source: { x: root.x, y: NODE_H / 2 }, target: { x: tx, y: subY - NODE_H / 2 } }));
+              var nG = g.append('g').attr('class', 'org-node org-node--firma')
                 .attr('transform', 'translate(' + tx + ',' + subY + ')');
-              if (t.fnr) {
-                nodeG.style('cursor', 'pointer')
-                  .on('click', function () { window.location = '/firma/' + t.fnr; });
-              }
-              nodeG.append('rect')
-                .attr('x', -subW / 2).attr('y', -NODE_H / 2)
-                .attr('width', subW).attr('height', NODE_H).attr('rx', 6);
-              nodeG.append('text').attr('text-anchor', 'middle').attr('dy', '0.35em')
-                .text(t.name.length > maxCharsT ? t.name.slice(0, maxCharsT - 1) + '\u2026' : t.name);
+              nG.style('cursor', 'pointer').on('click', function () { window.location = '/firma/' + t.fnr; });
+              nG.append('rect').attr('x', -nodeW / 2).attr('y', -NODE_H / 2).attr('width', nodeW).attr('height', NODE_H).attr('rx', 6);
+              nG.append('text').attr('text-anchor', 'middle').attr('dy', '0.35em')
+                .text(t.name.length > maxChars ? t.name.slice(0, maxChars - 1) + '\u2026' : t.name);
+
+              // Co-Gesellschafter of this Tochter (other owners besides root)
+              (t.coGesellschafter || []).forEach(function (cg) {
+                if (rendered.has(cg.fnr)) return;
+                rendered.add(cg.fnr);
+                var cgx = nextSisterX + nodeW / 2;
+                nextSisterX += nodeW + H_GAP;
+                maxSisterX = Math.max(maxSisterX, cgx + nodeW / 2);
+                // Link from co-owner (at root Y level) down to Tochter node
+                g.append('path').attr('class', 'org-link')
+                  .attr('d', extraLink({ source: { x: cgx, y: NODE_H / 2 }, target: { x: tx, y: subY - NODE_H / 2 } }));
+                var cgG = g.append('g').attr('class', 'org-node org-node--firma')
+                  .attr('transform', 'translate(' + cgx + ',0)');
+                cgG.style('cursor', 'pointer').on('click', function () { window.location = '/firma/' + cg.fnr; });
+                cgG.append('rect').attr('x', -nodeW / 2).attr('y', -NODE_H / 2).attr('width', nodeW).attr('height', NODE_H).attr('rx', 6);
+                cgG.append('text').attr('text-anchor', 'middle').attr('dy', '0.35em')
+                  .text(cg.name.length > maxChars ? cg.name.slice(0, maxChars - 1) + '\u2026' : cg.name);
+              });
             });
+          }
+
+          // Gesellschafter nodes' other Töchter → sisters, placed to the right of the tree
+
+          nodes.filter(function (d) { return d.depth > 0 && d.data.type === 'firma'; })
+            .forEach(function (d) {
+              var sisters = (d.data.tochter || []).filter(function (t) { return t.fnr && !rendered.has(t.fnr); });
+              if (!sisters.length) return;
+              var sibY = d.y + NODE_H + V_GAP; // same Y as d's direct child in main tree
+              sisters.forEach(function (s) {
+                rendered.add(s.fnr);
+                var tx = nextSisterX + nodeW / 2;
+                nextSisterX += nodeW + H_GAP;
+                maxSisterX = Math.max(maxSisterX, tx + nodeW / 2);
+                g.append('path').attr('class', 'org-link')
+                  .attr('d', extraLink({ source: { x: d.x, y: d.y + NODE_H / 2 }, target: { x: tx, y: sibY - NODE_H / 2 } }));
+                var nG = g.append('g').attr('class', 'org-node org-node--firma')
+                  .attr('transform', 'translate(' + tx + ',' + sibY + ')');
+                nG.style('cursor', 'pointer').on('click', function () { window.location = '/firma/' + s.fnr; });
+                nG.append('rect').attr('x', -nodeW / 2).attr('y', -NODE_H / 2).attr('width', nodeW).attr('height', NODE_H).attr('rx', 6);
+                nG.append('text').attr('text-anchor', 'middle').attr('dy', '0.35em')
+                  .text(s.name.length > maxChars ? s.name.slice(0, maxChars - 1) + '\u2026' : s.name);
+              });
+            });
+
+          if (maxSisterX + offsetX + PAD > svgW) {
+            svg.attr('width', maxSisterX + offsetX + PAD);
           }
 
         } else {
