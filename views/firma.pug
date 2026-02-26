@@ -56,6 +56,7 @@ block content
                   a.source-badge(href="https://www.evi.gv.at/f/" + firma.fnr.replace(/ /g, '') target="_blank" rel="noopener" onclick="event.stopPropagation()" data-tooltip="Auf evi.gv.at öffnen") EVI
 
     h2 Organigramm
+      span.info-badge(data-tooltip="Zeigt Gesellschafter rekursiv nach oben (Quelle: evi.gv.at). Beteiligungen nach unten (Tochtergesellschaften) sind über die verfügbaren APIs nicht abrufbar und daher nicht dargestellt. Die Daten können unvollständig sein.") ?
     div#org-chart.org-chart
 
     if urkunden && urkunden.length > 0

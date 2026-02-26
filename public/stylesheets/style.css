@@ -305,6 +305,47 @@ td:last-child { white-space: nowrap; width: 1%; }
 
 small { color: var(--md-secondary-text); font-size: .8125rem; }
 
+/* ── Info badge (h2 Erläuterung) ──────────────────────────────── */
+.info-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 8px;
+  width: 18px;
+  height: 18px;
+  font-size: .75rem;
+  font-weight: 700;
+  background: var(--md-divider);
+  color: var(--md-secondary-text);
+  border-radius: 50%;
+  cursor: default;
+  position: relative;
+  vertical-align: middle;
+}
+
+.info-badge::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #202124;
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: .75rem;
+  font-weight: 400;
+  white-space: normal;
+  width: 280px;
+  line-height: 1.5;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .15s;
+  z-index: 20;
+}
+
+.info-badge:hover::after { opacity: 1; }
+
 /* ── EVI source badge + tooltip ───────────────────────────────── */
 .source-badge {
   display: inline-block;
@@ -325,8 +366,7 @@ small { color: var(--md-secondary-text); font-size: .8125rem; }
   content: attr(data-tooltip);
   position: absolute;
   bottom: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%);
+  right: 0;
   background: #202124;
   color: #fff;
   padding: 5px 10px;
