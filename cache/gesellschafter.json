@@ -27,12 +27,12 @@
         "quelle": "EVI"
       }
     ],
-    "cachedAt": "2026-02-26T10:39:54.605Z"
+    "cachedAt": "2026-02-26T14:26:18.829Z"
   },
   "72000h": {
     "name": "EVN AG",
     "gesellschafter": [],
-    "cachedAt": "2026-02-26T10:39:55.250Z"
+    "cachedAt": "2026-02-26T14:26:19.797Z"
   },
   "215854h": {
     "name": "WIEN ENERGIE GmbH",
@@ -44,7 +44,7 @@
         "quelle": "EVI"
       }
     ],
-    "cachedAt": "2026-02-26T10:39:55.731Z"
+    "cachedAt": "2026-02-26T14:27:44.183Z"
   },
   "127783t": {
     "name": "WIENER STADTWERKE GmbH",
@@ -55,7 +55,7 @@
         "quelle": "EVI"
       }
     ],
-    "cachedAt": "2026-02-26T10:39:56.107Z"
+    "cachedAt": "2026-02-26T14:27:44.611Z"
   },
   "174300z": {
     "name": "WIENER NETZE GmbH",
@@ -130,7 +130,7 @@
         "quelle": "EVI"
       }
     ],
-    "cachedAt": "2026-02-26T10:40:15.818Z"
+    "cachedAt": "2026-02-26T15:15:28.120Z"
   },
   "607421t": {
     "name": "Merten Präzisionstechnik GmbH",
@@ -142,6 +142,60 @@
         "quelle": "EVI"
       }
     ],
-    "cachedAt": "2026-02-26T10:40:15.653Z"
+    "cachedAt": "2026-02-26T15:15:27.963Z"
+  },
+  "627276s": {
+    "name": "Neuro Dynamics e.U.",
+    "gesellschafter": [],
+    "cachedAt": "2026-02-26T14:25:24.929Z"
+  },
+  "183718z": {
+    "name": "HR Force EDV-Beratung GmbH",
+    "gesellschafter": [
+      {
+        "name": "Michael Homole",
+        "fkentext": "GESELLSCHAFTER/IN",
+        "quelle": "EVI"
+      },
+      {
+        "name": "Ing. Peter Hawle",
+        "fkentext": "GESELLSCHAFTER/IN",
+        "quelle": "EVI"
+      },
+      {
+        "name": "SCC EDV-Beratung Aktiengesellschaft",
+        "fnr": "161869v",
+        "fkentext": "GESELLSCHAFTER/IN",
+        "quelle": "EVI"
+      }
+    ],
+    "cachedAt": "2026-02-26T15:17:16.398Z"
+  },
+  "161869v": {
+    "name": "SCC EDV-Beratung Aktiengesellschaft",
+    "gesellschafter": [],
+    "cachedAt": "2026-02-26T15:17:16.690Z"
+  },
+  "399613t": {
+    "name": "Post 206 Beteiligungs GmbH",
+    "gesellschafter": [
+      {
+        "name": "Österreichische Post Aktiengesellschaft",
+        "fnr": "180219d",
+        "fkentext": "GESELLSCHAFTER/IN",
+        "quelle": "EVI"
+      }
+    ],
+    "cachedAt": "2026-02-26T15:19:08.569Z"
+  },
+  "180219d": {
+    "name": "Österreichische Post",
+    "gesellschafter": [],
+    "cachedAt": "2026-02-26T15:19:09.401Z"
+  },
+  "369675s": {
+    "name": "Post 101 Beteiligungs GmbH",
+    "gesellschafter": [],
+    "cachedAt": "2026-02-26T15:20:25.578Z"
   }
 }

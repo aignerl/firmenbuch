@@ -395,6 +395,7 @@ tbody tr.row-link:hover { background: var(--md-primary-light); }
   padding: 8px;
   margin-bottom: 24px;
   min-height: 80px;
+  overflow: auto;
 }
 
 .org-loading, .org-error {
