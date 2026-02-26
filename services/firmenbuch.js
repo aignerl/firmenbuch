@@ -219,6 +219,7 @@ async function getOwnershipTree(rootFnr) {
     // Extract firm name from SOAP
     let name = normFnr;
     let geschaeftsfuehrer = [];
+    let vorstand = [];
 
     if (auszug) {
       const firma = auszug['FIRMA'] || {};
@@ -245,10 +246,11 @@ async function getOwnershipTree(rootFnr) {
 
       toArr(auszug['FUN']).forEach((f) => {
         const a = f['$'] || {};
-        if ((a['FKEN'] || '').trim() === 'GF') {
-          const name = perMap[(a['PNR'] || '').trim()];
-          if (name && !geschaeftsfuehrer.includes(name)) geschaeftsfuehrer.push(name);
-        }
+        const fken = (a['FKEN'] || '').trim();
+        const personName = perMap[(a['PNR'] || '').trim()];
+        if (!personName) return;
+        if (fken === 'GF' && !geschaeftsfuehrer.includes(personName)) geschaeftsfuehrer.push(personName);
+        if (fken === 'VM' && !vorstand.includes(personName)) vorstand.push(personName);
       });
     }
 
@@ -271,7 +273,7 @@ async function getOwnershipTree(rootFnr) {
       }
     }
 
-    return { id: normFnr, name, fnr: normFnr, type: 'firma', children, geschaeftsfuehrer };
+    return { id: normFnr, name, fnr: normFnr, type: 'firma', children, geschaeftsfuehrer, vorstand };
   }
 
   return buildNode(rootFnr);

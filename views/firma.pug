@@ -247,13 +247,21 @@ block scripts
             return n.length > 26 ? n.slice(0, 25) + '\u2026' : n;
           });
 
-        // Hover: show Geschäftsführer
+        // Hover: show Geschäftsführer / Vorstand
         node.filter(function (d) {
-          return d.data.type === 'firma' && d.data.geschaeftsfuehrer && d.data.geschaeftsfuehrer.length > 0;
+          return d.data.type === 'firma' && (
+            (d.data.geschaeftsfuehrer && d.data.geschaeftsfuehrer.length > 0) ||
+            (d.data.vorstand && d.data.vorstand.length > 0)
+          );
         })
           .on('mouseover', function (event, d) {
+            var parts = [];
+            if (d.data.geschaeftsfuehrer && d.data.geschaeftsfuehrer.length > 0)
+              parts.push('<strong>Gesch\u00e4ftsf\u00fchrung</strong><br>' + d.data.geschaeftsfuehrer.join('<br>'));
+            if (d.data.vorstand && d.data.vorstand.length > 0)
+              parts.push('<strong>Vorstand</strong><br>' + d.data.vorstand.join('<br>'));
             tooltip
-              .html('<strong>Gesch\u00e4ftsf\u00fchrung</strong><br>' + d.data.geschaeftsfuehrer.join('<br>'))
+              .html(parts.join('<br><br>'))
               .classed('org-tooltip--visible', true);
           })
           .on('mousemove', function (event) {
