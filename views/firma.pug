@@ -211,7 +211,7 @@ block scripts
           var svgW = Math.max(maxX - minX + nodeW + PAD * 2, containerW);
           var svgH = maxY - minY + NODE_H + PAD * 2;
           var offsetX = -minX + (svgW - (maxX - minX + nodeW)) / 2;
-          var offsetY = -minY + PAD;
+          var offsetY = -minY + PAD + NODE_H / 2;
 
           var svg = d3.select(container).append('svg').attr('width', svgW).attr('height', svgH);
           var g = svg.append('g').attr('transform', 'translate(' + offsetX + ',' + offsetY + ')');
@@ -240,7 +240,7 @@ block scripts
           var rightEdge = svgW - PAD;
 
           function gx(d) { return rightEdge - d.y - STD_W / 2; }
-          function gy(d) { return d.x - minX + PAD; }
+          function gy(d) { return d.x - minX + PAD + NODE_H / 2; }
 
           var svg = d3.select(container).append('svg').attr('width', svgW).attr('height', svgH);
           var g = svg.append('g');
