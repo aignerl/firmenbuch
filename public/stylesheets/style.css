@@ -441,19 +441,6 @@ tbody tr.row-link:hover { background: var(--md-primary-light); }
   font-size: .78rem;
 }
 
-/* Tochtergesellschaft node (from cache, dashed border) */
-.org-node--tochter rect {
-  fill: #e6f4ea;
-  stroke: #137333;
-  stroke-width: 1px;
-  stroke-dasharray: 5 3;
-}
-.org-node--tochter text {
-  fill: #137333;
-  font-size: .8rem;
-  font-weight: 500;
-}
-
 /* Hover tooltip */
 .org-tooltip {
   position: absolute;
