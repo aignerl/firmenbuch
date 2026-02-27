@@ -19,6 +19,12 @@ function persistToDb(fnr, name, gesellschafter, geschaeftsfuehrer, vorstand) {
     ...(geschaeftsfuehrer || []).map(n => ({ name: n, rolle: 'GF', fkentext: 'Geschäftsführer/in' })),
     ...(vorstand || []).map(n => ({ name: n, rolle: 'VM', fkentext: 'Vorstand' })),
   ]);
+  dbService.getDb().prepare(`
+    UPDATE companies
+    SET scrape_status = 'done', scraped_at = datetime('now'),
+        last_attempt_at = datetime('now'), scrape_error = NULL
+    WHERE fnr = ?
+  `).run(fnr);
 }
 
 const ENDPOINT = 'https://justizonline.gv.at/jop/api/at.gv.justiz.fbw/ws';
