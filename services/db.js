@@ -138,6 +138,13 @@ function initSchema(db) {
       ON jahresabschluesse(company_fnr);
     CREATE INDEX IF NOT EXISTS idx_jahresabschluesse_jahr
       ON jahresabschluesse(company_fnr, gj_jahr);
+
+    -- ── KPI-Scrape-Status (Phase 3 Tracking) ───────────────────────
+    CREATE TABLE IF NOT EXISTS kpi_scrape_status (
+      company_fnr TEXT    PRIMARY KEY REFERENCES companies(fnr),
+      ja_count    INTEGER NOT NULL DEFAULT 0,
+      scraped_at  DATETIME NOT NULL DEFAULT (datetime('now'))
+    );
   `);
 }
 
@@ -402,6 +409,30 @@ function getJahresabschlussList(companyFnr) {
 }
 
 /**
+ * Gibt Firmen zurück, die Phase 2 abgeschlossen haben, aber noch keinen
+ * KPI-Scrape (Phase 3) hatten.
+ */
+function getPendingKpiScrape(limit) {
+  return getDb().prepare(`
+    SELECT c.fnr FROM companies c
+    LEFT JOIN kpi_scrape_status k ON k.company_fnr = c.fnr
+    WHERE c.scrape_status = 'done' AND k.company_fnr IS NULL
+    ORDER BY c.fnr
+    LIMIT ?
+  `).all(limit);
+}
+
+/**
+ * Markiert eine Firma als KPI-gescrapt (auch wenn keine Jahresabschlüsse gefunden).
+ */
+function markKpiScraped(companyFnr, jaCount) {
+  getDb().prepare(`
+    INSERT OR REPLACE INTO kpi_scrape_status (company_fnr, ja_count, scraped_at)
+    VALUES (?, ?, datetime('now'))
+  `).run(companyFnr, jaCount || 0);
+}
+
+/**
  * Fortschrittsabfrage für Bulk-Load.
  */
 function getBulkLoadProgress() {
@@ -419,6 +450,8 @@ module.exports = {
   upsertJahresabschluss,
   getJahresabschluss,
   getJahresabschlussList,
+  getPendingKpiScrape,
+  markKpiScraped,
   getGesellschafter,
   getPersonenRollen,
   getTochtergesellschaften,
