@@ -194,13 +194,23 @@ block content
         }
         var kpis = data.kpis || {};
         var cards = [
-          { label: 'Bilanzsumme',      key: 'bilanzsumme',      type: 'eur' },
-          { label: 'Eigenkapital',     key: 'eigenkapital',     type: 'eur' },
-          { label: 'EK-Quote',         key: 'ekQuote',          type: 'pct' },
-          { label: 'Verbindlichkeiten',key: 'verbindlichkeiten',type: 'eur' },
-          { label: 'Umsatz',           key: 'umsatz',           type: 'eur' },
-          { label: 'Jahresergebnis',   key: 'jahresergebnis',   type: 'eur' },
-          { label: 'Umsatzrendite',    key: 'umsatzrendite',    type: 'pct' },
+          { label: 'Bilanzsumme',       key: 'bilanzsumme',       type: 'eur' },
+          { label: 'Anlagevermögen',    key: 'anlagevermögen',    type: 'eur' },
+          { label: 'Umlaufvermögen',    key: 'umlaufvermögen',    type: 'eur' },
+          { label: 'Eigenkapital',      key: 'eigenkapital',      type: 'eur' },
+          { label: 'EK-Quote',          key: 'ekQuote',           type: 'pct' },
+          { label: 'Anlageintensität',  key: 'anlageintensität',  type: 'pct' },
+          { label: 'Verbindlichkeiten', key: 'verbindlichkeiten', type: 'eur' },
+          { label: 'Verschuldungsgrad', key: 'verschuldungsgrad', type: 'pct' },
+          { label: 'Umsatz',            key: 'umsatz',            type: 'eur' },
+          { label: 'Personalaufwand',   key: 'personalaufwand',   type: 'eur' },
+          { label: 'Abschreibungen',    key: 'abschreibungen',    type: 'eur' },
+          { label: 'Betriebsergebnis',  key: 'betriebsergebnis',  type: 'eur' },
+          { label: 'EGT',               key: 'egt',               type: 'eur' },
+          { label: 'Jahresergebnis',    key: 'jahresergebnis',    type: 'eur' },
+          { label: 'Umsatzrendite',     key: 'umsatzrendite',     type: 'pct' },
+          { label: 'ROE',               key: 'roe',               type: 'pct' },
+          { label: 'ROA',               key: 'roa',               type: 'pct' },
         ];
 
         var html = '<div class="kpi-grid">';

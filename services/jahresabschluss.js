@@ -135,33 +135,65 @@ async function parseJahresabschluss(xmlBuffer) {
   return { gj, kpis, positions };
 }
 
+function deriveRatio(numerator, denominator, scale = 100) {
+  const betrag = (numerator?.betrag != null && denominator?.betrag)
+    ? numerator.betrag / denominator.betrag * scale : null;
+  const betragVJ = (numerator?.betragVJ != null && denominator?.betragVJ)
+    ? numerator.betragVJ / denominator.betragVJ * scale : null;
+  return (betrag !== null || betragVJ !== null) ? { betrag, betragVJ } : null;
+}
+
 function extractKpis(positions) {
-  // old format: HGB_224_x codes  —  new format (v4): descriptive names
-  const bilanzsumme     = positions['HGB_224_2']    || positions['AKTIVA']    || null;
-  const eigenkapital    = positions['HGB_224_3_A']  || positions['EIGENKAPITAL'] || null;
-  const verbindlichkeiten = positions['HGB_224_3_D'] || positions['VERBINDLICHKEITEN'] || null;
-  const umsatz          = positions['HGB_231_2_1']
-                       || positions['HGB_231_1_1']
-                       || positions['UMSATZERLOESE'] || null;
-  const jahresergebnis  = positions['HGB_231_2_20']
-                       || positions['HGB_231_2_29']
-                       || positions['HGB_231_2_23']
-                       || positions['HGB_231_1_20']
-                       || positions['JAHRESUEBERSCHUSS_JAHRESFEHLBETRAG'] || null;
+  // ── Bilanz ──────────────────────────────────────────────────────
+  const bilanzsumme       = positions['HGB_224_2']    || positions['AKTIVA']           || null;
+  const anlagevermögen    = positions['HGB_224_2_A']  || positions['ANLAGEVERMÖGEN']   || null;
+  const umlaufvermögen    = positions['HGB_224_2_B']  || positions['UMLAUFVERMÖGEN']   || null;
+  const eigenkapital      = positions['HGB_224_3_A']  || positions['EIGENKAPITAL']     || null;
+  const verbindlichkeiten = positions['HGB_224_3_D']  || positions['VERBINDLICHKEITEN']|| null;
 
-  const ekQuote = (bilanzsumme?.betrag && eigenkapital?.betrag)
-    ? { betrag: eigenkapital.betrag / bilanzsumme.betrag * 100,
-        betragVJ: (bilanzsumme?.betragVJ && eigenkapital?.betragVJ)
-          ? eigenkapital.betragVJ / bilanzsumme.betragVJ * 100 : null }
-    : null;
+  // ── GuV ─────────────────────────────────────────────────────────
+  const umsatz = positions['HGB_231_2_1']
+              || positions['HGB_231_1_1']
+              || positions['UMSATZERLOESE'] || null;
 
-  const umsatzrendite = (umsatz?.betrag && jahresergebnis?.betrag)
-    ? { betrag: jahresergebnis.betrag / umsatz.betrag * 100,
-        betragVJ: (umsatz?.betragVJ && jahresergebnis?.betragVJ)
-          ? jahresergebnis.betragVJ / umsatz.betragVJ * 100 : null }
-    : null;
+  const personalaufwand = positions['HGB_231_2_6']
+                       || positions['HGB_231_1_6']
+                       || positions['PERSONALAUFWAND'] || null;
 
-  return { bilanzsumme, eigenkapital, ekQuote, verbindlichkeiten, umsatz, jahresergebnis, umsatzrendite };
+  const abschreibungen = positions['HGB_231_2_7']
+                      || positions['HGB_231_1_7']
+                      || positions['ABSCHREIBUNGEN'] || null;
+
+  const betriebsergebnis = positions['HGB_231_2_9']
+                        || positions['HGB_231_1_9']
+                        || positions['BETRIEBSERGEBNIS'] || null;
+
+  const egt = positions['HGB_231_2_17']
+           || positions['HGB_231_1_17']
+           || positions['EGT'] || null;
+
+  const jahresergebnis = positions['HGB_231_2_20']
+                      || positions['HGB_231_2_29']
+                      || positions['HGB_231_2_23']
+                      || positions['HGB_231_1_20']
+                      || positions['JAHRESUEBERSCHUSS_JAHRESFEHLBETRAG'] || null;
+
+  // ── Abgeleitete Kennzahlen ───────────────────────────────────────
+  const ekQuote          = deriveRatio(eigenkapital,    bilanzsumme);
+  const anlageintensität = deriveRatio(anlagevermögen,  bilanzsumme);
+  const verschuldungsgrad= deriveRatio(verbindlichkeiten, eigenkapital);
+  const roe              = deriveRatio(jahresergebnis,  eigenkapital);
+  const roa              = deriveRatio(jahresergebnis,  bilanzsumme);
+  const umsatzrendite    = (umsatz?.betrag) ? deriveRatio(jahresergebnis, umsatz) : null;
+
+  return {
+    bilanzsumme, anlagevermögen, umlaufvermögen,
+    eigenkapital, ekQuote, anlageintensität,
+    verbindlichkeiten, verschuldungsgrad,
+    umsatz, personalaufwand, abschreibungen,
+    betriebsergebnis, egt,
+    jahresergebnis, umsatzrendite, roe, roa,
+  };
 }
 
 module.exports = { parseJahresabschluss };
