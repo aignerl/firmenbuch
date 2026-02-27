@@ -3,6 +3,7 @@ var express = require('express');
 var router = express.Router();
 var { sucheFirma, getAuszug, sucheUrkunde, getUrkunde, scrapeEviGesellschafter, getOwnershipTree } = require('../services/firmenbuch');
 
+
 function toArr(v) {
   if (!v) return [];
   return Array.isArray(v) ? v : [v];
@@ -118,7 +119,21 @@ router.get('/firma/:fnr', async function (req, res) {
         : '',
       datumSort: u.stichtag || u.dokumentendatum || u.eingereicht || '',
     }));
-    res.render('firma', { title: `Firma ${fnr}`, firma, urkunden, fnr });
+    const xmlUrkunden = Object.values(
+      urkundenRaw
+        .filter((u) => u.dateiendung === 'xml')
+        .map((u) => ({
+          key: u.key,
+          label: ((u.stichtag || u.dokumentendatum || '').slice(0, 4)) || u.key,
+          datum: u.stichtag || u.dokumentendatum || u.eingereicht || '',
+        }))
+        .reduce((acc, u) => {
+          const year = u.datum.slice(0, 4) || u.label;
+          if (!acc[year] || u.datum > acc[year].datum) acc[year] = u;
+          return acc;
+        }, {})
+    ).sort((a, b) => b.datum.localeCompare(a.datum));
+    res.render('firma', { title: `Firma ${fnr}`, firma, urkunden, xmlUrkunden, fnr });
   } catch (err) {
     res.locals.message = err.message;
     res.locals.error = req.app.get('env') === 'development' ? err : {};
