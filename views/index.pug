@@ -11,9 +11,31 @@ block content
       label(for="firmenwortlaut") Firmenwortlaut
       input#firmenwortlaut(type="text" name="firmenwortlaut" placeholder="z.B. Erste*" required autofocus)
     div.field
-      label.checkbox-label
-        input(type="checkbox" name="exaktesuche")
-        | Exakte Suche
+      label(for="rechtsform") Rechtsform
+      select#rechtsform(name="rechtsform")
+        option(value="") Alle Rechtsformen
+        option(value="GES") GmbH – Gesellschaft mit beschränkter Haftung
+        option(value="AG") AG – Aktiengesellschaft
+        option(value="SE") SE – Societas Europaea
+        option(value="FLX") FlexKapGes – Flexible Kapitalgesellschaft
+        option(value="OG") OG – Offene Gesellschaft
+        option(value="KG") KG – Kommanditgesellschaft
+        option(value="EU") e.U. – Eingetragener Unternehmer/in
+        option(value="PST") Privatstiftung
+        option(value="GEN") Genossenschaft
+    div.field
+      label(for="bundesland") Bundesland
+      select#bundesland(name="bundesland")
+        option(value="") Alle Bundesländer
+        option(value="1") Burgenland
+        option(value="2") Kärnten
+        option(value="3") Niederösterreich
+        option(value="4") Oberösterreich
+        option(value="5") Salzburg
+        option(value="6") Steiermark
+        option(value="7") Tirol
+        option(value="8") Vorarlberg
+        option(value="9") Wien
     div.field
       label.checkbox-label
         input(type="checkbox" name="nurAktiv" checked)
@@ -21,8 +43,8 @@ block content
     div.field
       label(for="suchbereich") Suchbereich
       select#suchbereich(name="suchbereich")
-        option(value="1") 1 – eingetragene und gelöschte Firmen
-        option(value="2") 2 – historische Firmenwortlaute
-        option(value="3") 3 – keine Einschränkung
-        option(value="4") 4 – eingetragene Firmenwortlaute
+        option(value="1") Eingetragene und gelöschte Firmen
+        option(value="2") Historische Firmenwortlaute
+        option(value="3") Keine Einschränkung
+        option(value="4") Nur eingetragene Firmenwortlaute
     button(type="submit") Suchen

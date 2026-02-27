@@ -81,15 +81,16 @@ router.get('/', function (req, res) {
 });
 
 router.post('/suchen', async function (req, res) {
-  const { firmenwortlaut, exaktesuche, suchbereich, nurAktiv } = req.body;
+  const { firmenwortlaut, suchbereich, nurAktiv, rechtsform, bundesland } = req.body;
   if (!firmenwortlaut) {
     return res.render('index', { title: 'Firmenbuch Suche', error: 'Bitte Firmenwortlaut eingeben.' });
   }
   try {
     let ergebnisse = await sucheFirma({
       firmenwortlaut,
-      exaktesuche: exaktesuche === 'on',
       suchbereich: Number(suchbereich) || 1,
+      rechtsform: rechtsform || '',
+      ortnr: bundesland || '',
     });
     if (nurAktiv === 'on') ergebnisse = ergebnisse.filter((e) => !e.status);
     res.render('suche-ergebnis', { title: 'Suchergebnisse', ergebnisse, firmenwortlaut });

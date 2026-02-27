@@ -51,7 +51,7 @@
     "cachedAt": "2026-02-26T17:36:57.159Z"
   },
   "215854h": {
-    "name": "WIEN ENERGIE GmbH",
+    "name": "215854h",
     "gesellschafter": [
       {
         "name": "WIENER STADTWERKE GmbH",
@@ -60,12 +60,9 @@
         "quelle": "EVI"
       }
     ],
-    "geschaeftsfuehrer": [
-      "Dipl.Ing. Karl Gruber",
-      "Mag. Alma Kahler"
-    ],
+    "geschaeftsfuehrer": [],
     "vorstand": [],
-    "cachedAt": "2026-02-26T17:40:37.535Z"
+    "cachedAt": "2026-02-26T17:47:51.607Z"
   },
   "127783t": {
     "name": "WIENER STADTWERKE GmbH",
@@ -82,7 +79,7 @@
       "KommR. Mag.ª Monika Unterholzner"
     ],
     "vorstand": [],
-    "cachedAt": "2026-02-26T17:40:37.986Z"
+    "cachedAt": "2026-02-26T17:47:57.027Z"
   },
   "174300z": {
     "name": "WIENER NETZE GmbH",
@@ -190,7 +187,9 @@
   "627276s": {
     "name": "Neuro Dynamics e.U.",
     "gesellschafter": [],
-    "cachedAt": "2026-02-26T14:25:24.929Z"
+    "geschaeftsfuehrer": [],
+    "vorstand": [],
+    "cachedAt": "2026-02-26T17:43:55.265Z"
   },
   "183718z": {
     "name": "HR Force EDV-Beratung GmbH",
@@ -295,5 +294,20 @@
       }
     ],
     "cachedAt": "2026-02-26T17:30:04.118Z"
+  },
+  "421754b": {
+    "name": "ABBAG - Abbaumanagementgesellschaft",
+    "gesellschafter": [
+      {
+        "name": "Republik Österreich",
+        "fkentext": "GESELLSCHAFTER/IN",
+        "quelle": "EVI"
+      }
+    ],
+    "geschaeftsfuehrer": [
+      "Mag. Alexander Tscherteu"
+    ],
+    "vorstand": [],
+    "cachedAt": "2026-02-26T17:47:25.958Z"
   }
 }

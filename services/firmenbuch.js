@@ -93,19 +93,19 @@ async function postSoap(body) {
 
 async function sucheFirma({
   firmenwortlaut,
-  exaktesuche = false,
   suchbereich = 1,
   gericht = '',
   rechtsform = '',
+  ortnr = '',
 }) {
   const body = `<SUCHEFIRMAREQUEST xmlns="ns://firmenbuch.justiz.gv.at/Abfrage/SucheFirmaRequest">
     <FIRMENWORTLAUT>${firmenwortlaut}</FIRMENWORTLAUT>
-    <EXAKTESUCHE>${exaktesuche}</EXAKTESUCHE>
+    <EXAKTESUCHE>false</EXAKTESUCHE>
     <SUCHBEREICH>${suchbereich}</SUCHBEREICH>
     <GERICHT>${gericht}</GERICHT>
     <RECHTSFORM>${rechtsform}</RECHTSFORM>
     <RECHTSEIGENSCHAFT></RECHTSEIGENSCHAFT>
-    <ORTNR></ORTNR>
+    <ORTNR>${ortnr}</ORTNR>
   </SUCHEFIRMAREQUEST>`;
 
   const soapBody = await postSoap(body);
