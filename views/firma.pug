@@ -40,7 +40,7 @@ block content
 
     if firma.funktionen.length > 0
       h2 Funktionen
-      table
+      table.funk-table
         thead
           tr
             th Funktion
@@ -97,7 +97,10 @@ block content
                     = u.dateiendung.toUpperCase()
                 td(data-sort=u.groesse)= u.groesseFormatiert || '—'
                 td
-                  a.btn(href=`/urkunde/download?key=${encodeURIComponent(u.key)}` target="_blank") Öffnen
+                  a.btn-icon(href=`/urkunde/download?key=${encodeURIComponent(u.key)}` target="_blank" title="Öffnen")
+                    svg(xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round")
+                      path(d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z")
+                      circle(cx="12" cy="12" r="3")
 
   a.back-fab(href="/" data-tooltip="Zurück zur Suche")
     svg(xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round")
@@ -155,15 +158,17 @@ block content
       // initial sort: Stichtag descending
       sortTable(0, -1);
 
-      // set scroll container height to exactly 7 full rows
-      var wrapper = table.closest('.urkunden-scroll');
-      if (wrapper) {
-        var rows = Array.from(table.querySelectorAll('tbody tr'));
-        var h = table.querySelector('thead').offsetHeight;
-        for (var i = 0; i < Math.min(7, rows.length); i++) {
-          h += rows[i].offsetHeight;
+      // Höhe exakt auf 7 sichtbare Zeilen setzen — nur Desktop (Mobile via CSS)
+      if (window.innerWidth > 600) {
+        var wrapper = table.closest('.urkunden-scroll');
+        if (wrapper) {
+          var uRows = Array.from(table.querySelectorAll('tbody tr'));
+          var h = table.querySelector('thead').offsetHeight;
+          for (var i = 0; i < Math.min(7, uRows.length); i++) {
+            h += uRows[i].offsetHeight;
+          }
+          wrapper.style.maxHeight = h + 'px';
         }
-        wrapper.style.maxHeight = h + 'px';
       }
     })();
 

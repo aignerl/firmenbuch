@@ -331,8 +331,32 @@ thead th.sortable:hover { background: var(--md-primary-dark); }
 thead th.sort-asc::after  { content: ' ▲'; font-size: .75em; }
 thead th.sort-desc::after { content: ' ▼'; font-size: .75em; }
 
-/* ── Table action column ──────────────────────────────────────── */
+/* ── Table action column (nur in Tabellen mit Aktions-Spalte) ─── */
 td:last-child { white-space: nowrap; width: 1%; }
+
+/* KV-Tabelle + Funktionen-Tabelle: letzte Zelle ist kein Aktions-Slot */
+.kv-table   td:last-child { white-space: normal; width: auto; }
+.funk-table td:last-child { white-space: normal; width: auto; }
+
+/* ── Icon-only Button (z.B. Urkunde öffnen) ──────────────────── */
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 4px;
+  background: var(--md-primary);
+  color: var(--md-on-primary);
+  transition: background .15s, box-shadow .15s;
+  text-decoration: none;
+}
+.btn-icon:hover {
+  background: var(--md-primary-dark);
+  box-shadow: var(--md-shadow-1);
+  text-decoration: none;
+}
 
 small { color: var(--md-secondary-text); font-size: .8125rem; }
 
@@ -541,6 +565,13 @@ tbody tr.row-link:hover { background: var(--md-primary-light); }
   gap: 12px;
 }
 
+@media (min-width: 601px) {
+  /* Mindestbreite so dass "VERBINDLICHKEITEN" (längstes Label) ohne Umbruch passt */
+  .kpi-grid {
+    grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));
+  }
+}
+
 .kpi-card {
   background: var(--md-background);
   border-radius: 6px;
@@ -587,6 +618,8 @@ tbody tr.row-link:hover { background: var(--md-primary-light); }
   margin-bottom: 0;
   flex: 1;
   min-width: 0;
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 
 .kpi-value {
@@ -614,9 +647,94 @@ tbody tr.row-link:hover { background: var(--md-primary-light); }
 
 /* ── Responsive ───────────────────────────────────────────────── */
 @media (max-width: 600px) {
-  .container { padding: 0 16px; margin-top: 16px; }
-  form { padding: 20px; }
+  /* Layout */
+  .container { padding: 0 16px; margin: 16px auto; }
   .app-bar { padding: 0 16px; }
+
+  /* Typography */
+  h1 { font-size: 1.25rem; margin-bottom: 16px; }
+  h2 { margin: 16px 0 8px; }
+
+  /* Form: full width on mobile */
+  form { max-width: 100%; padding: 20px; }
+
+  /* Tables: kompaktere Abstände, Spaltenköpfe dürfen umbrechen */
   table { font-size: .875rem; }
-  td, th { padding: 10px 12px; }
+  td, th { padding: 9px 11px; }
+  thead th { white-space: normal; line-height: 1.3; }
+
+  /* Urkunden-Scroll: auf Mobile feste Höhe (JS läuft dort nicht) */
+  .urkunden-scroll { max-height: 300px; overflow-y: auto; }
+
+  /* ── Urkunden: Eingereicht + Größe ausblenden ─────────────── */
+  #urkunden-table  th:nth-child(3), #urkunden-table  td:nth-child(3),
+  #urkunden-table  th:nth-child(5), #urkunden-table  td:nth-child(5),
+  .urkunden-table  th:nth-child(3), .urkunden-table  td:nth-child(3),
+  .urkunden-table  th:nth-child(5), .urkunden-table  td:nth-child(5) { display: none; }
+
+  /* ── KV-Tabelle: Label über Wert stapeln ──────────────────── */
+  .kv-table, .kv-table tbody { display: block; }
+  .kv-table thead { display: none; }
+  .kv-table tbody tr {
+    display: block;
+    border-bottom: 1px solid var(--md-divider);
+    padding: 6px 0;
+  }
+  .kv-table tbody tr:last-child { border-bottom: none; }
+  .kv-table tbody th {
+    display: block;
+    width: 100%;
+    padding: 8px 14px 2px;
+    font-size: .75rem;
+    white-space: normal;
+  }
+  .kv-table tbody td {
+    display: block;
+    width: 100%;
+    padding: 1px 14px 8px;
+    white-space: normal;
+  }
+
+  /* ── Funktionen-Tabelle: Funktion über Name stapeln ──────────── */
+  .funk-table, .funk-table tbody { display: block; }
+  .funk-table thead { display: none; }
+  .funk-table tbody tr {
+    display: flex;
+    flex-direction: column;
+    border-bottom: 1px solid var(--md-divider);
+    padding: 10px 14px;
+  }
+  .funk-table tbody tr:last-child { border-bottom: none; }
+  .funk-table tbody td:first-child {
+    padding: 0 0 3px;
+    font-size: .72rem;
+    font-weight: 500;
+    color: var(--md-secondary-text);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    white-space: normal;
+  }
+  .funk-table tbody td:last-child {
+    padding: 0;
+    font-size: .9375rem;
+    white-space: normal;
+    width: auto;
+  }
+
+  /* ── Suche-Ergebnis: Sitz + Rechtsform ausblenden ─────────── */
+  .suche-table th:nth-child(3), .suche-table td:nth-child(3),
+  .suche-table th:nth-child(4), .suche-table td:nth-child(4) { display: none; }
+
+
+  /* ── KPI-Sektion ───────────────────────────────────────────── */
+  .kpi-section { padding: 14px 16px 16px; }
+  .kpi-year-selector { flex-wrap: wrap; gap: 8px; }
+  .kpi-year-selector select { width: 100%; }
+
+  /* ── Org-Chart ─────────────────────────────────────────────── */
+  .org-chart { padding: 4px; }
+
+  /* ── Back FAB: kleiner, kein Tooltip (kein Hover auf Touch) ── */
+  .back-fab { bottom: 20px; left: 16px; width: 44px; height: 44px; }
+  .back-fab::after { display: none; }
 }
