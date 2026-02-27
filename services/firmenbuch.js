@@ -2,50 +2,23 @@
 const axios = require('axios');
 const xml2js = require('xml2js');
 const cheerio = require('cheerio');
-const fs = require('fs');
-const path = require('path');
-
-// ── Persistent Gesellschafter cache ────────────────────────────
-const GS_CACHE_FILE = path.join(__dirname, '../cache/gesellschafter.json');
-let _gsCache = null;
-
-function loadGsCache() {
-  if (_gsCache) return _gsCache;
-  try { _gsCache = JSON.parse(fs.readFileSync(GS_CACHE_FILE, 'utf8')); }
-  catch (e) { _gsCache = {}; }
-  return _gsCache;
-}
-
-function persistToCache(fnr, name, gesellschafter, geschaeftsfuehrer, vorstand) {
-  // Always read fresh from disk before writing to avoid overwriting entries
-  // added by other processes (e.g. parallel node commands or future workers)
-  let onDisk = {};
-  try { onDisk = JSON.parse(fs.readFileSync(GS_CACHE_FILE, 'utf8')); } catch (e) {}
-  const merged = Object.assign(onDisk, _gsCache || {});
-  merged[fnr] = { name, gesellschafter, geschaeftsfuehrer: geschaeftsfuehrer || [], vorstand: vorstand || [], cachedAt: new Date().toISOString() };
-  _gsCache = merged;
-  try { fs.writeFileSync(GS_CACHE_FILE, JSON.stringify(merged, null, 2), 'utf8'); }
-  catch (e) { /* ignore write errors */ }
-}
+const dbService = require('./db');
 
 function getTochtergesellschaften(fnr) {
-  const cache = loadGsCache();
-  const tochter = [];
-  for (const [compFnr, entry] of Object.entries(cache)) {
-    if (compFnr === fnr || !Array.isArray(entry.gesellschafter)) continue;
-    if (entry.gesellschafter.some(g => g.fnr && g.fnr.replace(/ /g, '') === fnr)) {
-      // Include co-Gesellschafter (other owners besides the querying company)
-      const coGs = entry.gesellschafter
-        .filter(g => g.fnr && g.fnr.replace(/ /g, '') !== fnr)
-        .map(g => {
-          const coFnr = g.fnr.replace(/ /g, '');
-          const coEntry = cache[coFnr] || {};
-          return { fnr: coFnr, name: g.name, geschaeftsfuehrer: coEntry.geschaeftsfuehrer || [], vorstand: coEntry.vorstand || [] };
-        });
-      tochter.push({ fnr: compFnr, name: entry.name || compFnr, coGesellschafter: coGs, geschaeftsfuehrer: entry.geschaeftsfuehrer || [], vorstand: entry.vorstand || [] });
-    }
-  }
-  return tochter;
+  return dbService.getTochtergesellschaften(fnr);
+}
+
+function persistToDb(fnr, name, gesellschafter, geschaeftsfuehrer, vorstand) {
+  dbService.upsertCompany(fnr, { name });
+  dbService.updateGesellschafter(fnr, gesellschafter.map(g => ({
+    name: g.name,
+    fnr: g.fnr ? g.fnr.replace(/ /g, '') : null,
+    quelle: g.quelle || 'EVI',
+  })));
+  dbService.updatePersonenRollen(fnr, [
+    ...(geschaeftsfuehrer || []).map(n => ({ name: n, rolle: 'GF', fkentext: 'Geschäftsführer/in' })),
+    ...(vorstand || []).map(n => ({ name: n, rolle: 'VM', fkentext: 'Vorstand' })),
+  ]);
 }
 
 const ENDPOINT = 'https://justizonline.gv.at/jop/api/at.gv.justiz.fbw/ws';
@@ -299,8 +272,8 @@ async function getOwnershipTree(rootFnr) {
       });
     }
 
-    // Persist name + EVI Gesellschafter to file cache
-    persistToCache(normFnr, name, eviGesellschafter, geschaeftsfuehrer, vorstand);
+    // Persist to DB
+    persistToDb(normFnr, name, eviGesellschafter, geschaeftsfuehrer, vorstand);
 
     // Build children from EVI Gesellschafter
     const children = [];
