@@ -187,40 +187,116 @@ block content
         return s;
       }
 
+      function escAttr(s) {
+        return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/\n/g, '&#10;');
+      }
+
+      function ev(kpi) { return kpi && kpi.betrag != null ? fmt(kpi.betrag, 'eur') : null; }
+
       function renderKpis(data) {
         if (data.error) {
           kpiCards.innerHTML = '<p class="kpi-error">Kennzahlen konnten nicht geladen werden.</p>';
           return;
         }
         var kpis = data.kpis || {};
+        var D = '\u00f7', X = '\u00d7', GE = '\u2265', NB = '\u202f';
         var cards = [
-          { label: 'Bilanzsumme',       key: 'bilanzsumme',       type: 'eur' },
-          { label: 'Anlagevermögen',    key: 'anlagevermögen',    type: 'eur' },
-          { label: 'Umlaufvermögen',    key: 'umlaufvermögen',    type: 'eur' },
-          { label: 'Eigenkapital',      key: 'eigenkapital',      type: 'eur' },
-          { label: 'EK-Quote',          key: 'ekQuote',           type: 'pct' },
-          { label: 'Anlageintensität',  key: 'anlageintensität',  type: 'pct' },
-          { label: 'Verbindlichkeiten', key: 'verbindlichkeiten', type: 'eur' },
-          { label: 'Verschuldungsgrad', key: 'verschuldungsgrad', type: 'pct' },
-          { label: 'Liquidität 1',      key: 'liquidität1',      type: 'pct' },
-          { label: 'Liquidität 2',      key: 'liquidität2',      type: 'pct' },
-          { label: 'Liquidität 3',      key: 'liquidität3',      type: 'pct' },
-          { label: 'Umsatz',            key: 'umsatz',            type: 'eur' },
-          { label: 'Personalaufwand',   key: 'personalaufwand',   type: 'eur' },
-          { label: 'Abschreibungen',    key: 'abschreibungen',    type: 'eur' },
-          { label: 'Betriebsergebnis',  key: 'betriebsergebnis',  type: 'eur' },
-          { label: 'EGT',               key: 'egt',               type: 'eur' },
-          { label: 'Jahresergebnis',    key: 'jahresergebnis',    type: 'eur' },
-          { label: 'Umsatzrendite',     key: 'umsatzrendite',     type: 'pct' },
-          { label: 'ROE',               key: 'roe',               type: 'pct' },
-          { label: 'ROA',               key: 'roa',               type: 'pct' },
+          { label: 'Bilanzsumme', key: 'bilanzsumme', type: 'eur',
+            tip: function(k) { return 'Aktiva gesamt\nSumme aller Verm\u00f6gensgegen-\nst\u00e4nde der Bilanz'; } },
+          { label: 'Anlageverm\u00f6gen', key: 'anlageverm\u00f6gen', type: 'eur',
+            tip: function(k) { return 'Langfristig gebundenes Verm\u00f6gen\n(Sachanlagen, immaterielle Anlagen,\nFinanzanlagen)'; } },
+          { label: 'Umlaufverm\u00f6gen', key: 'umlaufverm\u00f6gen', type: 'eur',
+            tip: function(k) { return 'Kurzfristig verf\u00fcgbares Verm\u00f6gen\n(Vorr\u00e4te, Forderungen, fl\u00fcssige Mittel)'; } },
+          { label: 'Eigenkapital', key: 'eigenkapital', type: 'eur',
+            tip: function(k) { return 'Stamm-/Grundkapital\n+ R\u00fccklagen\n+ Bilanzgewinn/-verlust'; } },
+          { label: 'EK-Quote', key: 'ekQuote', type: 'pct',
+            tip: function(k) {
+              var l = 'Eigenkapital ' + D + ' Bilanzsumme ' + X + ' 100';
+              var ek = ev(k.eigenkapital), bs = ev(k.bilanzsumme);
+              if (ek && bs) l += '\n= ' + ek + ' ' + D + ' ' + bs + ' ' + X + ' 100';
+              return l;
+            } },
+          { label: 'Anlageintensit\u00e4t', key: 'anlageintensit\u00e4t', type: 'pct',
+            tip: function(k) {
+              var l = 'Anlageverm\u00f6gen ' + D + ' Bilanzsumme ' + X + ' 100';
+              var av = ev(k['anlageverm\u00f6gen']), bs = ev(k.bilanzsumme);
+              if (av && bs) l += '\n= ' + av + ' ' + D + ' ' + bs + ' ' + X + ' 100';
+              return l;
+            } },
+          { label: 'Verbindlichkeiten', key: 'verbindlichkeiten', type: 'eur',
+            tip: function(k) { return 'Verbindlichkeiten gesamt\n(kurz- und langfristig)'; } },
+          { label: 'Verschuldungsgrad', key: 'verschuldungsgrad', type: 'pct',
+            tip: function(k) {
+              var l = 'Verbindlichkeiten ' + D + ' Eigenkapital ' + X + ' 100';
+              var vb = ev(k.verbindlichkeiten), ek = ev(k.eigenkapital);
+              if (vb && ek) l += '\n= ' + vb + ' ' + D + ' ' + ek + ' ' + X + ' 100';
+              return l;
+            } },
+          { label: 'Liquidit\u00e4t 1', key: 'liquidit\u00e4t1', type: 'pct',
+            tip: function(k) {
+              var l = 'Fl\u00fcssige Mittel ' + D + ' kurzfristige Verbindlichkeiten ' + X + ' 100';
+              var fm = ev(k['fl\u00fcssigeMittel']), kv = ev(k['kurzfristigeVerbindlichkeiten']);
+              if (fm && kv) l += '\n= ' + fm + ' ' + D + ' ' + kv + ' ' + X + ' 100';
+              l += '\nRichtwert: ' + GE + ' 20' + NB + '%';
+              return l;
+            } },
+          { label: 'Liquidit\u00e4t 2', key: 'liquidit\u00e4t2', type: 'pct',
+            tip: function(k) {
+              var l = '(Fl\u00fcssige Mittel + Forderungen) ' + D + ' kurzfristige Verbindlichkeiten ' + X + ' 100';
+              var fm = ev(k['fl\u00fcssigeMittel']), fo = ev(k.forderungen), kv = ev(k['kurzfristigeVerbindlichkeiten']);
+              if (fm && fo && kv) l += '\n= (' + fm + ' + ' + fo + ') ' + D + ' ' + kv + ' ' + X + ' 100';
+              l += '\nRichtwert: ' + GE + ' 100' + NB + '%';
+              return l;
+            } },
+          { label: 'Liquidit\u00e4t 3', key: 'liquidit\u00e4t3', type: 'pct',
+            tip: function(k) {
+              var l = 'Umlaufverm\u00f6gen ' + D + ' kurzfristige Verbindlichkeiten ' + X + ' 100';
+              var uv = ev(k['umlaufverm\u00f6gen']), kv = ev(k['kurzfristigeVerbindlichkeiten']);
+              if (uv && kv) l += '\n= ' + uv + ' ' + D + ' ' + kv + ' ' + X + ' 100';
+              l += '\nRichtwert: ' + GE + ' 120' + NB + '%';
+              return l;
+            } },
+          { label: 'Umsatz', key: 'umsatz', type: 'eur',
+            tip: function(k) { return 'Umsatzerlöse (Netto, exkl. MwSt.)'; } },
+          { label: 'Personalaufwand', key: 'personalaufwand', type: 'eur',
+            tip: function(k) { return 'L\u00f6hne + Geh\u00e4lter + Sozialaufwand\n(negativer Wert = Aufwand)'; } },
+          { label: 'Abschreibungen', key: 'abschreibungen', type: 'eur',
+            tip: function(k) { return 'Abschreibungen auf Sachanlagen\nund immaterielle Anlagen\n(negativer Wert = Aufwand)'; } },
+          { label: 'Betriebsergebnis', key: 'betriebsergebnis', type: 'eur',
+            tip: function(k) { return 'Betriebsergebnis (EBIT)\nErgebnis aus dem operativen Gesch\u00e4ft'; } },
+          { label: 'EGT', key: 'egt', type: 'eur',
+            tip: function(k) { return 'Ergebnis der gew\u00f6hnlichen Gesch\u00e4ftst\u00e4tigkeit\nBetriebsergebnis + Finanzergebnis'; } },
+          { label: 'Jahresergebnis', key: 'jahresergebnis', type: 'eur',
+            tip: function(k) { return 'Jahres\u00fcberschuss / -fehlbetrag\nNach au\u00dferordentlichen Posten und Steuern'; } },
+          { label: 'Umsatzrendite', key: 'umsatzrendite', type: 'pct',
+            tip: function(k) {
+              var l = 'Jahresergebnis ' + D + ' Umsatz ' + X + ' 100';
+              var je = ev(k.jahresergebnis), u = ev(k.umsatz);
+              if (je && u) l += '\n= ' + je + ' ' + D + ' ' + u + ' ' + X + ' 100';
+              return l;
+            } },
+          { label: 'ROE', key: 'roe', type: 'pct',
+            tip: function(k) {
+              var l = 'Eigenkapitalrendite\nJahresergebnis ' + D + ' Eigenkapital ' + X + ' 100';
+              var je = ev(k.jahresergebnis), ek = ev(k.eigenkapital);
+              if (je && ek) l += '\n= ' + je + ' ' + D + ' ' + ek + ' ' + X + ' 100';
+              return l;
+            } },
+          { label: 'ROA', key: 'roa', type: 'pct',
+            tip: function(k) {
+              var l = 'Gesamtkapitalrendite\nJahresergebnis ' + D + ' Bilanzsumme ' + X + ' 100';
+              var je = ev(k.jahresergebnis), bs = ev(k.bilanzsumme);
+              if (je && bs) l += '\n= ' + je + ' ' + D + ' ' + bs + ' ' + X + ' 100';
+              return l;
+            } },
         ];
 
         var html = '<div class="kpi-grid">';
         cards.forEach(function (c) {
           var kpi = kpis[c.key];
           if (!kpi || (kpi.betrag === null && kpi.betragVJ === null)) return;
-          html += '<div class="kpi-card">';
+          var tip = c.tip ? escAttr(c.tip(kpis)) : '';
+          html += '<div class="kpi-card"' + (tip ? ' data-tooltip="' + tip + '"' : '') + '>';
           html += '<div class="kpi-label">' + c.label + '</div>';
           html += '<div class="kpi-value">' + fmt(kpi.betrag, c.type) + '</div>';
           if (kpi.betragVJ !== null && kpi.betragVJ !== undefined) {

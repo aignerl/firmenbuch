@@ -212,7 +212,7 @@ function extractKpis(positions) {
     bilanzsumme, anlagevermögen, umlaufvermögen,
     vorräte, forderungen, flüssigeMittel,
     eigenkapital, ekQuote, anlageintensität,
-    verbindlichkeiten, verschuldungsgrad,
+    verbindlichkeiten, kurzfristigeVerbindlichkeiten, verschuldungsgrad,
     liquidität1, liquidität2, liquidität3,
     umsatz, personalaufwand, abschreibungen,
     betriebsergebnis, egt,
