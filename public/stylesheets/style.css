@@ -544,7 +544,7 @@ tbody tr.row-link:hover { background: var(--md-primary-light); }
 .kpi-card {
   background: var(--md-background);
   border-radius: 6px;
-  padding: 14px 16px;
+  padding: 14px 28px 14px 16px;
   border: 1px solid var(--md-divider);
   position: relative;
 }
