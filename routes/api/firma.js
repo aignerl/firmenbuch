@@ -1,7 +1,8 @@
 'use strict';
 const express = require('express');
 const router = express.Router();
-const { sucheFirma, getAuszug, sucheUrkunde, getOwnershipTree } = require('../../services/firmenbuch');
+const { sucheFirma, getAuszug, sucheUrkunde, getUrkunde, getOwnershipTree } = require('../../services/firmenbuch');
+const { parseJahresabschluss } = require('../../services/jahresabschluss');
 
 router.get('/suchen', async (req, res) => {
   const { name, exakt, suchbereich, gericht, rechtsform, nurAktiv } = req.query;
@@ -52,6 +53,22 @@ router.get('/:fnr/baum', async (req, res) => {
   try {
     const tree = await getOwnershipTree(req.params.fnr);
     res.json(tree);
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
+});
+
+router.get('/:fnr/jahresabschluss', async (req, res) => {
+  const { key, raw } = req.query;
+  if (!key) return res.status(400).json({ error: 'Parameter "key" fehlt' });
+  try {
+    const { content } = await getUrkunde({ key });
+    if (raw === '1') {
+      const xmlString = content.toString('latin1');
+      return res.json({ xml: xmlString.slice(0, 5000) });
+    }
+    const result = await parseJahresabschluss(content);
+    res.json(result);
   } catch (err) {
     res.status(502).json({ error: err.message });
   }

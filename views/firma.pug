@@ -55,6 +55,17 @@ block content
                   |
                   a.source-badge(href="https://www.evi.gv.at/f/" + firma.fnr.replace(/ /g, '') target="_blank" rel="noopener" onclick="event.stopPropagation()" data-tooltip="Auf evi.gv.at öffnen") EVI
 
+    if xmlUrkunden && xmlUrkunden.length > 0
+      h2 Kennzahlen
+      div.kpi-section
+        div.kpi-year-selector
+          label(for="kpi-year") Geschäftsjahr
+          select#kpi-year
+            each u in xmlUrkunden
+              option(value=u.key)= u.label
+        div#kpi-cards
+          p.kpi-loading Lade Kennzahlen…
+
     h2 Organigramm
       span.info-badge(data-tooltip="Zeigt Gesellschafter rekursiv nach oben (Quelle: evi.gv.at). Beteiligungen nach unten (Tochtergesellschaften) sind über die verfügbaren APIs nicht abrufbar und daher nicht dargestellt. Die Daten können unvollständig sein.") ?
     div#org-chart.org-chart
@@ -154,6 +165,76 @@ block content
         }
         wrapper.style.maxHeight = h + 'px';
       }
+    })();
+
+  script.
+    (function () {
+      var yearSelect = document.getElementById('kpi-year');
+      var kpiCards  = document.getElementById('kpi-cards');
+      if (!yearSelect || !kpiCards) return;
+
+      var fnrNorm = !{JSON.stringify(firma ? firma.fnr.replace(/ /g, '') : '')};
+
+      function fmt(v, type) {
+        if (v === null || v === undefined) return '\u2014';
+        if (type === 'pct') return v.toFixed(1).replace('.', ',') + '\u202f%';
+        var abs = Math.abs(v);
+        var s;
+        if (abs >= 1e9) s = (v / 1e9).toFixed(1).replace('.', ',') + '\u202fMrd.\u202f\u20ac';
+        else if (abs >= 1e6) s = (v / 1e6).toFixed(1).replace('.', ',') + '\u202fMio.\u202f\u20ac';
+        else if (abs >= 1e3) s = Math.round(v / 1e3).toLocaleString('de-AT') + '\u202fTsd.\u202f\u20ac';
+        else s = Math.round(v).toLocaleString('de-AT') + '\u202f\u20ac';
+        return s;
+      }
+
+      function renderKpis(data) {
+        if (data.error) {
+          kpiCards.innerHTML = '<p class="kpi-error">Kennzahlen konnten nicht geladen werden.</p>';
+          return;
+        }
+        var kpis = data.kpis || {};
+        var cards = [
+          { label: 'Bilanzsumme',      key: 'bilanzsumme',      type: 'eur' },
+          { label: 'Eigenkapital',     key: 'eigenkapital',     type: 'eur' },
+          { label: 'EK-Quote',         key: 'ekQuote',          type: 'pct' },
+          { label: 'Verbindlichkeiten',key: 'verbindlichkeiten',type: 'eur' },
+          { label: 'Umsatz',           key: 'umsatz',           type: 'eur' },
+          { label: 'Jahresergebnis',   key: 'jahresergebnis',   type: 'eur' },
+          { label: 'Umsatzrendite',    key: 'umsatzrendite',    type: 'pct' },
+        ];
+
+        var html = '<div class="kpi-grid">';
+        cards.forEach(function (c) {
+          var kpi = kpis[c.key];
+          if (!kpi || (kpi.betrag === null && kpi.betragVJ === null)) return;
+          html += '<div class="kpi-card">';
+          html += '<div class="kpi-label">' + c.label + '</div>';
+          html += '<div class="kpi-value">' + fmt(kpi.betrag, c.type) + '</div>';
+          if (kpi.betragVJ !== null && kpi.betragVJ !== undefined) {
+            html += '<div class="kpi-vj">VJ\u202f' + fmt(kpi.betragVJ, c.type) + '</div>';
+          }
+          html += '</div>';
+        });
+        html += '</div>';
+
+        if (html === '<div class="kpi-grid"></div>') {
+          html = '<p class="kpi-error">Keine Kennzahlen verf\u00fcgbar.</p>';
+        }
+        kpiCards.innerHTML = html;
+      }
+
+      function loadKpis(key) {
+        kpiCards.innerHTML = '<p class="kpi-loading">Lade Kennzahlen\u2026</p>';
+        fetch('/api/firma/' + encodeURIComponent(fnrNorm) + '/jahresabschluss?key=' + encodeURIComponent(key))
+          .then(function (r) { return r.json(); })
+          .then(renderKpis)
+          .catch(function () {
+            kpiCards.innerHTML = '<p class="kpi-error">Kennzahlen konnten nicht geladen werden.</p>';
+          });
+      }
+
+      yearSelect.addEventListener('change', function () { loadKpis(yearSelect.value); });
+      if (yearSelect.value) loadKpis(yearSelect.value);
     })();
 
 block scripts

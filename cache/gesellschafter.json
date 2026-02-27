@@ -309,5 +309,96 @@
     ],
     "vorstand": [],
     "cachedAt": "2026-02-26T17:47:25.958Z"
+  },
+  "188510x": {
+    "name": "Messevertrieb Mertl KG",
+    "gesellschafter": [
+      {
+        "name": "Herbert Mertl",
+        "fkentext": "GESELLSCHAFTER/IN",
+        "quelle": "EVI"
+      }
+    ],
+    "geschaeftsfuehrer": [],
+    "vorstand": [],
+    "cachedAt": "2026-02-27T05:01:14.626Z"
+  },
+  "514915d": {
+    "name": "Mert GmbH",
+    "gesellschafter": [
+      {
+        "name": "KMBC GmbH",
+        "fnr": "575134k",
+        "fkentext": "GESELLSCHAFTER/IN",
+        "quelle": "EVI"
+      }
+    ],
+    "geschaeftsfuehrer": [
+      "Mahrem Mert"
+    ],
+    "vorstand": [],
+    "cachedAt": "2026-02-27T05:03:17.242Z"
+  },
+  "575134k": {
+    "name": "KMBC GmbH",
+    "gesellschafter": [
+      {
+        "name": "Mahrem Mert",
+        "fkentext": "GESELLSCHAFTER/IN",
+        "quelle": "EVI"
+      }
+    ],
+    "geschaeftsfuehrer": [
+      "Mahrem Mert"
+    ],
+    "vorstand": [],
+    "cachedAt": "2026-02-27T05:03:17.432Z"
+  },
+  "632508i": {
+    "name": "Puntigam. Steuerberatung GmbH",
+    "gesellschafter": [
+      {
+        "name": "Puntigam Wirtschaftstreuhand und Steuerberatung GmbH",
+        "fnr": "405179b",
+        "fkentext": "GESELLSCHAFTER/IN",
+        "quelle": "EVI"
+      }
+    ],
+    "geschaeftsfuehrer": [
+      "Mag. Christian Puntigam"
+    ],
+    "vorstand": [],
+    "cachedAt": "2026-02-27T06:47:35.608Z"
+  },
+  "405179b": {
+    "name": "Puntigam Wirtschaftstreuhand und",
+    "gesellschafter": [
+      {
+        "name": "Puntigam. Steuerberatung Gruppe GmbH",
+        "fnr": "416348b",
+        "fkentext": "GESELLSCHAFTER/IN",
+        "quelle": "EVI"
+      }
+    ],
+    "geschaeftsfuehrer": [
+      "Mag. Christian Puntigam"
+    ],
+    "vorstand": [],
+    "cachedAt": "2026-02-27T06:55:39.865Z"
+  },
+  "416348b": {
+    "name": "Puntigam. Steuerberatung Gruppe GmbH",
+    "gesellschafter": [
+      {
+        "name": "Mag. Christian Puntigam",
+        "fkentext": "GESELLSCHAFTER/IN",
+        "quelle": "EVI"
+      }
+    ],
+    "geschaeftsfuehrer": [
+      "Mag. Christian Puntigam"
+    ],
+    "vorstand": [],
+    "cachedAt": "2026-02-27T06:55:43.299Z"
   }
 }

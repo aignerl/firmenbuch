@@ -509,6 +509,77 @@ tbody tr.row-link:hover { background: var(--md-primary-light); }
 }
 .org-tooltip--visible { opacity: 1; }
 
+/* ── KPI Kennzahlen ───────────────────────────────────────────── */
+.kpi-section {
+  background: var(--md-surface);
+  border-radius: var(--radius);
+  box-shadow: var(--md-shadow-1);
+  padding: 20px 24px 24px;
+  margin-bottom: 24px;
+}
+
+.kpi-year-selector {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.kpi-year-selector label {
+  margin-bottom: 0;
+  white-space: nowrap;
+}
+
+.kpi-year-selector select {
+  width: auto;
+  min-width: 100px;
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.kpi-card {
+  background: var(--md-background);
+  border-radius: 6px;
+  padding: 14px 16px;
+  border: 1px solid var(--md-divider);
+}
+
+.kpi-label {
+  font-size: .75rem;
+  font-weight: 500;
+  color: var(--md-secondary-text);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  margin-bottom: 6px;
+}
+
+.kpi-value {
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: var(--md-on-surface);
+  line-height: 1.2;
+}
+
+.kpi-vj {
+  font-size: .78rem;
+  color: var(--md-secondary-text);
+  margin-top: 5px;
+}
+
+.kpi-loading {
+  color: var(--md-secondary-text);
+  font-size: .9375rem;
+}
+
+.kpi-error {
+  color: var(--md-secondary-text);
+  font-size: .9375rem;
+}
+
 /* ── Responsive ───────────────────────────────────────────────── */
 @media (max-width: 600px) {
   .container { padding: 0 16px; margin-top: 16px; }
