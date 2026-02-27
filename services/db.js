@@ -107,6 +107,37 @@ function initSchema(db) {
       companies_updated  INTEGER NOT NULL DEFAULT 0,
       synced_at          DATETIME NOT NULL DEFAULT (datetime('now'))
     );
+
+    -- ── Adressen (aktueller Stand, wird bei jedem Auszug ersetzt) ──
+    CREATE TABLE IF NOT EXISTS adressen (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      company_fnr TEXT    NOT NULL REFERENCES companies(fnr),
+      strasse     TEXT,
+      hausnummer  TEXT,
+      plz         TEXT,
+      ort         TEXT,
+      staat       TEXT    NOT NULL DEFAULT 'AUT',
+      updated_at  DATETIME NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_adressen_fnr
+      ON adressen(company_fnr);
+
+    -- ── Jahresabschlüsse (KPI-Cache, keyed by urkunde_key) ─────────
+    CREATE TABLE IF NOT EXISTS jahresabschluesse (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      company_fnr TEXT    NOT NULL REFERENCES companies(fnr),
+      urkunde_key TEXT    NOT NULL UNIQUE,
+      gj_beginn   TEXT,
+      gj_ende     TEXT,
+      gj_jahr     INTEGER,
+      kpis        TEXT    NOT NULL,
+      positions   TEXT,
+      created_at  DATETIME NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_jahresabschluesse_fnr
+      ON jahresabschluesse(company_fnr);
+    CREATE INDEX IF NOT EXISTS idx_jahresabschluesse_jahr
+      ON jahresabschluesse(company_fnr, gj_jahr);
   `);
 }
 
@@ -310,6 +341,67 @@ function getTochtergesellschaften(fnr) {
 }
 
 /**
+ * Ersetzt alle Adressen einer Firma durch die neue Liste.
+ * adressen: Array von { strasse, hausnummer, plz, ort, staat }
+ */
+function updateAdressen(companyFnr, adressen) {
+  const db = getDb();
+  db.prepare('DELETE FROM adressen WHERE company_fnr = ?').run(companyFnr);
+  const ins = db.prepare(`
+    INSERT INTO adressen (company_fnr, strasse, hausnummer, plz, ort, staat)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `);
+  for (const a of adressen) {
+    ins.run(companyFnr, a.strasse || null, a.hausnummer || null,
+      a.plz || null, a.ort || null, a.staat || 'AUT');
+  }
+}
+
+/**
+ * Speichert einen geparsten Jahresabschluss (INSERT OR IGNORE – einmal gespeichert
+ * wird nie überschrieben, da sich ein eingereichter Abschluss nicht ändert).
+ */
+function upsertJahresabschluss(companyFnr, urkundeKey, { gj, kpis, positions }) {
+  getDb().prepare(`
+    INSERT OR IGNORE INTO jahresabschluesse
+      (company_fnr, urkunde_key, gj_beginn, gj_ende, gj_jahr, kpis, positions)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    companyFnr, urkundeKey,
+    gj?.beginn || null, gj?.ende || null, gj?.jahr || null,
+    JSON.stringify(kpis),
+    positions ? JSON.stringify(positions) : null,
+  );
+}
+
+/**
+ * Gibt einen gecachten Jahresabschluss zurück oder null.
+ */
+function getJahresabschluss(urkundeKey) {
+  const row = getDb().prepare(
+    'SELECT * FROM jahresabschluesse WHERE urkunde_key = ?'
+  ).get(urkundeKey);
+  if (!row) return null;
+  return {
+    gj: { beginn: row.gj_beginn, ende: row.gj_ende, jahr: row.gj_jahr },
+    kpis: JSON.parse(row.kpis),
+    positions: row.positions ? JSON.parse(row.positions) : {},
+  };
+}
+
+/**
+ * Gibt alle gespeicherten Jahresabschlüsse einer Firma zurück (für die Jahr-Auswahl).
+ */
+function getJahresabschlussList(companyFnr) {
+  return getDb().prepare(`
+    SELECT urkunde_key, gj_beginn, gj_ende, gj_jahr
+    FROM jahresabschluesse
+    WHERE company_fnr = ?
+    ORDER BY gj_jahr DESC NULLS LAST
+  `).all(companyFnr);
+}
+
+/**
  * Fortschrittsabfrage für Bulk-Load.
  */
 function getBulkLoadProgress() {
@@ -323,6 +415,10 @@ module.exports = {
   upsertCompany,
   updateGesellschafter,
   updatePersonenRollen,
+  updateAdressen,
+  upsertJahresabschluss,
+  getJahresabschluss,
+  getJahresabschlussList,
   getGesellschafter,
   getPersonenRollen,
   getTochtergesellschaften,

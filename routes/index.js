@@ -2,6 +2,7 @@
 var express = require('express');
 var router = express.Router();
 var { sucheFirma, getAuszug, sucheUrkunde, getUrkunde, scrapeEviGesellschafter, getOwnershipTree } = require('../services/firmenbuch');
+var db = require('../services/db');
 
 
 function toArr(v) {
@@ -110,6 +111,13 @@ router.get('/firma/:fnr', async function (req, res) {
     ]);
     const firma = buildFirmaView(raw);
     firma.funktionen.push(...eviGesellschafter);
+
+    // Stammdaten + Adressen in DB persistieren (fire-and-forget)
+    try {
+      const firstName = firma.namen[0] || '';
+      db.upsertCompany(fnr, { name: firstName, rechtsform: firma.rechtsform, sitz: firma.sitz });
+      if (firma.adressen.length > 0) db.updateAdressen(fnr, firma.adressen);
+    } catch (_) {}
     const urkunden = urkundenRaw.map((u) => ({
       ...u,
       groesseFormatiert: u.groesse
