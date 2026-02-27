@@ -145,11 +145,15 @@ function deriveRatio(numerator, denominator, scale = 100) {
 
 function extractKpis(positions) {
   // ── Bilanz ──────────────────────────────────────────────────────
-  const bilanzsumme       = positions['HGB_224_2']    || positions['AKTIVA']           || null;
-  const anlagevermögen    = positions['HGB_224_2_A']  || positions['ANLAGEVERMÖGEN']   || null;
-  const umlaufvermögen    = positions['HGB_224_2_B']  || positions['UMLAUFVERMÖGEN']   || null;
-  const eigenkapital      = positions['HGB_224_3_A']  || positions['EIGENKAPITAL']     || null;
-  const verbindlichkeiten = positions['HGB_224_3_D']  || positions['VERBINDLICHKEITEN']|| null;
+  const bilanzsumme                = positions['HGB_224_2']           || positions['AKTIVA']                    || null;
+  const anlagevermögen             = positions['HGB_224_2_A']         || positions['ANLAGEVERMÖGEN']            || null;
+  const umlaufvermögen             = positions['HGB_224_2_B']         || positions['UMLAUFVERMÖGEN']            || null;
+  const vorräte                    = positions['HGB_224_2_B_I']       || positions['VORRAETE']                  || null;
+  const forderungen                = positions['HGB_224_2_B_II']      || positions['FORDERUNGEN']               || null;
+  const flüssigeMittel             = positions['HGB_224_2_B_IV']      || positions['FLUESSIGE_MITTEL']          || null;
+  const eigenkapital               = positions['HGB_224_3_A']         || positions['EIGENKAPITAL']              || null;
+  const verbindlichkeiten          = positions['HGB_224_3_D']         || positions['VERBINDLICHKEITEN']         || null;
+  const kurzfristigeVerbindlichkeiten = positions['HGB_224_3_D_HGB_225B'] || positions['VERBINDLICHKEITEN_KFR'] || null;
 
   // ── GuV ─────────────────────────────────────────────────────────
   const umsatz = positions['HGB_231_2_1']
@@ -186,10 +190,30 @@ function extractKpis(positions) {
   const roa              = deriveRatio(jahresergebnis,  bilanzsumme);
   const umsatzrendite    = (umsatz?.betrag) ? deriveRatio(jahresergebnis, umsatz) : null;
 
+  // ── Liquidität (nur wenn kurzfristige Verbindlichkeiten verfügbar) ─
+  const liquidität1 = kurzfristigeVerbindlichkeiten
+    ? deriveRatio(flüssigeMittel, kurzfristigeVerbindlichkeiten) : null;
+
+  const liquidität2 = (kurzfristigeVerbindlichkeiten && forderungen)
+    ? (() => {
+        const add = (a, b) => a !== null && b !== null ? a + b : (a ?? b);
+        return deriveRatio(
+          { betrag:   add(flüssigeMittel?.betrag,   forderungen?.betrag),
+            betragVJ: add(flüssigeMittel?.betragVJ, forderungen?.betragVJ) },
+          kurzfristigeVerbindlichkeiten
+        );
+      })()
+    : null;
+
+  const liquidität3 = kurzfristigeVerbindlichkeiten
+    ? deriveRatio(umlaufvermögen, kurzfristigeVerbindlichkeiten) : null;
+
   return {
     bilanzsumme, anlagevermögen, umlaufvermögen,
+    vorräte, forderungen, flüssigeMittel,
     eigenkapital, ekQuote, anlageintensität,
     verbindlichkeiten, verschuldungsgrad,
+    liquidität1, liquidität2, liquidität3,
     umsatz, personalaufwand, abschreibungen,
     betriebsergebnis, egt,
     jahresergebnis, umsatzrendite, roe, roa,
