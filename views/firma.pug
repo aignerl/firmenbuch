@@ -297,8 +297,10 @@ block content
           if (!kpi || (kpi.betrag === null && kpi.betragVJ === null)) return;
           var tip = c.tip ? escAttr(c.tip(kpis)) : '';
           html += '<div class="kpi-card">';
-          if (tip) html += '<span class="info-badge kpi-tip" data-tooltip="' + tip + '">?</span>';
+          html += '<div class="kpi-card-header">';
           html += '<div class="kpi-label">' + c.label + '</div>';
+          if (tip) html += '<span class="info-badge kpi-tip" data-tooltip="' + tip + '">?</span>';
+          html += '</div>';
           html += '<div class="kpi-value">' + fmt(kpi.betrag, c.type) + '</div>';
           if (kpi.betragVJ !== null && kpi.betragVJ !== undefined) {
             html += '<div class="kpi-vj">VJ\u202f' + fmt(kpi.betragVJ, c.type) + '</div>';
