@@ -81,14 +81,14 @@ router.get('/', function (req, res) {
 });
 
 router.post('/suchen', async function (req, res) {
-  const { firmenwortlaut, suchbereich, nurAktiv, rechtsform, bundesland } = req.body;
+  const { firmenwortlaut, nurAktiv, rechtsform, bundesland } = req.body;
   if (!firmenwortlaut) {
     return res.render('index', { title: 'Firmenbuch Suche', error: 'Bitte Firmenwortlaut eingeben.' });
   }
   try {
     let ergebnisse = await sucheFirma({
       firmenwortlaut,
-      suchbereich: Number(suchbereich) || 1,
+      suchbereich: 3,
       rechtsform: rechtsform || '',
       ortnr: bundesland || '',
     });
