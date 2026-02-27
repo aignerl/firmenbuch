@@ -4,7 +4,13 @@ block content
   h1 Suchergebnisse für "#{firmenwortlaut}"
 
   if ergebnisse.length === 0
-    p Keine Ergebnisse gefunden.
+    div.error
+      p Keine Ergebnisse gefunden.
+      p Tipps für die Suche:
+      ul(style="margin: 8px 0 0 20px; line-height: 2")
+        li Verwende <strong>*</strong> als Platzhalter am Anfang und/oder Ende, z.B. <strong>*energie*</strong>
+        li Die API unterstützt kein Durchsuchen aller Firmen ohne Namensangabe — bitte mindestens einen Teil des Firmennamens eingeben
+        li Rechtsform- und Bundesland-Filter funktionieren nur in Kombination mit einem Suchbegriff
   else
     table
       thead
