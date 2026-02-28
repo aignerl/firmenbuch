@@ -1,0 +1,46 @@
+extends layout
+
+block content
+  h1= name
+
+  if firmen.length === 0
+    div.error
+      p Keine Einträge in der lokalen Datenbank gefunden.
+  else
+    p.feedback-intro #{firmen.length} Eintrag#{firmen.length === 1 ? '' : 'träge'} in lokalen Firmen.
+    table.funk-table
+      thead
+        tr
+          th Funktion
+          th Firma
+      tbody
+        each f in firmen
+          tr.row-link(onclick=`window.location='/firma/${f.company_fnr}'`)
+            td= f.rolle_text || '—'
+            td
+              a(href=`/firma/${f.company_fnr}` onclick="event.stopPropagation()")= f.company_name || f.company_fnr
+              if f.rechtsform
+                |
+                small= f.rechtsform
+              if f.sitz
+                br
+                small= f.sitz
+              if f.status === 'gelöscht'
+                |
+                span.badge.badge--deleted gelöscht
+
+  a.back-fab(href="/" data-tooltip="Zurück")
+    svg(xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round")
+      polyline(points="15 18 9 12 15 6")
+
+block scripts
+  script.
+    (function () {
+      var btn = document.querySelector('.back-fab');
+      if (btn) {
+        btn.addEventListener('click', function (e) {
+          e.preventDefault();
+          history.back();
+        });
+      }
+    })();

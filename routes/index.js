@@ -83,6 +83,43 @@ router.get('/', function (req, res) {
 });
 
 router.post('/suchen', async function (req, res) {
+  const { type } = req.body;
+
+  // ── Personensuche ──────────────────────────────────────────────
+  if (type === 'person') {
+    const { personenwortlaut } = req.body;
+    if (!personenwortlaut?.trim()) {
+      return res.render('index', { title: 'Firmenbuch Suche', error: 'Bitte Namen eingeben.' });
+    }
+    const q = `%${personenwortlaut.trim()}%`;
+    const d = db.getDb();
+    const rows = d.prepare(`
+      SELECT p.name, p.company_fnr, cn.name AS company_name, c.rechtsform, c.sitz, p.rolle_text
+      FROM (
+        SELECT name, company_fnr, fkentext AS rolle_text
+        FROM personen_rollen WHERE valid_to IS NULL AND name LIKE ?
+        UNION ALL
+        SELECT name, company_fnr, 'Gesellschafter/in' AS rolle_text
+        FROM gesellschafter WHERE valid_to IS NULL AND gesellschafter_fnr IS NULL AND name LIKE ?
+      ) p
+      LEFT JOIN company_names cn ON cn.company_fnr = p.company_fnr AND cn.valid_to IS NULL
+      LEFT JOIN companies c ON c.fnr = p.company_fnr
+      ORDER BY p.name, cn.name
+    `).all(q, q);
+    // Deduplizieren (selbe Person + Firma + Rolle)
+    const seen = new Set();
+    const ergebnisse = rows.filter((r) => {
+      const key = `${r.name}|${r.company_fnr}|${r.rolle_text}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+    return res.render('personen-ergebnis', {
+      title: 'Personensuche', ergebnisse, personenwortlaut: personenwortlaut.trim(),
+    });
+  }
+
+  // ── Firmensuche ────────────────────────────────────────────────
   const { firmenwortlaut, nurAktiv, rechtsform, bundesland } = req.body;
   if (!firmenwortlaut) {
     return res.render('index', { title: 'Firmenbuch Suche', error: 'Bitte Firmenwortlaut eingeben.' });
@@ -99,6 +136,33 @@ router.post('/suchen', async function (req, res) {
   } catch (err) {
     res.render('index', { title: 'Firmenbuch Suche', error: err.message });
   }
+});
+
+router.get('/person', function (req, res) {
+  const { name } = req.query;
+  if (!name?.trim()) return res.redirect('/');
+  const d = db.getDb();
+  const rows = d.prepare(`
+    SELECT p.name, p.company_fnr, cn.name AS company_name, c.rechtsform, c.sitz, c.status, p.rolle_text
+    FROM (
+      SELECT name, company_fnr, fkentext AS rolle_text
+      FROM personen_rollen WHERE valid_to IS NULL AND name = ?
+      UNION ALL
+      SELECT name, company_fnr, 'Gesellschafter/in' AS rolle_text
+      FROM gesellschafter WHERE valid_to IS NULL AND gesellschafter_fnr IS NULL AND name = ?
+    ) p
+    LEFT JOIN company_names cn ON cn.company_fnr = p.company_fnr AND cn.valid_to IS NULL
+    LEFT JOIN companies c ON c.fnr = p.company_fnr
+    ORDER BY cn.name
+  `).all(name.trim(), name.trim());
+  const seen = new Set();
+  const firmen = rows.filter((r) => {
+    const key = `${r.company_fnr}|${r.rolle_text}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  res.render('person', { title: name.trim(), name: name.trim(), firmen });
 });
 
 router.get('/firma/:fnr', async function (req, res) {
