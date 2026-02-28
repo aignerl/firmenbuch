@@ -33,11 +33,31 @@ body {
   height: 56px;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   padding: 0 24px;
   box-shadow: var(--md-shadow-1);
   position: sticky;
   top: 0;
   z-index: 100;
+}
+
+.app-bar__feedback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  color: var(--md-on-primary);
+  opacity: .8;
+  text-decoration: none;
+  transition: opacity .15s, background .15s;
+}
+
+.app-bar__feedback:hover {
+  opacity: 1;
+  background: rgba(255,255,255,.15);
+  text-decoration: none;
 }
 
 .app-bar__title {
@@ -168,7 +188,9 @@ label {
 }
 
 input[type="text"],
-select {
+input[type="email"],
+select,
+textarea {
   width: 100%;
   height: 40px;
   padding: 0 12px;
@@ -182,8 +204,17 @@ select {
   outline: none;
 }
 
+textarea {
+  height: auto;
+  resize: vertical;
+  min-height: 120px;
+  padding: 10px 12px;
+}
+
 input[type="text"]:focus,
-select:focus {
+input[type="email"]:focus,
+select:focus,
+textarea:focus {
   border-color: var(--md-primary);
   box-shadow: 0 0 0 2px rgba(26,115,232,.2);
 }
@@ -703,6 +734,65 @@ tbody tr.row-link:hover { background: var(--md-primary-light); }
 
 .kpi-error {
   color: var(--md-secondary-text);
+  font-size: .9375rem;
+}
+
+/* ── Radio buttons ────────────────────────────────────────────── */
+.radio-group {
+  display: flex;
+  gap: 24px;
+}
+
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: .9375rem;
+  color: var(--md-on-surface);
+  cursor: pointer;
+  font-weight: 400;
+}
+
+input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--md-primary);
+  cursor: pointer;
+}
+
+/* ── Feedback form ────────────────────────────────────────────── */
+.feedback-form { max-width: 600px; }
+
+.feedback-intro {
+  color: var(--md-secondary-text);
+  margin-bottom: 20px;
+}
+
+small.optional {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.feedback-success {
+  background: #e6f4ea;
+  border-left: 4px solid #137333;
+  border-radius: 4px;
+  padding: 20px 24px;
+  margin-bottom: 20px;
+}
+
+.feedback-success p {
+  color: #137333;
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+
+/* ── Back link ────────────────────────────────────────────────── */
+.back-link {
+  display: inline-block;
+  margin-top: 16px;
+  color: var(--md-primary);
   font-size: .9375rem;
 }
 

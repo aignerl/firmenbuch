@@ -1,0 +1,49 @@
+extends layout
+
+block content
+  h1 Feedback
+
+  if sent
+    .feedback-success
+      p Danke! Dein Feedback wurde erfolgreich übermittelt.
+      a.btn(href=issueUrl target="_blank") Issue auf GitHub ansehen
+    a.back-link(href="/") ← Zurück zur Startseite
+
+  else
+    p.feedback-intro
+      | Einen Fehler entdeckt oder eine Idee für eine neue Funktion?
+      | Meld dich einfach — das Feedback landet direkt als GitHub Issue.
+
+    if error
+      p.error= error
+
+    form.feedback-form(method="POST" action="/feedback")
+      div.field
+        label Typ
+        .radio-group
+          label.radio-label
+            input(type="radio" name="typ" value="bug" checked)
+            | Bug-Report
+          label.radio-label
+            input(type="radio" name="typ" value="feature")
+            | Feature-Wunsch
+
+      div.field
+        label(for="fb-titel") Titel
+        input#fb-titel(type="text" name="titel" placeholder="Kurze Beschreibung des Problems oder Wunsches" required)
+
+      div.field
+        label(for="fb-beschreibung") Beschreibung
+        textarea#fb-beschreibung(name="beschreibung" rows="6" placeholder="Was ist passiert? Was hast du erwartet? Wie kann man es reproduzieren?" required)
+
+      div.field
+        label(for="fb-url") Betroffene Seite
+          small.optional  (optional)
+        input#fb-url(type="text" name="url" placeholder="z.B. /firma/123456a")
+
+      div.field
+        label(for="fb-email") E-Mail für Rückfragen
+          small.optional  (optional)
+        input#fb-email(type="email" name="email" placeholder="deine@email.at")
+
+      button(type="submit") Absenden
