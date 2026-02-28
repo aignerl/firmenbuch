@@ -24,6 +24,59 @@ router.get('/suchen', async (req, res) => {
   }
 });
 
+const METRICS = {
+  roa:           { path: '$.roa.betrag',          label: 'ROA',           suffix: '%' },
+  roe:           { path: '$.roe.betrag',           label: 'ROE',           suffix: '%' },
+  umsatzrendite: { path: '$.umsatzrendite.betrag', label: 'Umsatzrendite', suffix: '%' },
+  ek_quote:      { path: '$.ekQuote.betrag',       label: 'EK-Quote',      suffix: '%' },
+};
+
+router.get('/bestenliste', (req, res) => {
+  const { metric = 'roa', limit = '20', minBilanzsumme = '0', jahr } = req.query;
+  const metricDef = METRICS[metric];
+  if (!metricDef) return res.status(400).json({ error: 'Unbekannte Kennzahl' });
+
+  const limitN = Math.min(parseInt(limit, 10) || 20, 100);
+  const minBS = parseFloat(minBilanzsumme) || 0;
+  const database = db.getDb();
+
+  const conditions = [
+    `json_extract(j.kpis, '${metricDef.path}') IS NOT NULL`,
+    `COALESCE(CAST(json_extract(j.kpis, '$.bilanzsumme.betrag') AS REAL), 0) >= ?`,
+  ];
+  const params = [minBS];
+
+  if (jahr) {
+    conditions.push(`j.gj_jahr = ${parseInt(jahr, 10)}`);
+  } else {
+    conditions.push(`j.gj_jahr = (SELECT MAX(j2.gj_jahr) FROM jahresabschluesse j2 WHERE j2.company_fnr = j.company_fnr)`);
+  }
+
+  const sql = `
+    SELECT
+      j.company_fnr AS fnr,
+      COALESCE(cn.name, j.company_fnr) AS name,
+      c.rechtsform,
+      j.gj_jahr,
+      CAST(json_extract(j.kpis, '${metricDef.path}') AS REAL) AS wert,
+      CAST(json_extract(j.kpis, '$.bilanzsumme.betrag') AS REAL) AS bilanzsumme
+    FROM jahresabschluesse j
+    JOIN companies c ON c.fnr = j.company_fnr
+    LEFT JOIN company_names cn ON cn.company_fnr = j.company_fnr AND cn.valid_to IS NULL
+    WHERE ${conditions.join(' AND ')}
+    ORDER BY wert DESC
+    LIMIT ?
+  `;
+  params.push(limitN);
+
+  try {
+    const rows = database.prepare(sql).all(...params);
+    res.json({ metric, label: metricDef.label, suffix: metricDef.suffix, rows });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.get('/:fnr/auszug', async (req, res) => {
   const { fnr } = req.params;
   const { umfang, stichtag } = req.query;

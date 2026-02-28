@@ -7,37 +7,161 @@ block content
     p.error= error
 
   form(method="POST" action="/suchen")
+    .search-main-row
+      input#firmenwortlaut(type="text" name="firmenwortlaut" placeholder="Firmenname suchen…" required autofocus)
+      button(type="submit") Suchen
+    button.search-toggle(type="button" aria-expanded="false")
+      svg.search-toggle-icon(xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round")
+        polyline(points="6 9 12 15 18 9")
+      | Detailsuche
+    .search-detail(hidden)
+      .search-detail-grid
+        div.field
+          label(for="rechtsform") Rechtsform
+          select#rechtsform(name="rechtsform")
+            option(value="") Alle Rechtsformen
+            option(value="GES") GmbH – Gesellschaft mit beschränkter Haftung
+            option(value="AG") AG – Aktiengesellschaft
+            option(value="SE") SE – Societas Europaea
+            option(value="FLX") FlexKapGes – Flexible Kapitalgesellschaft
+            option(value="OG") OG – Offene Gesellschaft
+            option(value="KG") KG – Kommanditgesellschaft
+            option(value="EU") e.U. – Eingetragener Unternehmer/in
+            option(value="PST") Privatstiftung
+            option(value="GEN") Genossenschaft
+        div.field
+          label(for="bundesland") Bundesland
+          select#bundesland(name="bundesland")
+            option(value="") Alle Bundesländer
+            option(value="1") Burgenland
+            option(value="2") Kärnten
+            option(value="3") Niederösterreich
+            option(value="4") Oberösterreich
+            option(value="5") Salzburg
+            option(value="6") Steiermark
+            option(value="7") Tirol
+            option(value="8") Vorarlberg
+            option(value="9") Wien
+      div.field
+        label.checkbox-label
+          input(type="checkbox" name="nurAktiv" checked)
+          | Nur aktive Firmen
+
+  h2 Bestenliste
+  .bl-filters
     div.field
-      label(for="firmenwortlaut") Firmenwortlaut
-      input#firmenwortlaut(type="text" name="firmenwortlaut" placeholder="z.B. Erste*" required autofocus)
+      label(for="bl-metric") Kennzahl
+      select#bl-metric
+        option(value="roa") ROA (Return on Assets)
+        option(value="roe") ROE (Return on Equity)
+        option(value="umsatzrendite") Umsatzrendite
+        option(value="ek_quote") EK-Quote
     div.field
-      label(for="rechtsform") Rechtsform
-      select#rechtsform(name="rechtsform")
-        option(value="") Alle Rechtsformen
-        option(value="GES") GmbH – Gesellschaft mit beschränkter Haftung
-        option(value="AG") AG – Aktiengesellschaft
-        option(value="SE") SE – Societas Europaea
-        option(value="FLX") FlexKapGes – Flexible Kapitalgesellschaft
-        option(value="OG") OG – Offene Gesellschaft
-        option(value="KG") KG – Kommanditgesellschaft
-        option(value="EU") e.U. – Eingetragener Unternehmer/in
-        option(value="PST") Privatstiftung
-        option(value="GEN") Genossenschaft
+      label(for="bl-min-bs") Mind. Bilanzsumme
+      select#bl-min-bs
+        option(value="0") Alle Größen
+        option(value="1000000") ab 1 Mio. €
+        option(value="10000000") ab 10 Mio. €
+        option(value="100000000") ab 100 Mio. €
+        option(value="1000000000") ab 1 Mrd. €
     div.field
-      label(for="bundesland") Bundesland
-      select#bundesland(name="bundesland")
-        option(value="") Alle Bundesländer
-        option(value="1") Burgenland
-        option(value="2") Kärnten
-        option(value="3") Niederösterreich
-        option(value="4") Oberösterreich
-        option(value="5") Salzburg
-        option(value="6") Steiermark
-        option(value="7") Tirol
-        option(value="8") Vorarlberg
-        option(value="9") Wien
-    div.field
-      label.checkbox-label
-        input(type="checkbox" name="nurAktiv" checked)
-        | Nur aktive Firmen
-    button(type="submit") Suchen
+      label(for="bl-limit") Anzahl
+      select#bl-limit
+        option(value="10") Top 10
+        option(value="20" selected) Top 20
+        option(value="50") Top 50
+
+  table.bl-table
+    thead
+      tr
+        th.bl-rank #
+        th FNR
+        th Name
+        th Rechtsform
+        th GJ
+        th.numeric Kennzahl
+        th.numeric Bilanzsumme
+    tbody#bl-tbody
+      tr
+        td(colspan="7") Wird geladen…
+
+block scripts
+  script.
+    (function () {
+      var btn    = document.querySelector('.search-toggle');
+      var detail = document.querySelector('.search-detail');
+      btn.addEventListener('click', function () {
+        var open = detail.hasAttribute('hidden');
+        if (open) {
+          detail.removeAttribute('hidden');
+          btn.setAttribute('aria-expanded', 'true');
+        } else {
+          detail.setAttribute('hidden', '');
+          btn.setAttribute('aria-expanded', 'false');
+        }
+      });
+    })();
+
+  script.
+    (function () {
+      var metricEl = document.getElementById('bl-metric');
+      var minBsEl  = document.getElementById('bl-min-bs');
+      var limitEl  = document.getElementById('bl-limit');
+      var tbody    = document.getElementById('bl-tbody');
+
+      function esc(s) {
+        return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      }
+
+      function fmtNum(v, suffix) {
+        if (v == null) return '—';
+        return (v > 0 ? '+' : '') + v.toFixed(1) + (suffix || '');
+      }
+
+      function fmtBs(v) {
+        if (!v) return '—';
+        var a = Math.abs(v);
+        if (a >= 1e9) return (v / 1e9).toFixed(1) + '\u00a0Mrd.\u00a0\u20ac';
+        if (a >= 1e6) return (v / 1e6).toFixed(1) + '\u00a0Mio.\u00a0\u20ac';
+        if (a >= 1e3) return Math.round(v / 1e3) + '\u00a0T\u00a0\u20ac';
+        return v.toFixed(0) + '\u00a0\u20ac';
+      }
+
+      function load() {
+        var params = new URLSearchParams({
+          metric:         metricEl.value,
+          minBilanzsumme: minBsEl.value,
+          limit:          limitEl.value,
+        });
+        tbody.innerHTML = '<tr><td colspan="7" style="color:var(--md-secondary-text)">Wird geladen\u2026</td></tr>';
+        fetch('/api/firma/bestenliste?' + params)
+          .then(function (r) { return r.json(); })
+          .then(function (data) {
+            if (!data.rows || !data.rows.length) {
+              tbody.innerHTML = '<tr><td colspan="7">Keine Daten vorhanden.</td></tr>';
+              return;
+            }
+            tbody.innerHTML = data.rows.map(function (row, i) {
+              var cls = row.wert > 0 ? 'bl-positive' : (row.wert < 0 ? 'bl-negative' : '');
+              return '<tr class="row-link" onclick="location.href=\'/firma/' + esc(row.fnr) + '\'">' +
+                '<td class="bl-rank">' + (i + 1) + '</td>' +
+                '<td><a href="/firma/' + esc(row.fnr) + '" onclick="event.stopPropagation()">' + esc(row.fnr) + '</a></td>' +
+                '<td>' + esc(row.name) + '</td>' +
+                '<td>' + esc(row.rechtsform || '—') + '</td>' +
+                '<td>' + (row.gj_jahr || '—') + '</td>' +
+                '<td class="numeric' + (cls ? ' ' + cls : '') + '">' + fmtNum(row.wert, data.suffix) + '</td>' +
+                '<td class="numeric">' + fmtBs(row.bilanzsumme) + '</td>' +
+                '</tr>';
+            }).join('');
+          })
+          .catch(function (err) {
+            tbody.innerHTML = '<tr><td colspan="7" class="error">Fehler: ' + esc(err.message) + '</td></tr>';
+          });
+      }
+
+      [metricEl, minBsEl, limitEl].forEach(function (el) {
+        el.addEventListener('change', load);
+      });
+
+      load();
+    })();

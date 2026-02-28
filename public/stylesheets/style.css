@@ -94,9 +94,68 @@ form {
   background: var(--md-surface);
   border-radius: var(--radius);
   box-shadow: var(--md-shadow-1);
-  padding: 32px;
-  max-width: 560px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
 }
+
+.search-main-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.search-main-row input[type="text"] {
+  flex: 1;
+}
+
+.search-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 0;
+  height: auto;
+  background: none;
+  border: none;
+  box-shadow: none;
+  color: var(--md-primary);
+  font-size: .875rem;
+  font-weight: 500;
+  letter-spacing: normal;
+  text-transform: none;
+  cursor: pointer;
+  transition: color .15s;
+}
+
+.search-toggle:hover {
+  background: none;
+  box-shadow: none;
+  color: var(--md-primary-dark);
+  text-decoration: underline;
+}
+
+.search-toggle-icon {
+  transition: transform .2s;
+}
+
+.search-toggle[aria-expanded="true"] .search-toggle-icon {
+  transform: rotate(180deg);
+}
+
+.search-detail {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--md-divider);
+}
+
+.search-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 24px;
+  margin-bottom: 16px;
+}
+
+.search-detail > .field { margin-bottom: 0; }
 
 .field { margin-bottom: 20px; }
 
@@ -647,6 +706,28 @@ tbody tr.row-link:hover { background: var(--md-primary-light); }
   font-size: .9375rem;
 }
 
+/* ── Bestenliste ──────────────────────────────────────────────── */
+.bl-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-end;
+  background: var(--md-surface);
+  border-radius: var(--radius);
+  box-shadow: var(--md-shadow-1);
+  padding: 20px 24px;
+  margin-bottom: 20px;
+}
+
+.bl-filters .field { flex: 1; min-width: 160px; margin-bottom: 0; }
+
+td.numeric, th.numeric { text-align: right; }
+
+.bl-rank { color: var(--md-secondary-text); font-size: .875rem; }
+
+.bl-positive { color: #137333; font-weight: 500; }
+.bl-negative { color: #c5221f; font-weight: 500; }
+
 /* ── Responsive ───────────────────────────────────────────────── */
 @media (max-width: 600px) {
   /* Layout */
@@ -657,8 +738,9 @@ tbody tr.row-link:hover { background: var(--md-primary-light); }
   h1 { font-size: 1.25rem; margin-bottom: 16px; }
   h2 { margin: 16px 0 8px; }
 
-  /* Form: full width on mobile */
-  form { max-width: 100%; padding: 20px; }
+  /* Form: kompakter auf Mobile */
+  form { padding: 16px; }
+  .search-detail-grid { grid-template-columns: 1fr; }
 
   /* Tables: kompaktere Abstände, Spaltenköpfe dürfen umbrechen */
   table { font-size: .875rem; }
@@ -747,4 +829,11 @@ tbody tr.row-link:hover { background: var(--md-primary-light); }
   /* ── Responsive show/hide helpers ─────────────────────────── */
   .hide-mobile { display: none !important; }
   .show-mobile { display: inline-flex !important; align-items: center; justify-content: center; }
+
+  /* ── Bestenliste: Filter untereinander, FNR/Rechtsform/GJ ausblenden ── */
+  .bl-filters { flex-direction: column; gap: 12px; padding: 16px; }
+  .bl-filters .field { min-width: unset; }
+  .bl-table th:nth-child(2), .bl-table td:nth-child(2),
+  .bl-table th:nth-child(4), .bl-table td:nth-child(4),
+  .bl-table th:nth-child(5), .bl-table td:nth-child(5) { display: none; }
 }
