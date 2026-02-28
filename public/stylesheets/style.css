@@ -258,15 +258,6 @@ td, th {
   text-align: left;
 }
 
-/* Key-value table (firma detail) */
-.kv-table tbody th {
-  width: 160px;
-  color: var(--md-secondary-text);
-  font-weight: 500;
-  font-size: .875rem;
-  background: none;
-  white-space: nowrap;
-}
 
 /* ── Status badges ────────────────────────────────────────────── */
 .badge {
@@ -337,6 +328,17 @@ td:last-child { white-space: nowrap; width: 1%; }
 /* KV-Tabelle + Funktionen-Tabelle: letzte Zelle ist kein Aktions-Slot */
 .kv-table   td:last-child { white-space: normal; width: auto; }
 .funk-table td:last-child { white-space: normal; width: auto; }
+
+/* KV- und Funktionen-Tabelle: beide Spalten je 50% */
+.kv-table,
+.funk-table { table-layout: fixed; }
+.kv-table   thead th:first-child,
+.funk-table thead th:first-child { width: 50%; }
+
+/* ── Responsive show/hide helpers ────────────────────────────── */
+/* .hide-mobile: visible by default, hidden on mobile            */
+/* .show-mobile: hidden by default, visible on mobile            */
+.show-mobile { display: none !important; }
 
 /* ── Icon-only Button (z.B. Urkunde öffnen) ──────────────────── */
 .btn-icon {
@@ -676,23 +678,27 @@ tbody tr.row-link:hover { background: var(--md-primary-light); }
   .kv-table, .kv-table tbody { display: block; }
   .kv-table thead { display: none; }
   .kv-table tbody tr {
-    display: block;
+    display: flex;
+    flex-direction: column;
     border-bottom: 1px solid var(--md-divider);
-    padding: 6px 0;
+    padding: 10px 14px;
   }
   .kv-table tbody tr:last-child { border-bottom: none; }
-  .kv-table tbody th {
-    display: block;
-    width: 100%;
-    padding: 8px 14px 2px;
-    font-size: .75rem;
+  .kv-table tbody td:first-child {
+    padding: 0 0 3px;
+    font-size: .72rem;
+    font-weight: 500;
+    color: var(--md-secondary-text);
+    text-transform: uppercase;
+    letter-spacing: .04em;
     white-space: normal;
+    width: 100%;
   }
-  .kv-table tbody td {
-    display: block;
-    width: 100%;
-    padding: 1px 14px 8px;
+  .kv-table tbody td:last-child {
+    padding: 0;
+    font-size: .9375rem;
     white-space: normal;
+    width: auto;
   }
 
   /* ── Funktionen-Tabelle: Funktion über Name stapeln ──────────── */
@@ -737,4 +743,8 @@ tbody tr.row-link:hover { background: var(--md-primary-light); }
   /* ── Back FAB: kleiner, kein Tooltip (kein Hover auf Touch) ── */
   .back-fab { bottom: 20px; left: 16px; width: 44px; height: 44px; }
   .back-fab::after { display: none; }
+
+  /* ── Responsive show/hide helpers ─────────────────────────── */
+  .hide-mobile { display: none !important; }
+  .show-mobile { display: inline-flex !important; align-items: center; justify-content: center; }
 }

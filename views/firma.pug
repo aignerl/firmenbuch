@@ -13,23 +13,23 @@ block content
           th Wert
       tbody
         tr
-          th FNR
+          td FNR
           td= firma.fnr
         tr
-          th Stichtag
+          td Stichtag
           td= firma.stichtag
         tr
-          th Umfang
+          td Umfang
           td= firma.umfang
         tr
-          th Sitz
+          td Sitz
           td= firma.sitz
         tr
-          th Rechtsform
+          td Rechtsform
           td= firma.rechtsform
         each a in firma.adressen
           tr
-            th Adresse
+            td Adresse
             td.address
               if a.strasse
                 | #{a.strasse} #{a.hausnummer}
@@ -84,7 +84,7 @@ block content
               th
           tbody
             each u in urkunden
-              tr.row-link(onclick="if(!event.target.closest('a'))this.querySelector('a.btn').click()")
+              tr.row-link(onclick="if(!event.target.closest('a'))this.querySelector('a.btn,a.btn-icon').click()")
                 td(data-sort=u.datumSort)= u.stichtag || u.dokumentendatum || '—'
                 td
                   | #{u.dokumentart || '—'}
@@ -97,12 +97,13 @@ block content
                     = u.dateiendung.toUpperCase()
                 td(data-sort=u.groesse)= u.groesseFormatiert || '—'
                 td
-                  a.btn-icon(href=`/urkunde/download?key=${encodeURIComponent(u.key)}` target="_blank" title="Öffnen")
+                  a.btn.hide-mobile(href=`/urkunde/download?key=${encodeURIComponent(u.key)}` target="_blank") Öffnen
+                  a.btn-icon.show-mobile(href=`/urkunde/download?key=${encodeURIComponent(u.key)}` target="_blank" title="Öffnen")
                     svg(xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round")
                       path(d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z")
                       circle(cx="12" cy="12" r="3")
 
-  a.back-fab(href="/" data-tooltip="Zurück zur Suche")
+  a.back-fab(href="/" data-tooltip="Zurück zu den Suchergebnissen")
     svg(xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round")
       polyline(points="15 18 9 12 15 6")
 
@@ -334,6 +335,17 @@ block content
       if (yearSelect.value) loadKpis(yearSelect.value);
     })();
 
+  script.
+    (function () {
+      var btn = document.querySelector('.back-fab');
+      if (btn && document.referrer && document.referrer.indexOf(location.host) !== -1) {
+        btn.addEventListener('click', function (e) {
+          e.preventDefault();
+          history.back();
+        });
+      }
+    })();
+
 block scripts
   script(src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js")
   script.
@@ -357,7 +369,7 @@ block scripts
         var PAD = 16;
         var STD_W = 180, NODE_H = 44, MIN_W = 90;
         var H_GAP = 24, V_GAP = 70;
-        var containerW = container.clientWidth - PAD * 2;
+        var containerW = container.clientWidth - 16; // org-chart padding: 8px each side
 
         var root = d3.hierarchy(data);
 
