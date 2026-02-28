@@ -1,16 +1,30 @@
 'use strict';
-const express = require('express');
-const router  = express.Router();
-const axios   = require('axios');
+const express   = require('express');
+const router    = express.Router();
+const axios     = require('axios');
+const rateLimit = require('express-rate-limit');
 
 const GITHUB_REPO = 'aignerl/firmenbuch';
 const GITHUB_API  = `https://api.github.com/repos/${GITHUB_REPO}/issues`;
+
+const submitLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 Stunde
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    res.status(429).render('feedback', {
+      title: 'Feedback', sent: false, issueUrl: null,
+      error: 'Zu viele Meldungen von dieser IP. Bitte warte eine Stunde und versuche es erneut.',
+    });
+  },
+});
 
 router.get('/', (req, res) => {
   res.render('feedback', { title: 'Feedback', sent: false, issueUrl: null, error: null });
 });
 
-router.post('/', async (req, res) => {
+router.post('/', submitLimiter, async (req, res) => {
   const { typ, titel, beschreibung, email, url } = req.body;
 
   if (!titel?.trim() || !beschreibung?.trim()) {
