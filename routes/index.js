@@ -93,27 +93,28 @@ router.post('/suchen', async function (req, res) {
     }
     const q = `%${personenwortlaut.trim()}%`;
     const d = db.getDb();
-    const rows = d.prepare(`
-      SELECT p.name, p.company_fnr, cn.name AS company_name, c.rechtsform, c.sitz, p.rolle_text
+    // Gibt eindeutige Personen zurück: konsolidierte (personen-Tabelle) + nicht-konsolidierte (nur Name)
+    const ergebnisse = d.prepare(`
+      SELECT MAX(personen_id) AS personen_id, name, MAX(geburtsdatum) AS geburtsdatum,
+             SUM(firmen_count) AS firmen_count
       FROM (
-        SELECT name, company_fnr, fkentext AS rolle_text
-        FROM personen_rollen WHERE valid_to IS NULL AND name LIKE ?
+        SELECT p.id AS personen_id, p.name, p.geburtsdatum,
+          (SELECT COUNT(DISTINCT company_fnr) FROM personen_rollen WHERE personen_id = p.id AND valid_to IS NULL) +
+          (SELECT COUNT(DISTINCT company_fnr) FROM gesellschafter  WHERE personen_id = p.id AND valid_to IS NULL AND gesellschafter_fnr IS NULL) AS firmen_count
+        FROM personen p WHERE p.name LIKE ?
         UNION ALL
-        SELECT name, company_fnr, 'Gesellschafter/in' AS rolle_text
-        FROM gesellschafter WHERE valid_to IS NULL AND gesellschafter_fnr IS NULL AND name LIKE ?
-      ) p
-      LEFT JOIN company_names cn ON cn.company_fnr = p.company_fnr AND cn.valid_to IS NULL
-      LEFT JOIN companies c ON c.fnr = p.company_fnr
-      ORDER BY p.name, cn.name
-    `).all(q, q);
-    // Deduplizieren (selbe Person + Firma + Rolle)
-    const seen = new Set();
-    const ergebnisse = rows.filter((r) => {
-      const key = `${r.name}|${r.company_fnr}|${r.rolle_text}`;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
+        SELECT NULL, name, NULL,
+          COUNT(DISTINCT company_fnr) AS firmen_count
+        FROM (
+          SELECT name, company_fnr FROM personen_rollen WHERE valid_to IS NULL AND personen_id IS NULL AND name LIKE ?
+          UNION ALL
+          SELECT name, company_fnr FROM gesellschafter  WHERE valid_to IS NULL AND personen_id IS NULL AND gesellschafter_fnr IS NULL AND name LIKE ?
+        ) GROUP BY name
+      )
+      GROUP BY name
+      HAVING SUM(firmen_count) > 0
+      ORDER BY name
+    `).all(q, q, q);
     return res.render('personen-ergebnis', {
       title: 'Personensuche', ergebnisse, personenwortlaut: personenwortlaut.trim(),
     });
@@ -139,22 +140,55 @@ router.post('/suchen', async function (req, res) {
 });
 
 router.get('/person', function (req, res) {
-  const { name } = req.query;
-  if (!name?.trim()) return res.redirect('/');
+  const { id, name } = req.query;
   const d = db.getDb();
-  const rows = d.prepare(`
-    SELECT p.name, p.company_fnr, cn.name AS company_name, c.rechtsform, c.sitz, c.status, p.rolle_text
-    FROM (
-      SELECT name, company_fnr, fkentext AS rolle_text
-      FROM personen_rollen WHERE valid_to IS NULL AND name = ?
-      UNION ALL
-      SELECT name, company_fnr, 'Gesellschafter/in' AS rolle_text
-      FROM gesellschafter WHERE valid_to IS NULL AND gesellschafter_fnr IS NULL AND name = ?
-    ) p
-    LEFT JOIN company_names cn ON cn.company_fnr = p.company_fnr AND cn.valid_to IS NULL
-    LEFT JOIN companies c ON c.fnr = p.company_fnr
-    ORDER BY cn.name
-  `).all(name.trim(), name.trim());
+
+  let personName, geburtsdatum, rows;
+
+  if (id) {
+    const person = d.prepare(`SELECT name, geburtsdatum FROM personen WHERE id = ?`).get(id);
+    if (!person) return res.redirect('/');
+    personName = person.name;
+    geburtsdatum = person.geburtsdatum;
+    rows = d.prepare(`
+      SELECT p.name, p.company_fnr, cn.name AS company_name, c.rechtsform, c.sitz, c.status, p.rolle_text
+      FROM (
+        SELECT name, company_fnr, fkentext AS rolle_text
+        FROM personen_rollen WHERE personen_id = ? AND valid_to IS NULL
+        UNION ALL
+        SELECT name, company_fnr, fkentext AS rolle_text
+        FROM personen_rollen WHERE personen_id IS NULL AND name = ? AND valid_to IS NULL
+        UNION ALL
+        SELECT name, company_fnr, 'Gesellschafter/in' AS rolle_text
+        FROM gesellschafter WHERE personen_id = ? AND valid_to IS NULL AND gesellschafter_fnr IS NULL
+        UNION ALL
+        SELECT name, company_fnr, 'Gesellschafter/in' AS rolle_text
+        FROM gesellschafter WHERE personen_id IS NULL AND name = ? AND valid_to IS NULL AND gesellschafter_fnr IS NULL
+      ) p
+      LEFT JOIN company_names cn ON cn.company_fnr = p.company_fnr AND cn.valid_to IS NULL
+      LEFT JOIN companies c ON c.fnr = p.company_fnr
+      ORDER BY cn.name
+    `).all(id, personName, id, personName);
+  } else if (name?.trim()) {
+    personName = name.trim();
+    geburtsdatum = null;
+    rows = d.prepare(`
+      SELECT p.name, p.company_fnr, cn.name AS company_name, c.rechtsform, c.sitz, c.status, p.rolle_text
+      FROM (
+        SELECT name, company_fnr, fkentext AS rolle_text
+        FROM personen_rollen WHERE valid_to IS NULL AND personen_id IS NULL AND name = ?
+        UNION ALL
+        SELECT name, company_fnr, 'Gesellschafter/in' AS rolle_text
+        FROM gesellschafter WHERE valid_to IS NULL AND personen_id IS NULL AND gesellschafter_fnr IS NULL AND name = ?
+      ) p
+      LEFT JOIN company_names cn ON cn.company_fnr = p.company_fnr AND cn.valid_to IS NULL
+      LEFT JOIN companies c ON c.fnr = p.company_fnr
+      ORDER BY cn.name
+    `).all(personName, personName);
+  } else {
+    return res.redirect('/');
+  }
+
   const seen = new Set();
   const firmen = rows.filter((r) => {
     const key = `${r.company_fnr}|${r.rolle_text}`;
@@ -162,7 +196,7 @@ router.get('/person', function (req, res) {
     seen.add(key);
     return true;
   });
-  res.render('person', { title: name.trim(), name: name.trim(), firmen });
+  res.render('person', { title: personName, name: personName, geburtsdatum, firmen });
 });
 
 router.get('/firma/:fnr', async function (req, res) {
