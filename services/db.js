@@ -53,6 +53,7 @@ function initSchema(db) {
       company_fnr         TEXT    NOT NULL REFERENCES companies(fnr),
       gesellschafter_fnr  TEXT,   -- Soft-Referenz: Firma evtl. noch nicht in DB
       name                TEXT    NOT NULL,
+      geburtsdatum        DATE,
       quelle              TEXT    NOT NULL DEFAULT 'EVI',
       valid_from          DATE    NOT NULL,
       valid_to            DATE,
@@ -146,6 +147,10 @@ function initSchema(db) {
       scraped_at  DATETIME NOT NULL DEFAULT (datetime('now'))
     );
   `);
+
+  // ── Migrations ────────────────────────────────────────────────────
+  // geburtsdatum auf gesellschafter (bestehende DBs)
+  try { db.exec(`ALTER TABLE gesellschafter ADD COLUMN geburtsdatum DATE`); } catch (_) {}
 }
 
 // ── Hilfsfunktionen ────────────────────────────────────────────────
@@ -222,7 +227,7 @@ function updateGesellschafter(companyFnr, newList) {
   const t = today();
 
   const current = db.prepare(`
-    SELECT id, name, gesellschafter_fnr FROM gesellschafter
+    SELECT id, name, gesellschafter_fnr, geburtsdatum FROM gesellschafter
     WHERE company_fnr = ? AND valid_to IS NULL
   `).all(companyFnr);
 
@@ -241,13 +246,19 @@ function updateGesellschafter(companyFnr, newList) {
     }
   }
 
-  // Neue eintragen
+  // Neue eintragen oder Geburtsdatum bei bestehenden Einträgen ergänzen
   for (const [key, g] of newMap) {
     if (!currentMap.has(key)) {
       db.prepare(`
-        INSERT INTO gesellschafter (company_fnr, gesellschafter_fnr, name, quelle, valid_from)
-        VALUES (?, ?, ?, ?, ?)
-      `).run(companyFnr, g.fnr || null, g.name, g.quelle || 'EVI', t);
+        INSERT INTO gesellschafter (company_fnr, gesellschafter_fnr, name, geburtsdatum, quelle, valid_from)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `).run(companyFnr, g.fnr || null, g.name, g.geburtsdatum || null, g.quelle || 'EVI', t);
+    } else {
+      const existing = currentMap.get(key);
+      if (!existing.geburtsdatum && g.geburtsdatum) {
+        db.prepare(`UPDATE gesellschafter SET geburtsdatum = ? WHERE id = ?`)
+          .run(g.geburtsdatum, existing.id);
+      }
     }
   }
 }

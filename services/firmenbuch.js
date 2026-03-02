@@ -179,6 +179,16 @@ async function scrapeEviGesellschafter({ fnr }) {
 
   if (response.status !== 200) return [];
 
+  // Geburtsdaten aus dem serialisierten React-Payload extrahieren.
+  // Die Daten liegen als escaped JSON im HTML: \"name\":\"Max Muster\",\"geburtsdatum\":\"1970-01-01\"
+  const geburtsdatumMap = {};
+  const unescaped = response.data.replace(/\\"/g, '"');
+  const bdRegex = /"name":"([^"]+)","geburtsdatum":"(\d{4}-\d{2}-\d{2})"/g;
+  let bdMatch;
+  while ((bdMatch = bdRegex.exec(unescaped)) !== null) {
+    geburtsdatumMap[bdMatch[1]] = bdMatch[2];
+  }
+
   const $ = cheerio.load(response.data);
   const result = [];
 
@@ -191,11 +201,16 @@ async function scrapeEviGesellschafter({ fnr }) {
 
       if (link.length > 0) {
         const name = link.text().trim();
-        const fnr = link.attr('href').replace('/f/', '');
-        if (name) result.push({ name, fnr, fkentext: 'GESELLSCHAFTER/IN', quelle: 'EVI' });
+        const gsFnr = link.attr('href').replace('/f/', '');
+        if (name) result.push({ name, fnr: gsFnr, fkentext: 'GESELLSCHAFTER/IN', quelle: 'EVI' });
       } else {
         const name = firstP.text().trim();
-        if (name) result.push({ name, fkentext: 'GESELLSCHAFTER/IN', quelle: 'EVI' });
+        if (name) result.push({
+          name,
+          fkentext: 'GESELLSCHAFTER/IN',
+          quelle: 'EVI',
+          geburtsdatum: geburtsdatumMap[name] || null,
+        });
       }
     });
   });
