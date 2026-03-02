@@ -146,11 +146,23 @@ function initSchema(db) {
       ja_count    INTEGER NOT NULL DEFAULT 0,
       scraped_at  DATETIME NOT NULL DEFAULT (datetime('now'))
     );
+
+    -- ── Personen (konsolidierte natürliche Personen) ────────────────
+    CREATE TABLE IF NOT EXISTS personen (
+      id           INTEGER  PRIMARY KEY AUTOINCREMENT,
+      name         TEXT     NOT NULL,
+      geburtsdatum DATE     NOT NULL,
+      created_at   DATETIME NOT NULL DEFAULT (datetime('now')),
+      UNIQUE(name, geburtsdatum)
+    );
+    CREATE INDEX IF NOT EXISTS idx_personen_name ON personen(name);
   `);
 
   // ── Migrations ────────────────────────────────────────────────────
-  // geburtsdatum auf gesellschafter (bestehende DBs)
-  try { db.exec(`ALTER TABLE gesellschafter ADD COLUMN geburtsdatum DATE`); } catch (_) {}
+  try { db.exec(`ALTER TABLE gesellschafter  ADD COLUMN geburtsdatum DATE`);                          } catch (_) {}
+  try { db.exec(`ALTER TABLE gesellschafter  ADD COLUMN personen_id  INTEGER REFERENCES personen(id)`); } catch (_) {}
+  try { db.exec(`ALTER TABLE personen_rollen ADD COLUMN geburtsdatum DATE`);                          } catch (_) {}
+  try { db.exec(`ALTER TABLE personen_rollen ADD COLUMN personen_id  INTEGER REFERENCES personen(id)`); } catch (_) {}
 }
 
 // ── Hilfsfunktionen ────────────────────────────────────────────────
@@ -219,8 +231,19 @@ function upsertCompany(fnr, { name, rechtsform, sitz, status } = {}) {
 }
 
 /**
+ * Legt eine Person an (name + geburtsdatum) oder gibt die ID der bestehenden zurück.
+ * Gibt null zurück wenn kein Geburtsdatum bekannt — keine Konsolidierung ohne sicheres Merkmal.
+ */
+function upsertPerson(name, geburtsdatum) {
+  if (!geburtsdatum) return null;
+  const db = getDb();
+  db.prepare(`INSERT OR IGNORE INTO personen (name, geburtsdatum) VALUES (?, ?)`).run(name, geburtsdatum);
+  return db.prepare(`SELECT id FROM personen WHERE name = ? AND geburtsdatum = ?`).get(name, geburtsdatum)?.id || null;
+}
+
+/**
  * Aktualisiert Gesellschafter einer Firma (mit valid_from/valid_to Historisierung).
- * newList: Array von { name, fnr (optional), quelle }
+ * newList: Array von { name, fnr (optional), quelle, geburtsdatum (optional) }
  */
 function updateGesellschafter(companyFnr, newList) {
   const db = getDb();
@@ -246,18 +269,22 @@ function updateGesellschafter(companyFnr, newList) {
     }
   }
 
-  // Neue eintragen oder Geburtsdatum bei bestehenden Einträgen ergänzen
+  // Neue eintragen oder Geburtsdatum/personen_id bei bestehenden Einträgen ergänzen
   for (const [key, g] of newMap) {
+    const personenId = upsertPerson(g.name, g.geburtsdatum || null);
     if (!currentMap.has(key)) {
       db.prepare(`
-        INSERT INTO gesellschafter (company_fnr, gesellschafter_fnr, name, geburtsdatum, quelle, valid_from)
-        VALUES (?, ?, ?, ?, ?, ?)
-      `).run(companyFnr, g.fnr || null, g.name, g.geburtsdatum || null, g.quelle || 'EVI', t);
+        INSERT INTO gesellschafter (company_fnr, gesellschafter_fnr, name, geburtsdatum, personen_id, quelle, valid_from)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `).run(companyFnr, g.fnr || null, g.name, g.geburtsdatum || null, personenId, g.quelle || 'EVI', t);
     } else {
       const existing = currentMap.get(key);
-      if (!existing.geburtsdatum && g.geburtsdatum) {
-        db.prepare(`UPDATE gesellschafter SET geburtsdatum = ? WHERE id = ?`)
-          .run(g.geburtsdatum, existing.id);
+      if ((!existing.geburtsdatum && g.geburtsdatum) || personenId) {
+        db.prepare(`
+          UPDATE gesellschafter
+          SET geburtsdatum = COALESCE(geburtsdatum, ?), personen_id = COALESCE(personen_id, ?)
+          WHERE id = ?
+        `).run(g.geburtsdatum || null, personenId, existing.id);
       }
     }
   }
@@ -265,14 +292,14 @@ function updateGesellschafter(companyFnr, newList) {
 
 /**
  * Aktualisiert Personen-Rollen einer Firma (mit Historisierung).
- * newList: Array von { name, rolle, fkentext }
+ * newList: Array von { name, rolle, fkentext, geburtsdatum (optional) }
  */
 function updatePersonenRollen(companyFnr, newList) {
   const db = getDb();
   const t = today();
 
   const current = db.prepare(`
-    SELECT id, name, rolle FROM personen_rollen
+    SELECT id, name, rolle, geburtsdatum FROM personen_rollen
     WHERE company_fnr = ? AND valid_to IS NULL
   `).all(companyFnr);
 
@@ -288,11 +315,21 @@ function updatePersonenRollen(companyFnr, newList) {
   }
 
   for (const [key, r] of newMap) {
+    const personenId = upsertPerson(r.name, r.geburtsdatum || null);
     if (!currentMap.has(key)) {
       db.prepare(`
-        INSERT INTO personen_rollen (company_fnr, name, rolle, fkentext, valid_from)
-        VALUES (?, ?, ?, ?, ?)
-      `).run(companyFnr, r.name, r.rolle, r.fkentext || null, t);
+        INSERT INTO personen_rollen (company_fnr, name, rolle, fkentext, geburtsdatum, personen_id, valid_from)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `).run(companyFnr, r.name, r.rolle, r.fkentext || null, r.geburtsdatum || null, personenId, t);
+    } else {
+      const existing = currentMap.get(key);
+      if ((!existing.geburtsdatum && r.geburtsdatum) || personenId) {
+        db.prepare(`
+          UPDATE personen_rollen
+          SET geburtsdatum = COALESCE(geburtsdatum, ?), personen_id = COALESCE(personen_id, ?)
+          WHERE id = ?
+        `).run(r.geburtsdatum || null, personenId, existing.id);
+      }
     }
   }
 }
@@ -455,6 +492,7 @@ function getBulkLoadProgress() {
 module.exports = {
   getDb,
   upsertCompany,
+  upsertPerson,
   updateGesellschafter,
   updatePersonenRollen,
   updateAdressen,

@@ -8,16 +8,17 @@ function getTochtergesellschaften(fnr) {
   return dbService.getTochtergesellschaften(fnr);
 }
 
-function persistToDb(fnr, name, gesellschafter, geschaeftsfuehrer, vorstand) {
+function persistToDb(fnr, name, gesellschafter, geschaeftsfuehrer, vorstand, geburtsdatumMap = {}) {
   dbService.upsertCompany(fnr, { name });
   dbService.updateGesellschafter(fnr, gesellschafter.map(g => ({
     name: g.name,
     fnr: g.fnr ? g.fnr.replace(/ /g, '') : null,
     quelle: g.quelle || 'EVI',
+    geburtsdatum: g.geburtsdatum || null,
   })));
   dbService.updatePersonenRollen(fnr, [
-    ...(geschaeftsfuehrer || []).map(n => ({ name: n, rolle: 'GF', fkentext: 'Geschäftsführer/in' })),
-    ...(vorstand || []).map(n => ({ name: n, rolle: 'VM', fkentext: 'Vorstand' })),
+    ...(geschaeftsfuehrer || []).map(n => ({ name: n, rolle: 'GF', fkentext: 'Geschäftsführer/in', geburtsdatum: geburtsdatumMap[n] || null })),
+    ...(vorstand || []).map(n => ({ name: n, rolle: 'VM', fkentext: 'Vorstand', geburtsdatum: geburtsdatumMap[n] || null })),
   ]);
   dbService.getDb().prepare(`
     UPDATE companies
@@ -170,17 +171,20 @@ async function getUrkunde({ key }) {
   };
 }
 
-async function scrapeEviGesellschafter({ fnr }) {
+/**
+ * Interne Funktion: Holt EVI-Seite und gibt sowohl Gesellschafter-Liste
+ * als auch eine vollständige name→geburtsdatum Map (inkl. GF/Vorstand) zurück.
+ */
+async function fetchEviData({ fnr }) {
   const response = await axios.get(`https://www.evi.gv.at/f/${fnr}`, {
     headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Firmenbuch-App/1.0)' },
     validateStatus: () => true,
     timeout: 10000,
   });
 
-  if (response.status !== 200) return [];
+  if (response.status !== 200) return { gesellschafter: [], geburtsdatumMap: {} };
 
-  // Geburtsdaten aus dem serialisierten React-Payload extrahieren.
-  // Die Daten liegen als escaped JSON im HTML: \"name\":\"Max Muster\",\"geburtsdatum\":\"1970-01-01\"
+  // Geburtsdaten aller Personen (GF, Vorstand, Gesellschafter) aus React-Payload extrahieren.
   const geburtsdatumMap = {};
   const unescaped = response.data.replace(/\\"/g, '"');
   const bdRegex = /"name":"([^"]+)","geburtsdatum":"(\d{4}-\d{2}-\d{2})"/g;
@@ -190,7 +194,7 @@ async function scrapeEviGesellschafter({ fnr }) {
   }
 
   const $ = cheerio.load(response.data);
-  const result = [];
+  const gesellschafter = [];
 
   $('#personen h3').each(function () {
     if (!$(this).text().includes('Gesellschafter')) return;
@@ -202,10 +206,10 @@ async function scrapeEviGesellschafter({ fnr }) {
       if (link.length > 0) {
         const name = link.text().trim();
         const gsFnr = link.attr('href').replace('/f/', '');
-        if (name) result.push({ name, fnr: gsFnr, fkentext: 'GESELLSCHAFTER/IN', quelle: 'EVI' });
+        if (name) gesellschafter.push({ name, fnr: gsFnr, fkentext: 'GESELLSCHAFTER/IN', quelle: 'EVI' });
       } else {
         const name = firstP.text().trim();
-        if (name) result.push({
+        if (name) gesellschafter.push({
           name,
           fkentext: 'GESELLSCHAFTER/IN',
           quelle: 'EVI',
@@ -215,7 +219,13 @@ async function scrapeEviGesellschafter({ fnr }) {
     });
   });
 
-  return result;
+  return { gesellschafter, geburtsdatumMap };
+}
+
+/** Öffentliche Funktion — gibt nur die Gesellschafter-Liste zurück (Abwärtskompatibilität). */
+async function scrapeEviGesellschafter({ fnr }) {
+  const { gesellschafter } = await fetchEviData({ fnr });
+  return gesellschafter;
 }
 
 async function getOwnershipTree(rootFnr) {
@@ -355,10 +365,12 @@ async function scrapeAndPersist(fnr) {
   const normFnr = fnr.replace(/ /g, '');
   const db = dbService.getDb();
 
-  const [auszug, eviGesellschafter] = await Promise.all([
+  const [auszug, eviData] = await Promise.all([
     getAuszug({ fnr: normFnr }).catch(() => null),
-    scrapeEviGesellschafter({ fnr: normFnr }).catch(() => []),
+    fetchEviData({ fnr: normFnr }).catch(() => ({ gesellschafter: [], geburtsdatumMap: {} })),
   ]);
+  const eviGesellschafter = eviData.gesellschafter;
+  const geburtsdatumMap  = eviData.geburtsdatumMap;
 
   let name = normFnr;
   let rechtsform = '';
@@ -401,7 +413,7 @@ async function scrapeAndPersist(fnr) {
     });
   }
 
-  persistToDb(normFnr, name, eviGesellschafter, geschaeftsfuehrer, vorstand);
+  persistToDb(normFnr, name, eviGesellschafter, geschaeftsfuehrer, vorstand, geburtsdatumMap);
   dbService.upsertCompany(normFnr, { name, rechtsform, sitz });
 
   db.prepare(`
