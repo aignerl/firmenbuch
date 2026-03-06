@@ -1,28 +1,42 @@
-extends layout
+doctype html
+html(lang="de")
+  head
+    meta(charset="utf-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1")
+    title= title
+    link(rel='preconnect', href='https://fonts.googleapis.com')
+    link(rel='preconnect', href='https://fonts.gstatic.com', crossorigin)
+    link(rel='stylesheet', href='https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap')
+    link(rel='stylesheet', href='/stylesheets/style.css?v=40')
+    style.
+      html, body { height: 100%; overflow: hidden; }
+      body { background: #fff; }
+      #org-chart {
+        position: fixed;
+        inset: 0;
+        margin: 0;
+        border-radius: 0;
+        box-shadow: none;
+        overflow: auto;
+      }
+  body
+    div#org-chart.org-chart
 
-block content
-  .org-page
-    .org-page__header
-      h1.org-page__title= 'Organigramm – ' + fnr
-    div#org-chart.org-chart.org-chart--page
+    a.back-fab(href=`/firma/${fnr}` title="Zurück zur Firma")
+      svg(xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round")
+        polyline(points="15 18 9 12 15 6")
 
-  a.back-fab(href=`/firma/${fnr}` title="Zurück zur Firma")
-    svg(xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round")
-      polyline(points="15 18 9 12 15 6")
-
-block scripts
-  script(src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js")
-  script(src="/javascripts/orgchart.js")
-  script.
-    (function () {
-      var fnr = !{JSON.stringify(fnr)};
-      var container = document.getElementById('org-chart');
-      if (!container || !fnr) return;
-      renderOrgChart(container, fnr, {
-        fullscreen: true,
-        onData: function (data) {
-          var h1 = document.querySelector('.org-page__title');
-          if (h1 && data && data.name) h1.textContent = data.name + ' – Organigramm';
-        }
-      });
-    })();
+    script(src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js")
+    script(src="/javascripts/orgchart.js")
+    script.
+      (function () {
+        var fnr = !{JSON.stringify(fnr)};
+        var container = document.getElementById('org-chart');
+        if (!container || !fnr) return;
+        renderOrgChart(container, fnr, {
+          fullscreen: true,
+          onData: function (data) {
+            if (data && data.name) document.title = data.name + ' – Organigramm';
+          }
+        });
+      })();
