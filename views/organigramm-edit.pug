@@ -1,0 +1,92 @@
+doctype html
+html(lang="de")
+  head
+    meta(charset="utf-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1")
+    title= title
+    link(rel='preconnect', href='https://fonts.googleapis.com')
+    link(rel='preconnect', href='https://fonts.gstatic.com', crossorigin)
+    link(rel='stylesheet', href='https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap')
+    link(rel='stylesheet', href='/stylesheets/style.css?v=42')
+    style.
+      html, body { height: 100%; overflow: hidden; }
+  body
+    .editor-toolbar
+      a.editor-btn(href=`/firma/${fnr}/organigramm`)
+        svg(xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:block")
+          polyline(points="15 18 9 12 15 6")
+      button#btn-add-node.editor-btn.editor-btn--primary + Knoten
+      button#btn-draw-edge.editor-btn ↝ Kante zeichnen
+      button#btn-save.editor-btn ↓ Speichern
+      label.editor-btn(for="file-import") ↑ Laden
+        input#file-import(type="file" accept=".json" hidden)
+      button#btn-layout.editor-btn ↺ Layout
+      span#editor-firma-name.editor-firma-name
+
+    #cy(data-fnr=fnr)
+    #cy-loading.cy-loading Organigramm wird geladen…
+
+    .editor-panel#props-panel(hidden)
+      .editor-panel-header
+        h3#props-title Eigenschaften
+        button#props-close-btn.editor-panel-close ✕
+      form#props-node-form(hidden)
+        .editor-field
+          label(for="pn-name") Name
+          input#pn-name(type="text" autocomplete="off")
+        .editor-field
+          label(for="pn-fnr") FNR (optional)
+          input#pn-fnr(type="text" autocomplete="off")
+        .editor-field
+          label(for="pn-land") Land
+          input#pn-land(type="text" autocomplete="off" placeholder="z.B. DE, UK, CH")
+        .editor-field
+          label(for="pn-rechtsform") Rechtsform
+          input#pn-rechtsform(type="text" autocomplete="off" placeholder="z.B. GmbH, Ltd, AG")
+        .editor-field
+          label(for="pn-note") Notiz
+          textarea#pn-note(rows="3")
+        button#props-node-save-btn.editor-btn.editor-btn--primary(type="button") Speichern
+        button#props-node-delete-btn.editor-btn.editor-btn--danger(type="button" style="display:none; margin-top:8px") Löschen
+      form#props-edge-form(hidden)
+        .editor-field
+          label(for="pe-prozent") Beteiligung (%)
+          input#pe-prozent(type="number" min="0" max="100" step="0.01" placeholder="z.B. 33.33")
+        .editor-field
+          label(for="pe-typ") Typ
+          select#pe-typ
+            option(value="direkt") Direkt
+            option(value="indirekt") Indirekt
+            option(value="treuhänderisch") Treuhänderisch
+        button#props-edge-save-btn.editor-btn.editor-btn--primary(type="button") Speichern
+        button#props-edge-delete-btn.editor-btn.editor-btn--danger(type="button" style="display:none; margin-top:8px") Löschen
+
+    #modal-overlay.modal-overlay(hidden)
+      #modal-add-node.modal-card
+        h2.modal-title Knoten hinzufügen
+        .editor-field
+          label(for="an-typ") Typ
+          select#an-typ
+            option(value="firma") Firma
+            option(value="person") Person
+        .editor-field
+          label(for="an-name") Name *
+          input#an-name(type="text" autocomplete="off" placeholder="z.B. Foreign Holdings Ltd")
+        .editor-field.an-firma-field
+          label(for="an-fnr") FNR (optional)
+          input#an-fnr(type="text" autocomplete="off" placeholder="nur für österreichische Firmen")
+        .editor-field.an-firma-field
+          label(for="an-land") Land
+          input#an-land(type="text" autocomplete="off" placeholder="z.B. DE, UK, CH")
+        .editor-field.an-firma-field
+          label(for="an-rechtsform") Rechtsform
+          input#an-rechtsform(type="text" autocomplete="off" placeholder="z.B. GmbH, OG, KG")
+        .editor-field
+          label(for="an-note") Notiz
+          textarea#an-note(rows="2")
+        .modal-actions
+          button#btn-modal-cancel.editor-btn(type="button") Abbrechen
+          button#btn-modal-add.editor-btn.editor-btn--primary(type="button") Hinzufügen
+
+    script(src="https://cdn.jsdelivr.net/npm/cytoscape@3/dist/cytoscape.min.js")
+    script(src="/javascripts/cytoscape-editor.js")

@@ -293,6 +293,11 @@ router.get('/firma/:fnr/organigramm', function (req, res) {
   res.render('organigramm', { title: `Organigramm – ${fnr}`, fnr });
 });
 
+router.get('/firma/:fnr/organigramm/edit', function (req, res) {
+  const { fnr } = req.params;
+  res.render('organigramm-edit', { title: `Struktur-Editor – ${fnr}`, fnr });
+});
+
 router.get('/firma/:fnr/urkunden', async function (req, res) {
   const { fnr } = req.params;
   try {

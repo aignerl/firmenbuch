@@ -1,7 +1,7 @@
 'use strict';
 const express = require('express');
 const router = express.Router();
-const { sucheFirma, getAuszug, sucheUrkunde, getUrkunde, getOwnershipTree } = require('../../services/firmenbuch');
+const { sucheFirma, getAuszug, sucheUrkunde, getUrkunde, getOwnershipTree, buildGraph } = require('../../services/firmenbuch');
 const { parseJahresabschluss, extractKpis } = require('../../services/jahresabschluss');
 const db = require('../../services/db');
 
@@ -140,6 +140,15 @@ router.get('/:fnr/jahresabschluss', async (req, res) => {
     try { db.upsertJahresabschluss(fnr, key, result); } catch (_) {}
 
     res.json(result);
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
+});
+
+router.get('/:fnr/graph', async (req, res) => {
+  try {
+    const graph = await buildGraph(req.params.fnr);
+    res.json(graph);
   } catch (err) {
     res.status(502).json({ error: err.message });
   }

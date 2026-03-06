@@ -1,5 +1,6 @@
 /* ── Reset & base ─────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+[hidden] { display: none !important; }
 
 :root {
   --md-primary:       #1a73e8;
@@ -722,6 +723,11 @@ tbody tr.row-link:hover { background: var(--md-primary-light); }
   font-size: .72rem;
   font-weight: 700;
 }
+.org-coges-label text {
+  font-size: .72rem;
+  font-style: italic;
+  fill: var(--md-secondary-text, #666);
+}
 
 /* Tabular fallback */
 .org-table {
@@ -1365,6 +1371,200 @@ thead th.bl-rank { color: inherit; }
 .bl-positive { color: #137333; font-weight: 500; }
 .bl-negative { color: #c5221f; font-weight: 500; }
 
+/* ── Corporate Structure Editor ──────────────────────────────── */
+.editor-toolbar {
+  height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+  background: var(--md-surface);
+  border-bottom: 1px solid var(--md-divider);
+  flex-shrink: 0;
+  overflow-x: auto;
+}
+
+.editor-firma-name {
+  font-size: .875rem;
+  color: var(--md-secondary-text);
+  margin-left: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.editor-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  height: 32px;
+  border: 1px solid var(--md-divider);
+  border-radius: var(--radius);
+  background: var(--md-surface);
+  color: var(--md-on-surface);
+  font-size: .875rem;
+  font-family: 'Roboto', sans-serif;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background .15s;
+  flex-shrink: 0;
+}
+.editor-btn:hover { background: var(--md-background); text-decoration: none; }
+.editor-btn--primary {
+  background: var(--md-primary);
+  color: var(--md-on-primary);
+  border-color: var(--md-primary);
+}
+.editor-btn--primary:hover { background: var(--md-primary-dark); }
+.editor-btn--active {
+  background: var(--md-primary);
+  color: var(--md-on-primary);
+  outline: 2px solid #fbbc04;
+  outline-offset: 1px;
+}
+.editor-btn--active:hover { background: var(--md-primary-dark); }
+.editor-btn--danger {
+  background: var(--md-error);
+  color: #fff;
+  border-color: var(--md-error);
+}
+
+#cy {
+  width: 100%;
+  height: calc(100vh - 48px);
+  display: block;
+}
+
+.cy-loading {
+  position: fixed;
+  top: calc(50% + 24px);
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--md-secondary-text);
+  font-size: .875rem;
+}
+
+.editor-panel {
+  position: fixed;
+  right: 0;
+  top: 48px;
+  width: 280px;
+  height: calc(100vh - 48px);
+  background: var(--md-surface);
+  padding: 16px;
+  box-shadow: -2px 0 8px rgba(0,0,0,.1);
+  overflow-y: auto;
+  z-index: 50;
+}
+
+.editor-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.editor-panel-header h3 {
+  font-size: .875rem;
+  font-weight: 500;
+}
+.editor-panel-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--md-secondary-text);
+  font-size: 1rem;
+  padding: 4px;
+  line-height: 1;
+}
+
+.editor-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+.editor-field label {
+  font-size: .75rem;
+  color: var(--md-secondary-text);
+}
+.editor-field input,
+.editor-field select,
+.editor-field textarea {
+  border: 1px solid var(--md-divider);
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-size: .875rem;
+  font-family: 'Roboto', sans-serif;
+  width: 100%;
+  background: #fff;
+  color: var(--md-on-surface);
+}
+.editor-field input[readonly],
+.editor-field textarea[readonly] {
+  background: var(--md-background);
+  color: var(--md-secondary-text);
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+.modal-card {
+  background: var(--md-surface);
+  border-radius: 12px;
+  padding: 24px;
+  width: 360px;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-title {
+  font-size: 1.125rem;
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+/* ── Edit FAB (on organigramm.pug) ──────────────────────────── */
+.edit-fab {
+  position: fixed;
+  bottom: clamp(1.25rem, 4vw, 1.75rem);
+  right: clamp(1rem, 4vw, 1.75rem);
+  width: clamp(2.75rem, 8vw, 3rem);
+  height: clamp(2.75rem, 8vw, 3rem);
+  border-radius: 50%;
+  background: var(--md-primary);
+  color: var(--md-on-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--md-shadow-2);
+  text-decoration: none;
+  transition: background .15s, box-shadow .15s, transform .15s;
+  z-index: 200;
+}
+.edit-fab:hover {
+  background: var(--md-primary-dark);
+  box-shadow: 0 4px 12px rgba(60,64,67,.4);
+  transform: scale(1.08);
+}
+
 /* ── Responsive ───────────────────────────────────────────────── */
 @media (max-width: 37.5em) {
   /* Typography */
@@ -1471,6 +1671,8 @@ thead th.bl-rank { color: inherit; }
 
   /* ── Back FAB: Tooltip ausblenden (kein Hover auf Touch) ───── */
   .back-fab::after { display: none; }
+  /* ── Edit FAB ─────────────────────────────────────────────── */
+  .edit-fab::after { display: none; }
 
   /* ── Responsive show/hide helpers ─────────────────────────── */
   .hide-mobile { display: none !important; }
@@ -1478,6 +1680,11 @@ thead th.bl-rank { color: inherit; }
 
   /* ── Search-Detail: Felder untereinander ──────────────────── */
   .search-detail-grid { grid-template-columns: 1fr; }
+
+  /* ── Editor: Stack toolbar buttons ─────────────────────────── */
+  .editor-toolbar { gap: 6px; padding: 0 10px; }
+  .editor-btn { padding: 0 8px; font-size: .8rem; }
+  .editor-firma-name { display: none; }
 
   /* ── Bestenliste: stacked rows ─────────────────────────────── */
   .bl-filters { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }

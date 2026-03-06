@@ -431,4 +431,67 @@ function toArr(v) {
   return Array.isArray(v) ? v : [v];
 }
 
-module.exports = { sucheFirma, getAuszug, sucheUrkunde, getUrkunde, scrapeEviGesellschafter, getOwnershipTree, veraenderungenFirma, scrapeAndPersist };
+/**
+ * Konvertiert den Ownership-Tree in ein flaches Nodes+Edges-Format für cytoscape.
+ * Kanten: Eigentümer → Firma (Besitzrichtung)
+ */
+async function buildGraph(rootFnr) {
+  const tree = await getOwnershipTree(rootFnr);
+  const nodes = new Map();
+  const edgeSet = new Set();
+  const edges = [];
+  const visited = new Set();
+
+  function addEdge(source, target) {
+    const key = source + '>' + target;
+    if (edgeSet.has(key)) return;
+    edgeSet.add(key);
+    edges.push({ data: { id: 'e:' + source + ':' + target, source, target, prozent: null, edgeSource: 'soap' } });
+  }
+
+  function traverse(node, parentId) {
+    // Person-IDs kommen bereits mit 'person:'-Präfix aus dem Tree
+    const id = node.fnr ? 'fnr:' + node.fnr : (node.id || ('person:' + node.name));
+    if (!nodes.has(id)) {
+      nodes.set(id, {
+        data: {
+          id,
+          name: node.name,
+          fnr: node.fnr || null,
+          type: node.type || 'firma',
+          source: 'soap',
+          isRoot: node.fnr === rootFnr,
+          geschaeftsfuehrer: node.geschaeftsfuehrer || [],
+          vorstand: node.vorstand || [],
+        }
+      });
+    }
+    if (parentId) {
+      addEdge(id, parentId); // id besitzt parentId
+    }
+    if (!visited.has(id)) {
+      visited.add(id);
+      (node.children || []).forEach(ch => traverse(ch, id));
+      (node.tochter || []).forEach(t => {
+        const tid = 'fnr:' + t.fnr;
+        if (!nodes.has(tid)) {
+          nodes.set(tid, { data: { id: tid, name: t.name || t.fnr, fnr: t.fnr, type: 'firma', source: 'soap' } });
+        }
+        addEdge(id, tid); // id besitzt tochter
+        (t.coGesellschafter || []).forEach(cg => {
+          if (!cg.fnr) return;
+          const cgid = 'fnr:' + cg.fnr;
+          if (!nodes.has(cgid)) {
+            nodes.set(cgid, { data: { id: cgid, name: cg.name || cg.fnr, fnr: cg.fnr, type: 'firma', source: 'soap' } });
+          }
+          addEdge(cgid, tid);
+        });
+      });
+    }
+  }
+
+  traverse(tree, null);
+  return { nodes: Array.from(nodes.values()), edges };
+}
+
+module.exports = { sucheFirma, getAuszug, sucheUrkunde, getUrkunde, scrapeEviGesellschafter, getOwnershipTree, veraenderungenFirma, scrapeAndPersist, buildGraph };
