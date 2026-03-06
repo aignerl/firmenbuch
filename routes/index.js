@@ -288,6 +288,11 @@ router.get('/firma/:fnr/kennzahlen', async function (req, res) {
   }
 });
 
+router.get('/firma/:fnr/organigramm', function (req, res) {
+  const { fnr } = req.params;
+  res.render('organigramm', { title: `Organigramm – ${fnr}`, fnr });
+});
+
 router.get('/firma/:fnr/urkunden', async function (req, res) {
   const { fnr } = req.params;
   try {

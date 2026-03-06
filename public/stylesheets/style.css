@@ -682,6 +682,110 @@ tbody tr.row-link:hover { background: var(--md-primary-light); }
 }
 .org-tooltip--visible { opacity: 1; }
 
+/* Organigramm header row (title + fullscreen button) */
+.org-header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+.org-header h2 { margin-bottom: 0; }
+
+.org-fullscreen-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: .8rem;
+  color: var(--md-secondary-text);
+  text-decoration: none;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius);
+  transition: background .15s, color .15s;
+  white-space: nowrap;
+}
+.org-fullscreen-btn:hover {
+  background: var(--md-primary-light);
+  color: var(--md-primary);
+}
+
+/* Expand/collapse indicator on tree nodes */
+.org-expand-btn {
+  fill: var(--md-primary);
+  stroke: var(--md-surface);
+  stroke-width: 1.5px;
+}
+.org-node--person .org-expand-btn {
+  fill: var(--md-secondary-text);
+}
+.org-expand-label {
+  fill: #fff;
+  font-size: .72rem;
+  font-weight: 700;
+}
+
+/* Tabular fallback */
+.org-table {
+  padding: 0.25rem 0.5rem;
+}
+.org-table__row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.2rem 0;
+  padding-left: calc(var(--depth, 0) * 1.25rem + 0.25rem);
+  border-left: 2px solid transparent;
+  font-size: .875rem;
+}
+.org-table__row:hover { background: var(--md-primary-light); border-radius: 4px; }
+.org-table__name a { color: var(--md-primary); text-decoration: none; font-weight: 500; }
+.org-table__name a:hover { text-decoration: underline; }
+.org-table__name strong { color: var(--md-on-surface); }
+.org-table__fnr {
+  font-size: .75rem;
+  color: var(--md-secondary-text);
+  margin-left: auto;
+  white-space: nowrap;
+}
+.org-table__type {
+  font-size: .7rem;
+  background: #f1f3f4;
+  color: var(--md-secondary-text);
+  padding: 0.1em 0.4em;
+  border-radius: 3px;
+  margin-left: 0.25rem;
+}
+.org-table__section {
+  margin-top: 0.75rem;
+  margin-bottom: 0.25rem;
+  padding-left: 0.25rem;
+  font-size: .78rem;
+  font-weight: 600;
+  color: var(--md-secondary-text);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+/* Fullscreen org chart page */
+.org-page {
+  margin-bottom: 0;
+}
+.org-page__header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+.org-page__title {
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin-bottom: 0;
+}
+.org-chart--page {
+  height: calc(100vh - 10rem);
+  min-height: 400px;
+  margin-bottom: 0;
+}
+
 /* ── KPI Kennzahlen ───────────────────────────────────────────── */
 .kpi-section {
   background: var(--md-surface);
