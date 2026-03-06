@@ -182,9 +182,10 @@
       var containerW = container.clientWidth - 16;
 
       var svgW = Math.max(maxX - minX + nodeW + PAD * 2, containerW);
-      var svgH = maxY - minY + NODE_H + PAD * 2;
+      var treeH = maxY - minY + NODE_H + PAD * 2;
+      var svgH  = Math.max(treeH, container.clientHeight);
       var offsetX = -minX + (svgW - (maxX - minX + nodeW)) / 2;
-      var offsetY = -minY + PAD + NODE_H / 2;
+      var offsetY = -minY + (svgH - (maxY - minY + NODE_H)) / 2 + NODE_H / 2;
 
       var svg = d3.select(container).append('svg').attr('width', svgW).attr('height', svgH);
       var zoomG = svg.append('g');
@@ -291,12 +292,14 @@
       var nodes = root.descendants();
       var xs = nodes.map(function (d) { return d.x; });
       var minX = Math.min.apply(null, xs), maxX = Math.max.apply(null, xs);
-      var svgH = maxX - minX + NODE_H + PAD * 2;
-      var svgW = Math.max((root.height + 1) * LEVEL_W + PAD * 2, containerW);
+      var treeH = maxX - minX + NODE_H + PAD * 2;
+      var svgH  = Math.max(treeH, container.clientHeight);
+      var svgW  = Math.max((root.height + 1) * LEVEL_W + PAD * 2, containerW);
       var rightEdge = svgW - PAD;
+      var extraPadY = (svgH - treeH) / 2;
 
       function gx(d) { return rightEdge - d.y - STD_W / 2; }
-      function gy(d) { return d.x - minX + PAD + NODE_H / 2; }
+      function gy(d) { return d.x - minX + PAD + NODE_H / 2 + extraPadY; }
 
       var svg = d3.select(container).append('svg').attr('width', svgW).attr('height', svgH);
       var zoomG = svg.append('g');
