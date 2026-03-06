@@ -115,16 +115,48 @@ block scripts
             firmaSection.hidden = true;
             personSection.removeAttribute('hidden');
             firmaInput.removeAttribute('required');
+            firmaInput.value = '';
             personInput.setAttribute('required', '');
             personInput.focus();
           } else {
             personSection.hidden = true;
             firmaSection.removeAttribute('hidden');
             personInput.removeAttribute('required');
+            personInput.value = '';
             firmaInput.setAttribute('required', '');
             firmaInput.focus();
           }
         });
+      });
+
+      // Sicherheitsnetz: beim Submit inaktives Feld leeren
+      document.querySelector('form').addEventListener('submit', function () {
+        if (typeInput.value === 'person') {
+          firmaInput.value = '';
+        } else {
+          personInput.value = '';
+        }
+      });
+
+      // bfcache-Fix: bei Wiederherstellung aus Browser-Cache Zustand neu synchronisieren
+      window.addEventListener('pageshow', function () {
+        var activeTab = document.querySelector('.search-tab--active');
+        if (!activeTab) return;
+        var type = activeTab.dataset.type;
+        typeInput.value = type;
+        if (type === 'person') {
+          firmaSection.hidden = true;
+          personSection.removeAttribute('hidden');
+          firmaInput.removeAttribute('required');
+          firmaInput.value = '';
+          personInput.setAttribute('required', '');
+        } else {
+          personSection.hidden = true;
+          firmaSection.removeAttribute('hidden');
+          personInput.removeAttribute('required');
+          personInput.value = '';
+          firmaInput.setAttribute('required', '');
+        }
       });
     })();
 

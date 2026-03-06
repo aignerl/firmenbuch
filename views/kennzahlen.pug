@@ -1,0 +1,383 @@
+extends layout
+
+block content
+  h1= title
+
+  if xmlUrkunden && xmlUrkunden.length > 0
+    div.kpi-year-selector.kz-year-selector
+      label(for="kz-year") Geschäftsjahr
+      select#kz-year
+        each u in xmlUrkunden
+          option(value=u.key)= u.label
+  else
+    p.kpi-error Keine Jahresabschluss-Daten verfügbar.
+
+  div#kz-content
+
+  a.back-fab(href=`/firma/${fnr}` data-tooltip="Zurück zur Firma")
+    svg(xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round")
+      polyline(points="15 18 9 12 15 6")
+
+block scripts
+  link(rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous")
+  script(src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous")
+  script.
+    (function () {
+      var yearSelect = document.getElementById('kz-year');
+      var content    = document.getElementById('kz-content');
+      if (!yearSelect || !content) return;
+
+      var fnr = !{JSON.stringify(fnr)};
+
+      /* ── KaTeX render helper ─────────────────────────────────── */
+      function tex(formula) {
+        try {
+          return katex.renderToString(formula, { throwOnError: false, displayMode: false });
+        } catch(e) { return formula; }
+      }
+
+      /* ── Format helpers ─────────────────────────────────────── */
+      function fmt(v, type) {
+        if (v === null || v === undefined) return '\u2014';
+        if (type === 'pct') return v.toFixed(1).replace('.', ',') + '\u202f%';
+        if (type === 'days') return v.toFixed(1).replace('.', ',') + '\u202fTage';
+        var abs = Math.abs(v);
+        var s;
+        if (abs >= 1e9) s = (v / 1e9).toFixed(1).replace('.', ',') + '\u202fMrd.\u202f\u20ac';
+        else if (abs >= 1e6) s = (v / 1e6).toFixed(1).replace('.', ',') + '\u202fMio.\u202f\u20ac';
+        else if (abs >= 1e3) s = Math.round(v / 1e3).toLocaleString('de-AT') + '\u202fTsd.\u202f\u20ac';
+        else s = Math.round(v).toLocaleString('de-AT') + '\u202f\u20ac';
+        return s;
+      }
+
+      /* ── KPI definitions with KaTeX formulas ──────────────────
+         sections: array of { title, kpis: [{ key, label, type, formula, desc }] }
+      ─────────────────────────────────────────────────────────── */
+      var D = '\u00f7', X = '\u00d7', MI = '\u2212', S = '\u00a7';
+      var sections = [
+        {
+          title: 'Vermögensstruktur',
+          kpis: [
+            { key: 'bilanzsumme', label: 'Bilanzsumme', type: 'eur',
+              formula: '\\text{Aktiva gesamt}',
+              desc: 'Summe aller Vermögensgegenstände der Bilanz.',
+              missing: 'Bilanzsumme nicht im XML ausgewiesen.',
+              calcText: function() { return 'Direkt aus Jahresabschluss-XML\nHGB ' + S + ' 224 Abs. 2 (Summe Aktiva)'; } },
+            { key: 'anlagevermögen', label: 'Anlagevermögen', type: 'eur',
+              formula: '\\text{Sachanlagen} + \\text{Immat. Anlagen} + \\text{Finanzanlagen}',
+              desc: 'Langfristig gebundenes Vermögen.',
+              missing: 'Anlagevermögen nicht im XML ausgewiesen.',
+              calcText: function() { return 'Direkt aus Jahresabschluss-XML\nHGB ' + S + ' 224 Abs. 2 lit. A'; } },
+            { key: 'umlaufvermögen', label: 'Umlaufvermögen', type: 'eur',
+              formula: '\\text{Vorräte} + \\text{Forderungen} + \\text{Flüssige Mittel}',
+              desc: 'Kurzfristig verfügbares Vermögen.',
+              missing: 'Umlaufvermögen nicht im XML ausgewiesen.',
+              calcText: function() { return 'Direkt aus Jahresabschluss-XML\nHGB ' + S + ' 224 Abs. 2 lit. B'; } },
+            { key: 'anlageintensität', label: 'Anlageintensität', type: 'pct',
+              formula: '\\frac{\\text{Anlagevermögen}}{\\text{Bilanzsumme}} \\times 100',
+              desc: 'Anteil des langfristig gebundenen Vermögens an der Bilanzsumme.',
+              missing: 'Anlagevermögen oder Bilanzsumme fehlt.',
+              calcText: function(fv) { return 'Anlagevermögen: ' + fv('anlagevermögen') + '\n' + D + ' Bilanzsumme: ' + fv('bilanzsumme') + '\n' + X + ' 100'; } },
+            { key: 'umlaufintensität', label: 'Umlaufintensität', type: 'pct',
+              formula: '\\frac{\\text{Umlaufvermögen}}{\\text{Bilanzsumme}} \\times 100',
+              desc: 'Anteil des kurzfristigen Vermögens an der Bilanzsumme.',
+              missing: 'Umlaufvermögen oder Bilanzsumme fehlt.',
+              calcText: function(fv) { return 'Umlaufvermögen: ' + fv('umlaufvermögen') + '\n' + D + ' Bilanzsumme: ' + fv('bilanzsumme') + '\n' + X + ' 100'; } },
+            { key: 'vorräte', label: 'Vorräte', type: 'eur',
+              formula: '\\text{HGB 224 (2) B I}',
+              desc: 'Roh-, Hilfs- und Betriebsstoffe, Fertig- und Halbfertigerzeugnisse.',
+              missing: 'Vorräte nicht im XML ausgewiesen (z.B. Dienstleistungsunternehmen).',
+              calcText: function() { return 'Direkt aus Jahresabschluss-XML\nHGB ' + S + ' 224 Abs. 2 lit. B Z 1'; } },
+            { key: 'forderungen', label: 'Forderungen', type: 'eur',
+              formula: '\\text{HGB 224 (2) B II}',
+              desc: 'Forderungen aus Lieferungen und Leistungen sowie sonstige Forderungen.',
+              missing: 'Forderungen nicht im XML ausgewiesen.',
+              calcText: function() { return 'Direkt aus Jahresabschluss-XML\nHGB ' + S + ' 224 Abs. 2 lit. B Z 2'; } },
+            { key: 'flüssigeMittel', label: 'Flüssige Mittel', type: 'eur',
+              formula: '\\text{Kasse} + \\text{Bankguthaben}',
+              desc: 'Sofort verfügbare Zahlungsmittel.',
+              missing: 'Flüssige Mittel nicht im XML ausgewiesen.',
+              calcText: function() { return 'Direkt aus Jahresabschluss-XML\nHGB ' + S + ' 224 Abs. 2 lit. B Z 4'; } },
+            { key: 'vorratsintensität', label: 'Vorratsintensität', type: 'pct',
+              formula: '\\frac{\\text{Vorräte}}{\\text{Umlaufvermögen}} \\times 100',
+              desc: 'Anteil der Vorräte am Umlaufvermögen.',
+              missing: 'Vorräte oder Umlaufvermögen fehlt.',
+              calcText: function(fv) { return 'Vorräte: ' + fv('vorräte') + '\n' + D + ' Umlaufvermögen: ' + fv('umlaufvermögen') + '\n' + X + ' 100'; } },
+            { key: 'forderungsintensität', label: 'Forderungsintensität', type: 'pct',
+              formula: '\\frac{\\text{Forderungen}}{\\text{Umlaufvermögen}} \\times 100',
+              desc: 'Anteil der Forderungen am Umlaufvermögen.',
+              missing: 'Forderungen oder Umlaufvermögen fehlt.',
+              calcText: function(fv) { return 'Forderungen: ' + fv('forderungen') + '\n' + D + ' Umlaufvermögen: ' + fv('umlaufvermögen') + '\n' + X + ' 100'; } },
+          ]
+        },
+        {
+          title: 'Kapitalstruktur',
+          kpis: [
+            { key: 'eigenkapital', label: 'Eigenkapital', type: 'eur',
+              formula: '\\text{Stamm-/Grundkapital} + \\text{Rücklagen} + \\text{Bilanzgewinn/-verlust}',
+              desc: 'Von Eigentümern bereitgestelltes Kapital.',
+              missing: 'Eigenkapital nicht im XML ausgewiesen.',
+              calcText: function() { return 'Direkt aus Jahresabschluss-XML\nHGB ' + S + ' 224 Abs. 3 lit. A'; } },
+            { key: 'ekQuote', label: 'Eigenkapitalquote', type: 'pct',
+              formula: '\\frac{\\text{Eigenkapital}}{\\text{Bilanzsumme}} \\times 100',
+              desc: 'Anteil des Eigenkapitals an der Bilanzsumme. Richtwert: ≥ 25 %.',
+              missing: 'Eigenkapital oder Bilanzsumme fehlt.',
+              calcText: function(fv) { return 'Eigenkapital: ' + fv('eigenkapital') + '\n' + D + ' Bilanzsumme: ' + fv('bilanzsumme') + '\n' + X + ' 100'; },
+              bench: { warn: 10, good: 25, dir: 'high', note: 'Richtwert: ≥ 25 %, gut: ≥ 40 %' } },
+            { key: 'verbindlichkeiten', label: 'Verbindlichkeiten', type: 'eur',
+              formula: '\\text{kurz- und langfristige Verbindlichkeiten}',
+              desc: 'Gesamte Fremdkapitalverpflichtungen.',
+              missing: 'Verbindlichkeiten nicht im XML ausgewiesen.',
+              calcText: function() { return 'Direkt aus Jahresabschluss-XML\nHGB ' + S + ' 224 Abs. 3 lit. D'; } },
+            { key: 'rückstellungen', label: 'Rückstellungen', type: 'eur',
+              formula: '\\text{HGB 224 (3) B}',
+              desc: 'Ungewisse Verbindlichkeiten (z.B. Abfertigungen, Steuerrückstellungen).',
+              missing: 'Rückstellungen nicht im XML ausgewiesen.',
+              calcText: function() { return 'Direkt aus Jahresabschluss-XML\nHGB ' + S + ' 224 Abs. 3 lit. B'; } },
+            { key: 'fremdkapitalquote', label: 'Fremdkapitalquote', type: 'pct',
+              formula: '\\frac{\\text{Verbindlichkeiten} + \\text{Rückstellungen}}{\\text{Bilanzsumme}} \\times 100',
+              desc: 'Anteil des Fremdkapitals an der Bilanzsumme.',
+              missing: 'Verbindlichkeiten, Rückstellungen oder Bilanzsumme fehlt.',
+              calcText: function(fv) { return '(Verbindlichkeiten: ' + fv('verbindlichkeiten') + '\n+ Rückstellungen: ' + fv('rückstellungen') + ')\n' + D + ' Bilanzsumme: ' + fv('bilanzsumme') + '\n' + X + ' 100'; },
+              bench: { warn: 75, good: 50, dir: 'low', note: 'Richtwert: < 50 %, kritisch: > 75 %' } },
+            { key: 'verschuldungsgrad', label: 'Verschuldungsgrad', type: 'pct',
+              formula: '\\frac{\\text{Verbindlichkeiten}}{\\text{Eigenkapital}} \\times 100',
+              desc: 'Verhältnis von Fremd- zu Eigenkapital.',
+              missing: 'Verbindlichkeiten oder Eigenkapital fehlt.',
+              calcText: function(fv) { return 'Verbindlichkeiten: ' + fv('verbindlichkeiten') + '\n' + D + ' Eigenkapital: ' + fv('eigenkapital') + '\n' + X + ' 100'; },
+              bench: { warn: 200, good: 100, dir: 'low', note: 'Richtwert: < 100 %, kritisch: > 200 %' } },
+            { key: 'rückstellungsquote', label: 'Rückstellungsquote', type: 'pct',
+              formula: '\\frac{\\text{Rückstellungen}}{\\text{Bilanzsumme}} \\times 100',
+              desc: 'Anteil der Rückstellungen an der Bilanzsumme.',
+              missing: 'Rückstellungen oder Bilanzsumme fehlt.',
+              calcText: function(fv) { return 'Rückstellungen: ' + fv('rückstellungen') + '\n' + D + ' Bilanzsumme: ' + fv('bilanzsumme') + '\n' + X + ' 100'; } },
+            { key: 'anlagendeckungI', label: 'Anlagendeckung I', type: 'pct',
+              formula: '\\frac{\\text{Eigenkapital}}{\\text{Anlagevermögen}} \\times 100',
+              desc: 'Anteil des Anlagevermögens, der durch Eigenkapital gedeckt ist. Richtwert: ≥ 60 %.',
+              missing: 'Eigenkapital oder Anlagevermögen fehlt.',
+              calcText: function(fv) { return 'Eigenkapital: ' + fv('eigenkapital') + '\n' + D + ' Anlagevermögen: ' + fv('anlagevermögen') + '\n' + X + ' 100'; },
+              bench: { warn: 60, good: 100, dir: 'high', note: 'Richtwert: ≥ 100 %, Minimum: ≥ 60 %' } },
+            { key: 'anlagendeckungII', label: 'Anlagendeckung II', type: 'pct',
+              formula: '\\frac{\\text{EK} + \\text{langfr. Verbindlichkeiten}}{\\text{Anlagevermögen}} \\times 100',
+              desc: 'Deckung des Anlagevermögens durch langfristiges Kapital. Richtwert: ≥ 100 %.',
+              missing: 'Langfristige Verbindlichkeiten nicht separat ausgewiesen (Fristigkeit fehlt im XML).',
+              calcText: function(fv) { return '(EK: ' + fv('eigenkapital') + '\n+ langfr. Verbindl.: ' + fv('langfristigeVerbindlichkeiten') + ')\n' + D + ' Anlagevermögen: ' + fv('anlagevermögen') + '\n' + X + ' 100'; },
+              bench: { warn: 100, good: 120, dir: 'high', note: 'Minimum: ≥ 100 %, gut: ≥ 120 %' } },
+            { key: 'workingCapital', label: 'Working Capital', type: 'eur',
+              formula: '\\text{Umlaufvermögen} - \\text{kurzfristige Verbindlichkeiten}',
+              desc: 'Nettoumlaufvermögen; positiver Wert zeigt kurzfristige Zahlungsfähigkeit.',
+              missing: 'Kurzfristige Verbindlichkeiten nicht separat ausgewiesen.',
+              calcText: function(fv) { return 'Umlaufvermögen: ' + fv('umlaufvermögen') + '\n' + MI + ' kurzfr. Verbindl.: ' + fv('kurzfristigeVerbindlichkeiten'); } },
+          ]
+        },
+        {
+          title: 'Liquidität',
+          kpis: [
+            { key: 'kurzfristigeVerbindlichkeiten', label: 'Kurzfr. Verbindlichkeiten', type: 'eur',
+              formula: '\\text{HGB 225 (1) Verbindlichkeiten} \\leq 1 \\text{ Jahr}',
+              desc: 'Verbindlichkeiten mit einer Restlaufzeit bis zu einem Jahr.',
+              missing: 'Restlaufzeiten nicht im XML ausgewiesen – Fristigkeit der Verbindlichkeiten fehlt.',
+              calcText: function() { return 'Direkt aus Jahresabschluss-XML\nHGB ' + S + ' 225 Abs. 1 (Restlaufzeit \u2264 1 Jahr)'; } },
+            { key: 'liquidität1', label: 'Liquidität 1. Grades', type: 'pct',
+              formula: '\\frac{\\text{Flüssige Mittel}}{\\text{kurzfr. Verbindlichkeiten}} \\times 100',
+              desc: 'Barliquidität. Richtwert: ≥ 20 %.',
+              missing: 'Flüssige Mittel oder kurzfristige Verbindlichkeiten fehlt.',
+              calcText: function(fv) { return 'Flüssige Mittel: ' + fv('flüssigeMittel') + '\n' + D + ' kurzfr. Verbindl.: ' + fv('kurzfristigeVerbindlichkeiten') + '\n' + X + ' 100'; },
+              bench: { warn: 10, good: 20, dir: 'high', note: 'Richtwert: ≥ 20 %, kritisch: < 10 %' } },
+            { key: 'liquidität2', label: 'Liquidität 2. Grades', type: 'pct',
+              formula: '\\frac{\\text{Flüssige Mittel} + \\text{Forderungen}}{\\text{kurzfr. Verbindlichkeiten}} \\times 100',
+              desc: 'Einzugsliquidität. Richtwert: ≥ 100 %.',
+              missing: 'Flüssige Mittel, Forderungen oder kurzfristige Verbindlichkeiten fehlt.',
+              calcText: function(fv) { return '(Flüssige Mittel: ' + fv('flüssigeMittel') + '\n+ Forderungen: ' + fv('forderungen') + ')\n' + D + ' kurzfr. Verbindl.: ' + fv('kurzfristigeVerbindlichkeiten') + '\n' + X + ' 100'; },
+              bench: { warn: 80, good: 100, dir: 'high', note: 'Richtwert: ≥ 100 %, kritisch: < 80 %' } },
+            { key: 'liquidität3', label: 'Liquidität 3. Grades', type: 'pct',
+              formula: '\\frac{\\text{Umlaufvermögen}}{\\text{kurzfr. Verbindlichkeiten}} \\times 100',
+              desc: 'Current Ratio. Richtwert: ≥ 120 %.',
+              missing: 'Umlaufvermögen oder kurzfristige Verbindlichkeiten fehlt.',
+              calcText: function(fv) { return 'Umlaufvermögen: ' + fv('umlaufvermögen') + '\n' + D + ' kurzfr. Verbindl.: ' + fv('kurzfristigeVerbindlichkeiten') + '\n' + X + ' 100'; },
+              bench: { warn: 100, good: 150, dir: 'high', note: 'Richtwert: ≥ 150 %, kritisch: < 100 %' } },
+            { key: 'debitorenziel', label: 'Debitorenziel', type: 'days',
+              formula: '\\frac{\\text{Forderungen}}{\\text{Umsatz}} \\times 365',
+              desc: 'Durchschnittliche Dauer bis Kundenforderungen beglichen werden (in Tagen).',
+              missing: 'Forderungen oder Umsatz fehlt.',
+              calcText: function(fv) { return 'Forderungen: ' + fv('forderungen') + '\n' + D + ' Umsatz: ' + fv('umsatz') + '\n' + X + ' 365'; },
+              bench: { warn: 60, good: 30, dir: 'low', note: 'Richtwert: ≤ 30 Tage, kritisch: > 60 Tage' } },
+            { key: 'kreditorenziel', label: 'Kreditorenziel', type: 'days',
+              formula: '\\frac{\\text{kurzfr. Verbindlichkeiten}}{\\text{Umsatz}} \\times 365',
+              desc: 'Durchschnittliche Zahlungsdauer an Lieferanten (in Tagen).',
+              missing: 'Kurzfristige Verbindlichkeiten oder Umsatz fehlt.',
+              calcText: function(fv) { return 'kurzfr. Verbindl.: ' + fv('kurzfristigeVerbindlichkeiten') + '\n' + D + ' Umsatz: ' + fv('umsatz') + '\n' + X + ' 365'; } },
+            { key: 'vorratsdauer', label: 'Vorratsdauer', type: 'days',
+              formula: '\\frac{\\text{Vorräte}}{\\text{Umsatz}} \\times 365',
+              desc: 'Durchschnittliche Lagerdauer der Vorräte (in Tagen).',
+              missing: 'Vorräte oder Umsatz fehlt.',
+              calcText: function(fv) { return 'Vorräte: ' + fv('vorräte') + '\n' + D + ' Umsatz: ' + fv('umsatz') + '\n' + X + ' 365'; },
+              bench: { warn: 90, good: 30, dir: 'low', note: 'Richtwert: ≤ 30 Tage (Handel), kritisch: > 90 Tage' } },
+          ]
+        },
+        {
+          title: 'Ertragslage',
+          kpis: [
+            { key: 'umsatz', label: 'Umsatz', type: 'eur',
+              formula: '\\text{Umsatzerlöse (netto, exkl. MwSt.)}',
+              desc: 'Nettoumsatzerlöse aus dem operativen Geschäft.',
+              missing: 'Umsatz nicht im XML ausgewiesen (z.B. Gesamtkostenverfahren ohne separaten Umsatzposten oder Holdinggesellschaft).',
+              calcText: function() { return 'Direkt aus Jahresabschluss-XML\nGuV-Posten 1 (Umsatzerlöse)'; } },
+            { key: 'personalaufwand', label: 'Personalaufwand', type: 'eur',
+              formula: '\\text{Löhne} + \\text{Gehälter} + \\text{Sozialaufwand}',
+              desc: 'Gesamte Personalkosten (negativer Wert = Aufwand).',
+              missing: 'Personalaufwand nicht im XML ausgewiesen.',
+              calcText: function() { return 'Direkt aus Jahresabschluss-XML\nGuV-Posten 6 (Personalaufwand)'; } },
+            { key: 'personalaufwandsquote', label: 'Personalaufwandsquote', type: 'pct',
+              formula: '\\frac{\\text{Personalaufwand}}{\\text{Umsatz}} \\times 100',
+              desc: 'Anteil des Personalaufwands am Umsatz.',
+              missing: 'Personalaufwand oder Umsatz fehlt.',
+              calcText: function(fv) { return '|Personalaufwand|: ' + fv('personalaufwand') + '\n' + D + ' Umsatz: ' + fv('umsatz') + '\n' + X + ' 100'; } },
+            { key: 'abschreibungen', label: 'Abschreibungen', type: 'eur',
+              formula: '\\text{AfA Sachanlagen} + \\text{AfA immat. Anlagen}',
+              desc: 'Wertminderung des Anlagevermögens (negativer Wert = Aufwand).',
+              missing: 'Abschreibungen nicht im XML ausgewiesen.',
+              calcText: function() { return 'Direkt aus Jahresabschluss-XML\nGuV-Posten 7a (Abschreibungen)'; } },
+            { key: 'betriebsergebnis', label: 'Betriebsergebnis (EBIT)', type: 'eur',
+              formula: '\\text{Umsatz} - \\text{Aufwendungen aus dem Betrieb}',
+              desc: 'Ergebnis aus dem operativen Geschäft vor Zinsen und Steuern.',
+              missing: 'Betriebsergebnis nicht im XML ausgewiesen.',
+              calcText: function() { return 'Direkt aus Jahresabschluss-XML\nGuV Zwischensumme Betriebserfolg'; } },
+            { key: 'egt', label: 'EGT', type: 'eur',
+              formula: '\\text{EBIT} + \\text{Finanzergebnis}',
+              desc: 'Ergebnis der gewöhnlichen Geschäftstätigkeit.',
+              missing: 'EGT nicht im XML ausgewiesen.',
+              calcText: function() { return 'Direkt aus Jahresabschluss-XML\nGuV Ergebnis der gewöhnl. Geschäftstätigkeit'; } },
+            { key: 'jahresergebnis', label: 'Jahresergebnis', type: 'eur',
+              formula: '\\text{EGT} \\pm \\text{außerord. Posten} - \\text{Steuern}',
+              desc: 'Jahresüberschuss oder -fehlbetrag nach Steuern.',
+              missing: 'Jahresergebnis nicht im XML ausgewiesen.',
+              calcText: function() { return 'Direkt aus Jahresabschluss-XML\nGuV Jahresergebnis'; } },
+          ]
+        },
+        {
+          title: 'Rentabilität',
+          kpis: [
+            { key: 'umsatzrendite', label: 'Umsatzrendite', type: 'pct',
+              formula: '\\frac{\\text{Jahresergebnis}}{\\text{Umsatz}} \\times 100',
+              desc: 'Nettogewinn je Euro Umsatz.',
+              missing: 'Jahresergebnis oder Umsatz fehlt.',
+              calcText: function(fv) { return 'Jahresergebnis: ' + fv('jahresergebnis') + '\n' + D + ' Umsatz: ' + fv('umsatz') + '\n' + X + ' 100'; },
+              bench: { warn: 2, good: 5, dir: 'high', note: 'Richtwert: ≥ 5 %, kritisch: < 2 %' } },
+            { key: 'ebitMarge', label: 'EBIT-Marge', type: 'pct',
+              formula: '\\frac{\\text{Betriebsergebnis}}{\\text{Umsatz}} \\times 100',
+              desc: 'Operativer Gewinn je Euro Umsatz.',
+              missing: 'Betriebsergebnis oder Umsatz fehlt.',
+              calcText: function(fv) { return 'Betriebsergebnis: ' + fv('betriebsergebnis') + '\n' + D + ' Umsatz: ' + fv('umsatz') + '\n' + X + ' 100'; },
+              bench: { warn: 3, good: 10, dir: 'high', note: 'Richtwert: ≥ 10 %, kritisch: < 3 %' } },
+            { key: 'roe', label: 'ROE (Eigenkapitalrendite)', type: 'pct',
+              formula: '\\frac{\\text{Jahresergebnis}}{\\text{Eigenkapital}} \\times 100',
+              desc: 'Verzinsung des eingesetzten Eigenkapitals.',
+              missing: 'Jahresergebnis oder Eigenkapital fehlt.',
+              calcText: function(fv) { return 'Jahresergebnis: ' + fv('jahresergebnis') + '\n' + D + ' Eigenkapital: ' + fv('eigenkapital') + '\n' + X + ' 100'; },
+              bench: { warn: 5, good: 15, dir: 'high', note: 'Richtwert: ≥ 15 %, akzeptabel: ≥ 5 %' } },
+            { key: 'roa', label: 'ROA (Gesamtkapitalrendite)', type: 'pct',
+              formula: '\\frac{\\text{Jahresergebnis}}{\\text{Bilanzsumme}} \\times 100',
+              desc: 'Jahresergebnis je Euro Bilanzsumme.',
+              missing: 'Jahresergebnis oder Bilanzsumme fehlt.',
+              calcText: function(fv) { return 'Jahresergebnis: ' + fv('jahresergebnis') + '\n' + D + ' Bilanzsumme: ' + fv('bilanzsumme') + '\n' + X + ' 100'; },
+              bench: { warn: 2, good: 5, dir: 'high', note: 'Richtwert: ≥ 5 %, kritisch: < 2 %' } },
+            { key: 'gesamtkapitalrendite', label: 'EBIT / Bilanzsumme', type: 'pct',
+              formula: '\\frac{\\text{Betriebsergebnis}}{\\text{Bilanzsumme}} \\times 100',
+              desc: 'Operativer Return on Assets — unabhängig von Kapitalstruktur und Steuern.',
+              missing: 'Betriebsergebnis oder Bilanzsumme fehlt.',
+              calcText: function(fv) { return 'Betriebsergebnis: ' + fv('betriebsergebnis') + '\n' + D + ' Bilanzsumme: ' + fv('bilanzsumme') + '\n' + X + ' 100'; },
+              bench: { warn: 2, good: 5, dir: 'high', note: 'Richtwert: ≥ 5 %, kritisch: < 2 %' } },
+          ]
+        },
+      ];
+
+      /* ── Richtwert-Bewertung ─────────────────────────────────── */
+      function getBenchLevel(val, bench) {
+        if (!bench || val === null || val === undefined) return -1;
+        if (bench.dir === 'high') {
+          return val >= bench.good ? 2 : val >= bench.warn ? 1 : 0;
+        } else {
+          return val <= bench.good ? 2 : val <= bench.warn ? 1 : 0;
+        }
+      }
+      function getBenchTip(b, type) {
+        if (!b) return '';
+        var u = type === 'days' ? ' Tage' : '\u202f%';
+        return b.dir === 'high'
+          ? 'Gut:\u2009\u2265 ' + b.good + u + '\nAkzeptabel:\u2009\u2265 ' + b.warn + u + '\nKritisch:\u2009< ' + b.warn + u
+          : 'Gut:\u2009\u2264 ' + b.good + u + '\nAkzeptabel:\u2009\u2264 ' + b.warn + u + '\nKritisch:\u2009> ' + b.warn + u;
+      }
+      var BENCH_LABELS  = ['unter Richtwert', 'akzeptabel', 'gut'];
+      var BENCH_CLASSES = ['kz-bench--warn', 'kz-bench--ok', 'kz-bench--good'];
+
+      /* ── Render ──────────────────────────────────────────────── */
+      function renderKpis(data) {
+        if (data.error) {
+          content.innerHTML = '<p class="kpi-error">Kennzahlen konnten nicht geladen werden.</p>';
+          return;
+        }
+        var kpis = data.kpis || {};
+        var html = '';
+
+        function fv(key, type) {
+          var v = kpis[key];
+          return (v && v.betrag !== null) ? fmt(v.betrag, type || 'eur') : '?';
+        }
+        function esc(s) {
+          return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/\n/g, '&#10;');
+        }
+
+        sections.forEach(function (sec) {
+          var cards = '';
+          sec.kpis.forEach(function (c) {
+            var kpi = kpis[c.key];
+            var available = kpi && (kpi.betrag !== null || kpi.betragVJ !== null);
+            if (available) {
+              var valStr = fmt(kpi.betrag, c.type);
+              var vjStr  = (kpi.betragVJ !== null && kpi.betragVJ !== undefined)
+                ? fmt(kpi.betragVJ, c.type) : null;
+              var tip = c.calcText ? esc(c.calcText(fv)) : '';
+              cards += '<div class="kz-card">';
+              cards += '<div class="kz-card__header">';
+              cards += '<div class="kz-card__label">' + c.label + '</div>';
+              if (tip) cards += '<span class="info-badge kpi-tip" data-tooltip="' + tip + '">?</span>';
+              cards += '</div>';
+              var benchLevel = (c.bench && kpi.betrag !== null) ? getBenchLevel(kpi.betrag, c.bench) : -1;
+              var benchHtml  = benchLevel >= 0 ? '<span class="kz-bench ' + BENCH_CLASSES[benchLevel] + '" data-tooltip="' + esc(getBenchTip(c.bench, c.type)) + '">' + BENCH_LABELS[benchLevel] + '</span>' : '';
+              cards += '<div class="kz-card__value">' + valStr + '</div>';
+              if (vjStr) cards += '<div class="kz-card__vj">VJ\u202f' + vjStr + '</div>';
+              cards += benchHtml;
+            } else {
+              cards += '<div class="kz-card kz-card--unavailable">';
+              cards += '<div class="kz-card__label">' + c.label + '</div>';
+              cards += '<div class="kz-card__value kz-card__value--na">\u2014</div>';
+              cards += '<div class="kz-card__missing">\u26a0\ufe0f\u202f' + (c.missing || 'Keine Daten im Jahresabschluss.') + '</div>';
+            }
+            cards += '<div class="kz-card__formula">' + tex(c.formula) + '</div>';
+            cards += '<div class="kz-card__desc">' + c.desc + '</div>';
+            cards += '</div>';
+          });
+          html += '<div class="kz-section">';
+          html += '<h2 class="kz-section__title">' + sec.title + '</h2>';
+          html += '<div class="kz-grid">' + cards + '</div>';
+          html += '</div>';
+        });
+
+        if (!html) html = '<p class="kpi-error">Keine Kennzahlen verfügbar.</p>';
+        content.innerHTML = html;
+      }
+
+      function loadKpis(key) {
+        content.innerHTML = '<p class="kpi-loading">Lade Kennzahlen\u2026</p>';
+        fetch('/api/firma/' + encodeURIComponent(fnr) + '/jahresabschluss?key=' + encodeURIComponent(key))
+          .then(function (r) { return r.json(); })
+          .then(renderKpis)
+          .catch(function () {
+            content.innerHTML = '<p class="kpi-error">Kennzahlen konnten nicht geladen werden.</p>';
+          });
+      }
+
+      yearSelect.addEventListener('change', function () { loadKpis(yearSelect.value); });
+      if (yearSelect.value) loadKpis(yearSelect.value);
+    })();

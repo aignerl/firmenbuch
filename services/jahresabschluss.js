@@ -145,15 +145,30 @@ function deriveRatio(numerator, denominator, scale = 100) {
 
 function extractKpis(positions) {
   // ── Bilanz ──────────────────────────────────────────────────────
-  const bilanzsumme                = positions['HGB_224_2']           || positions['AKTIVA']                    || null;
-  const anlagevermögen             = positions['HGB_224_2_A']         || positions['ANLAGEVERMÖGEN']            || null;
-  const umlaufvermögen             = positions['HGB_224_2_B']         || positions['UMLAUFVERMÖGEN']            || null;
-  const vorräte                    = positions['HGB_224_2_B_I']       || positions['VORRAETE']                  || null;
-  const forderungen                = positions['HGB_224_2_B_II']      || positions['FORDERUNGEN']               || null;
-  const flüssigeMittel             = positions['HGB_224_2_B_IV']      || positions['FLUESSIGE_MITTEL']          || null;
+  const bilanzsumme                = positions['HGB_224_2']           || positions['AKTIVA']                    || positions['PASSIVA']                                           || null;
+  const anlagevermögen             = positions['HGB_224_2_A']         || positions['ANLAGEVERMÖGEN']            || positions['ANLAGEVERMOEGEN']                                   || null;
+  const umlaufvermögen             = positions['HGB_224_2_B']         || positions['UMLAUFVERMÖGEN']            || positions['UMLAUFVERMOEGEN']                                   || null;
+  const vorräte                    = positions['HGB_224_2_B_I']       || positions['VORRAETE']                  || positions['VORRÄTE']                                           || null;
+  const forderungen                = positions['HGB_224_2_B_II']      || positions['FORDERUNGEN']               || positions['FORDERUNGEN_UND_SONSTIGE_VERMOEGENSGEGENSTAENDE']  || null;
+  const flüssigeMittel             = positions['HGB_224_2_B_IV']      || positions['FLUESSIGE_MITTEL']          || positions['KASSENBESTAND_SCHECKS_GUTHABEN_BEI_KREDITINSTITUTEN'] || null;
   const eigenkapital               = positions['HGB_224_3_A']         || positions['EIGENKAPITAL']              || null;
   const verbindlichkeiten          = positions['HGB_224_3_D']         || positions['VERBINDLICHKEITEN']         || null;
   const kurzfristigeVerbindlichkeiten = positions['HGB_224_3_D_HGB_225B'] || positions['VERBINDLICHKEITEN_KFR'] || null;
+  const rückstellungen = (() => {
+    const gesamt = positions['HGB_224_3_B'] || positions['RUECKSTELLUNGEN'] || null;
+    if (gesamt) return gesamt;
+    // Fallback: Summe der Unterpositionen wenn Gesamtsumme nicht ausgewiesen
+    const b1 = positions['HGB_224_3_B_1'];
+    const b2 = positions['HGB_224_3_B_2'];
+    const b3 = positions['HGB_224_3_B_3'];
+    if (!b1 && !b2 && !b3) return null;
+    const sum  = (b1?.betrag   ?? 0) + (b2?.betrag   ?? 0) + (b3?.betrag   ?? 0);
+    const sumVJ= (b1?.betragVJ ?? 0) + (b2?.betragVJ ?? 0) + (b3?.betragVJ ?? 0);
+    const hasCurrent = b1?.betrag   !== undefined || b2?.betrag   !== undefined || b3?.betrag   !== undefined;
+    const hasVJ      = b1?.betragVJ !== undefined || b2?.betragVJ !== undefined || b3?.betragVJ !== undefined;
+    return { betrag: hasCurrent ? sum : null, betragVJ: hasVJ ? sumVJ : null };
+  })();
+  const langfristigeVerbindlichkeiten = positions['HGB_224_3_D_HGB_225A'] || null;
 
   // ── GuV ─────────────────────────────────────────────────────────
   const umsatz = positions['HGB_231_2_1']
@@ -170,11 +185,13 @@ function extractKpis(positions) {
 
   const betriebsergebnis = positions['HGB_231_2_9']
                         || positions['HGB_231_1_9']
-                        || positions['BETRIEBSERGEBNIS'] || null;
+                        || positions['BETRIEBSERGEBNIS']
+                        || positions['ZWISCHENSUMME_BETRIEBSERFOLG'] || null;
 
   const egt = positions['HGB_231_2_17']
            || positions['HGB_231_1_17']
-           || positions['EGT'] || null;
+           || positions['EGT']
+           || positions['ERGEBNIS_VOR_STEUERN'] || null;
 
   const jahresergebnis = positions['HGB_231_2_20']
                       || positions['HGB_231_2_29']
@@ -208,16 +225,104 @@ function extractKpis(positions) {
   const liquidität3 = kurzfristigeVerbindlichkeiten
     ? deriveRatio(umlaufvermögen, kurzfristigeVerbindlichkeiten) : null;
 
+  // ── Kapital- & Vermögensanalyse (neu) ───────────────────────────
+  const umlaufintensität = deriveRatio(umlaufvermögen, bilanzsumme);
+
+  const fremdkapitalquote = (() => {
+    const vB  = verbindlichkeiten?.betrag   ?? null;
+    const vVJ = verbindlichkeiten?.betragVJ ?? null;
+    const rB  = rückstellungen?.betrag   ?? null;
+    const rVJ = rückstellungen?.betragVJ ?? null;
+    // Rückstellungen als 0 behandeln wenn nicht separat ausgewiesen
+    const fkB  = vB  !== null ? vB  + (rB  ?? 0) : (rB  !== null ? rB  : null);
+    const fkVJ = vVJ !== null ? vVJ + (rVJ ?? 0) : (rVJ !== null ? rVJ : null);
+    return (fkB !== null || fkVJ !== null) && bilanzsumme
+      ? deriveRatio({ betrag: fkB, betragVJ: fkVJ }, bilanzsumme)
+      : null;
+  })();
+
+  const anlagendeckungI = (eigenkapital && anlagevermögen)
+    ? deriveRatio(eigenkapital, anlagevermögen) : null;
+
+  const anlagendeckungII = (eigenkapital && anlagevermögen && langfristigeVerbindlichkeiten)
+    ? (() => {
+        const add = (a, b) => a !== null && b !== null ? a + b : (a ?? b);
+        return deriveRatio(
+          { betrag:   add(eigenkapital?.betrag,   langfristigeVerbindlichkeiten?.betrag),
+            betragVJ: add(eigenkapital?.betragVJ, langfristigeVerbindlichkeiten?.betragVJ) },
+          anlagevermögen
+        );
+      })()
+    : null;
+
+  const workingCapital = (umlaufvermögen && kurzfristigeVerbindlichkeiten)
+    ? (() => {
+        const b  = umlaufvermögen.betrag  !== null && kurzfristigeVerbindlichkeiten.betrag  !== null
+          ? umlaufvermögen.betrag  - kurzfristigeVerbindlichkeiten.betrag  : null;
+        const vj = umlaufvermögen.betragVJ !== null && kurzfristigeVerbindlichkeiten.betragVJ !== null
+          ? umlaufvermögen.betragVJ - kurzfristigeVerbindlichkeiten.betragVJ : null;
+        return (b !== null || vj !== null) ? { betrag: b, betragVJ: vj } : null;
+      })()
+    : null;
+
+  const vorratsintensität    = (vorräte   && umlaufvermögen) ? deriveRatio(vorräte,   umlaufvermögen) : null;
+  const forderungsintensität = (forderungen && umlaufvermögen) ? deriveRatio(forderungen, umlaufvermögen) : null;
+  const rückstellungsquote   = (rückstellungen && bilanzsumme) ? deriveRatio(rückstellungen, bilanzsumme) : null;
+
+  // ── Umschlag / Reichweite (nur wenn Umsatz vorhanden) ───────────
+  const debitorenziel = (forderungen && umsatz?.betrag)
+    ? (() => {
+        const b  = forderungen.betrag  !== null ? forderungen.betrag  / umsatz.betrag  * 365 : null;
+        const vj = forderungen.betragVJ !== null && umsatz.betragVJ
+          ? forderungen.betragVJ / umsatz.betragVJ * 365 : null;
+        return (b !== null || vj !== null) ? { betrag: b, betragVJ: vj } : null;
+      })()
+    : null;
+
+  const kreditorenziel = (kurzfristigeVerbindlichkeiten && umsatz?.betrag)
+    ? (() => {
+        const b  = kurzfristigeVerbindlichkeiten.betrag  !== null ? kurzfristigeVerbindlichkeiten.betrag  / umsatz.betrag  * 365 : null;
+        const vj = kurzfristigeVerbindlichkeiten.betragVJ !== null && umsatz.betragVJ
+          ? kurzfristigeVerbindlichkeiten.betragVJ / umsatz.betragVJ * 365 : null;
+        return (b !== null || vj !== null) ? { betrag: b, betragVJ: vj } : null;
+      })()
+    : null;
+
+  const vorratsdauer = (vorräte && umsatz?.betrag)
+    ? (() => {
+        const b  = vorräte.betrag  !== null ? vorräte.betrag  / umsatz.betrag  * 365 : null;
+        const vj = vorräte.betragVJ !== null && umsatz.betragVJ
+          ? vorräte.betragVJ / umsatz.betragVJ * 365 : null;
+        return (b !== null || vj !== null) ? { betrag: b, betragVJ: vj } : null;
+      })()
+    : null;
+
+  // ── Aufwand/Ertrag (neu) ─────────────────────────────────────────
+  const personalaufwandsquote = (personalaufwand && umsatz?.betrag)
+    ? deriveRatio(personalaufwand, umsatz) : null;
+
+  // ── Rentabilität (neu) ───────────────────────────────────────────
+  const ebitMarge = (betriebsergebnis && umsatz?.betrag)
+    ? deriveRatio(betriebsergebnis, umsatz) : null;
+
+  const gesamtkapitalrendite = (betriebsergebnis && bilanzsumme)
+    ? deriveRatio(betriebsergebnis, bilanzsumme) : null;
+
   return {
     bilanzsumme, anlagevermögen, umlaufvermögen,
     vorräte, forderungen, flüssigeMittel,
     eigenkapital, ekQuote, anlageintensität,
     verbindlichkeiten, kurzfristigeVerbindlichkeiten, verschuldungsgrad,
+    rückstellungen, langfristigeVerbindlichkeiten,
     liquidität1, liquidität2, liquidität3,
-    umsatz, personalaufwand, abschreibungen,
-    betriebsergebnis, egt,
-    jahresergebnis, umsatzrendite, roe, roa,
+    umlaufintensität, fremdkapitalquote,
+    anlagendeckungI, anlagendeckungII,
+    workingCapital, vorratsintensität, forderungsintensität, rückstellungsquote,
+    debitorenziel, kreditorenziel, vorratsdauer,
+    umsatz, personalaufwand, abschreibungen, personalaufwandsquote,
+    betriebsergebnis, egt, ebitMarge,
+    jahresergebnis, umsatzrendite, roe, roa, gesamtkapitalrendite,
   };
 }
 
-module.exports = { parseJahresabschluss };
+module.exports = { parseJahresabschluss, extractKpis };

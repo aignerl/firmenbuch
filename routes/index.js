@@ -125,6 +125,13 @@ router.post('/suchen', async function (req, res) {
   if (!firmenwortlaut) {
     return res.render('index', { title: 'Firmenbuch Suche', error: 'Bitte Firmenwortlaut eingeben.' });
   }
+
+  // FNR-Direktlink: z.B. "215854h" oder "187 a" → /firma/215854h
+  const fnrMatch = firmenwortlaut.trim().replace(/\s+/g, '').match(/^(\d+[a-z])$/i);
+  if (fnrMatch) {
+    return res.redirect('/firma/' + fnrMatch[1].toLowerCase());
+  }
+
   try {
     let ergebnisse = await sucheFirma({
       firmenwortlaut,
@@ -240,6 +247,39 @@ router.get('/firma/:fnr', async function (req, res) {
         }, {})
     ).sort((a, b) => b.datum.localeCompare(a.datum));
     res.render('firma', { title: `Firma ${fnr}`, firma, urkunden, xmlUrkunden, fnr });
+  } catch (err) {
+    res.locals.message = err.message;
+    res.locals.error = req.app.get('env') === 'development' ? err : {};
+    res.status(502);
+    res.render('error');
+  }
+});
+
+router.get('/firma/:fnr/kennzahlen', async function (req, res) {
+  const { fnr } = req.params;
+  try {
+    const [auszugRaw, urkundenRaw] = await Promise.all([
+      getAuszug({ fnr, umfang: 'Kurzinformation' }).catch(() => null),
+      sucheUrkunde({ fnr }).catch(() => []),
+    ]);
+    const firma = auszugRaw ? buildFirmaView(auszugRaw) : null;
+    const xmlUrkunden = Object.values(
+      urkundenRaw
+        .filter((u) => u.dateiendung === 'xml')
+        .map((u) => ({
+          key: u.key,
+          label: ((u.stichtag || u.dokumentendatum || '').slice(0, 4)) || u.key,
+          datum: u.stichtag || u.dokumentendatum || u.eingereicht || '',
+        }))
+        .reduce((acc, u) => {
+          const year = u.datum.slice(0, 4) || u.label;
+          if (!acc[year] || u.datum > acc[year].datum) acc[year] = u;
+          return acc;
+        }, {})
+    ).sort((a, b) => b.datum.localeCompare(a.datum));
+    const fnrNorm = fnr.replace(/ /g, '');
+    const firmaName = firma ? (firma.namen[0] || fnrNorm) : fnrNorm;
+    res.render('kennzahlen', { title: `Kennzahlen – ${firmaName}`, fnr: fnrNorm, firmaName, xmlUrkunden });
   } catch (err) {
     res.locals.message = err.message;
     res.locals.error = req.app.get('env') === 'development' ? err : {};

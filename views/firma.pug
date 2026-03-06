@@ -57,6 +57,16 @@ block content
 
     if xmlUrkunden && xmlUrkunden.length > 0
       h2 Kennzahlen
+      a.kz-deep-link(href=`/firma/${firma.fnr.replace(/ /g,'')}/kennzahlen`)
+        svg.kz-deep-link__icon(xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round")
+          line(x1="18" y1="20" x2="18" y2="10")
+          line(x1="12" y1="20" x2="12" y2="4")
+          line(x1="6" y1="20" x2="6" y2="14")
+        div.kz-deep-link__text
+          strong Alle Kennzahlen & Formeln
+          span 41 Kennzahlen in 5 Kategorien mit Erläuterungen
+        svg.kz-deep-link__arrow(xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round")
+          polyline(points="9 18 15 12 9 6")
       div.kpi-section
         div.kpi-year-selector
           label(for="kpi-year") Geschäftsjahr
@@ -65,6 +75,8 @@ block content
               option(value=u.key)= u.label
         div#kpi-cards
           p.kpi-loading Lade Kennzahlen…
+        div#bilanz
+        div#guv
 
     h2 Organigramm
       span.info-badge(data-tooltip="Zeigt Gesellschafter rekursiv nach oben (Quelle: evi.gv.at). Beteiligungen nach unten (Tochtergesellschaften) sind über die verfügbaren APIs nicht abrufbar und daher nicht dargestellt. Die Daten können unvollständig sein.") ?
@@ -183,7 +195,8 @@ block content
 
       function fmt(v, type) {
         if (v === null || v === undefined) return '\u2014';
-        if (type === 'pct') return v.toFixed(1).replace('.', ',') + '\u202f%';
+        if (type === 'pct')  return v.toFixed(1).replace('.', ',') + '\u202f%';
+        if (type === 'days') return v.toFixed(1).replace('.', ',') + '\u202fTage';
         var abs = Math.abs(v);
         var s;
         if (abs >= 1e9) s = (v / 1e9).toFixed(1).replace('.', ',') + '\u202fMrd.\u202f\u20ac';
@@ -205,103 +218,110 @@ block content
           return;
         }
         var kpis = data.kpis || {};
-        var D = '\u00f7', X = '\u00d7', GE = '\u2265', NB = '\u202f';
-        var cards = [
-          { label: 'Bilanzsumme', key: 'bilanzsumme', type: 'eur',
-            tip: function(k) { return 'Aktiva gesamt\nSumme aller Verm\u00f6gensgegen-\nst\u00e4nde der Bilanz'; } },
-          { label: 'Anlageverm\u00f6gen', key: 'anlageverm\u00f6gen', type: 'eur',
-            tip: function(k) { return 'Langfristig gebundenes Verm\u00f6gen\n(Sachanlagen, immaterielle Anlagen,\nFinanzanlagen)'; } },
-          { label: 'Umlaufverm\u00f6gen', key: 'umlaufverm\u00f6gen', type: 'eur',
-            tip: function(k) { return 'Kurzfristig verf\u00fcgbares Verm\u00f6gen\n(Vorr\u00e4te, Forderungen, fl\u00fcssige Mittel)'; } },
-          { label: 'Eigenkapital', key: 'eigenkapital', type: 'eur',
-            tip: function(k) { return 'Stamm-/Grundkapital\n+ R\u00fccklagen\n+ Bilanzgewinn/-verlust'; } },
-          { label: 'EK-Quote', key: 'ekQuote', type: 'pct',
-            tip: function(k) {
-              var l = 'Eigenkapital ' + D + ' Bilanzsumme ' + X + ' 100';
-              var ek = ev(k.eigenkapital), bs = ev(k.bilanzsumme);
-              if (ek && bs) l += '\n= ' + ek + ' ' + D + ' ' + bs + ' ' + X + ' 100';
-              return l;
-            } },
-          { label: 'Anlageintensit\u00e4t', key: 'anlageintensit\u00e4t', type: 'pct',
-            tip: function(k) {
-              var l = 'Anlageverm\u00f6gen ' + D + ' Bilanzsumme ' + X + ' 100';
-              var av = ev(k['anlageverm\u00f6gen']), bs = ev(k.bilanzsumme);
-              if (av && bs) l += '\n= ' + av + ' ' + D + ' ' + bs + ' ' + X + ' 100';
-              return l;
-            } },
-          { label: 'Verbindlichkeiten', key: 'verbindlichkeiten', type: 'eur',
+        var D = '\u00f7', X = '\u00d7', GE = '\u2265', LE = '\u2264', NB = '\u202f';
+
+        /* ── Richtwert-Bewertung ──────────────────────────────── */
+        function bl(val, b) {
+          if (!b || val === null || val === undefined) return -1;
+          return b.dir === 'high'
+            ? (val >= b.good ? 2 : val >= b.warn ? 1 : 0)
+            : (val <= b.good ? 2 : val <= b.warn ? 1 : 0);
+        }
+        function benchTip(b, type) {
+          if (!b) return '';
+          var u = type === 'days' ? ' Tage' : '\u202f%';
+          return b.dir === 'high'
+            ? 'Gut:\u2009\u2265 ' + b.good + u + '\nAkzeptabel:\u2009\u2265 ' + b.warn + u + '\nKritisch:\u2009< ' + b.warn + u
+            : 'Gut:\u2009\u2264 ' + b.good + u + '\nAkzeptabel:\u2009\u2264 ' + b.warn + u + '\nKritisch:\u2009> ' + b.warn + u;
+        }
+        var BL = ['unter Richtwert', 'akzeptabel', 'gut'];
+        var BC = ['kz-bench--warn', 'kz-bench--ok', 'kz-bench--good'];
+
+        /* ── Kandidaten: label, key, type, prio, bench?, tip ─── */
+        var candidates = [
+          { label: 'EK-Quote', key: 'ekQuote', type: 'pct', prio: 100,
+            bench: { warn: 10, good: 25, dir: 'high' },
+            tip: function(k) { var l='Eigenkapital '+D+' Bilanzsumme '+X+' 100'; var ek=ev(k.eigenkapital),bs=ev(k.bilanzsumme); if(ek&&bs)l+='\n= '+ek+' '+D+' '+bs+' '+X+' 100'; return l+'\nRichtwert: '+GE+' 25'+NB+'%'; } },
+          { label: 'EBIT-Marge', key: 'ebitMarge', type: 'pct', prio: 90,
+            bench: { warn: 3, good: 10, dir: 'high' },
+            tip: function(k) { var l='Betriebsergebnis '+D+' Umsatz '+X+' 100'; var be=ev(k.betriebsergebnis),u=ev(k.umsatz); if(be&&u)l+='\n= '+be+' '+D+' '+u+' '+X+' 100'; return l+'\nRichtwert: '+GE+' 10'+NB+'%'; } },
+          { label: 'Umsatzrendite', key: 'umsatzrendite', type: 'pct', prio: 85,
+            bench: { warn: 2, good: 5, dir: 'high' },
+            tip: function(k) { var l='Jahresergebnis '+D+' Umsatz '+X+' 100'; var je=ev(k.jahresergebnis),u=ev(k.umsatz); if(je&&u)l+='\n= '+je+' '+D+' '+u+' '+X+' 100'; return l+'\nRichtwert: '+GE+' 5'+NB+'%'; } },
+          { label: 'Jahresergebnis', key: 'jahresergebnis', type: 'eur', prio: 80,
+            tip: function(k) { return 'Jahres\u00fcberschuss / -fehlbetrag\nNach Steuern'; } },
+          { label: 'ROE', key: 'roe', type: 'pct', prio: 75,
+            bench: { warn: 5, good: 15, dir: 'high' },
+            tip: function(k) { var l='Eigenkapitalrendite\nJahresergebnis '+D+' Eigenkapital '+X+' 100'; var je=ev(k.jahresergebnis),ek=ev(k.eigenkapital); if(je&&ek)l+='\n= '+je+' '+D+' '+ek+' '+X+' 100'; return l+'\nRichtwert: '+GE+' 15'+NB+'%'; } },
+          { label: 'Verschuldungsgrad', key: 'verschuldungsgrad', type: 'pct', prio: 70,
+            bench: { warn: 200, good: 100, dir: 'low' },
+            tip: function(k) { var l='Verbindlichkeiten '+D+' Eigenkapital '+X+' 100'; var vb=ev(k.verbindlichkeiten),ek=ev(k.eigenkapital); if(vb&&ek)l+='\n= '+vb+' '+D+' '+ek+' '+X+' 100'; return l+'\nRichtwert: '+LE+' 100'+NB+'%'; } },
+          { label: 'Umsatz', key: 'umsatz', type: 'eur', prio: 65,
+            tip: function(k) { return 'Nettoumsatzerlöse (exkl. MwSt.)'; } },
+          { label: 'Liquidit\u00e4t 2', key: 'liquidit\u00e4t2', type: 'pct', prio: 60,
+            bench: { warn: 80, good: 100, dir: 'high' },
+            tip: function(k) { var l='(Fl\u00fcssige Mittel + Forderungen) '+D+' kurzfr. Verbindl. '+X+' 100'; var fm=ev(k['fl\u00fcssigeMittel']),fo=ev(k.forderungen),kv=ev(k['kurzfristigeVerbindlichkeiten']); if(fm&&fo&&kv)l+='\n= ('+fm+' + '+fo+') '+D+' '+kv+' '+X+' 100'; return l+'\nRichtwert: '+GE+' 100'+NB+'%'; } },
+          { label: 'Betriebsergebnis', key: 'betriebsergebnis', type: 'eur', prio: 55,
+            tip: function(k) { return 'EBIT \u2013 Ergebnis aus dem operativen Gesch\u00e4ft'; } },
+          { label: 'Anlagendeckung I', key: 'anlagendeckungI', type: 'pct', prio: 50,
+            bench: { warn: 60, good: 100, dir: 'high' },
+            tip: function(k) { var l='Eigenkapital '+D+' Anlageverm\u00f6gen '+X+' 100'; var ek=ev(k.eigenkapital),av=ev(k['anlageverm\u00f6gen']); if(ek&&av)l+='\n= '+ek+' '+D+' '+av+' '+X+' 100'; return l+'\nRichtwert: '+GE+' 100'+NB+'%'; } },
+          { label: 'ROA', key: 'roa', type: 'pct', prio: 45,
+            bench: { warn: 2, good: 5, dir: 'high' },
+            tip: function(k) { var l='Gesamtkapitalrendite\nJahresergebnis '+D+' Bilanzsumme '+X+' 100'; var je=ev(k.jahresergebnis),bs=ev(k.bilanzsumme); if(je&&bs)l+='\n= '+je+' '+D+' '+bs+' '+X+' 100'; return l+'\nRichtwert: '+GE+' 5'+NB+'%'; } },
+          { label: 'Bilanzsumme', key: 'bilanzsumme', type: 'eur', prio: 40,
+            tip: function(k) { return 'Summe aller Verm\u00f6gensgegen-\nst\u00e4nde der Bilanz'; } },
+          { label: 'Eigenkapital', key: 'eigenkapital', type: 'eur', prio: 35,
+            tip: function(k) { return 'Stamm-/Grundkapital\n+ R\u00fccklagen + Bilanzgewinn/-verlust'; } },
+          { label: 'Debitorenziel', key: 'debitorenziel', type: 'days', prio: 30,
+            bench: { warn: 60, good: 30, dir: 'low' },
+            tip: function(k) { return 'Forderungen '+D+' Umsatz '+X+' 365\nRichtwert: '+LE+' 30 Tage'; } },
+          { label: 'Fremdkapitalquote', key: 'fremdkapitalquote', type: 'pct', prio: 25,
+            bench: { warn: 75, good: 50, dir: 'low' },
+            tip: function(k) { return '(Verbindlichkeiten + R\u00fcckstellungen) '+D+' Bilanzsumme '+X+' 100\nRichtwert: '+LE+' 50'+NB+'%'; } },
+          { label: 'Anlageintensit\u00e4t', key: 'anlageintensit\u00e4t', type: 'pct', prio: 20,
+            tip: function(k) { return 'Anlageverm\u00f6gen '+D+' Bilanzsumme '+X+' 100'; } },
+          { label: 'Verbindlichkeiten', key: 'verbindlichkeiten', type: 'eur', prio: 18,
             tip: function(k) { return 'Verbindlichkeiten gesamt\n(kurz- und langfristig)'; } },
-          { label: 'Verschuldungsgrad', key: 'verschuldungsgrad', type: 'pct',
-            tip: function(k) {
-              var l = 'Verbindlichkeiten ' + D + ' Eigenkapital ' + X + ' 100';
-              var vb = ev(k.verbindlichkeiten), ek = ev(k.eigenkapital);
-              if (vb && ek) l += '\n= ' + vb + ' ' + D + ' ' + ek + ' ' + X + ' 100';
-              return l;
-            } },
-          { label: 'Liquidit\u00e4t 1', key: 'liquidit\u00e4t1', type: 'pct',
-            tip: function(k) {
-              var l = 'Fl\u00fcssige Mittel ' + D + ' kurzfristige Verbindlichkeiten ' + X + ' 100';
-              var fm = ev(k['fl\u00fcssigeMittel']), kv = ev(k['kurzfristigeVerbindlichkeiten']);
-              if (fm && kv) l += '\n= ' + fm + ' ' + D + ' ' + kv + ' ' + X + ' 100';
-              l += '\nRichtwert: ' + GE + ' 20' + NB + '%';
-              return l;
-            } },
-          { label: 'Liquidit\u00e4t 2', key: 'liquidit\u00e4t2', type: 'pct',
-            tip: function(k) {
-              var l = '(Fl\u00fcssige Mittel + Forderungen) ' + D + ' kurzfristige Verbindlichkeiten ' + X + ' 100';
-              var fm = ev(k['fl\u00fcssigeMittel']), fo = ev(k.forderungen), kv = ev(k['kurzfristigeVerbindlichkeiten']);
-              if (fm && fo && kv) l += '\n= (' + fm + ' + ' + fo + ') ' + D + ' ' + kv + ' ' + X + ' 100';
-              l += '\nRichtwert: ' + GE + ' 100' + NB + '%';
-              return l;
-            } },
-          { label: 'Liquidit\u00e4t 3', key: 'liquidit\u00e4t3', type: 'pct',
-            tip: function(k) {
-              var l = 'Umlaufverm\u00f6gen ' + D + ' kurzfristige Verbindlichkeiten ' + X + ' 100';
-              var uv = ev(k['umlaufverm\u00f6gen']), kv = ev(k['kurzfristigeVerbindlichkeiten']);
-              if (uv && kv) l += '\n= ' + uv + ' ' + D + ' ' + kv + ' ' + X + ' 100';
-              l += '\nRichtwert: ' + GE + ' 120' + NB + '%';
-              return l;
-            } },
-          { label: 'Umsatz', key: 'umsatz', type: 'eur',
-            tip: function(k) { return 'Umsatzerlöse (Netto, exkl. MwSt.)'; } },
-          { label: 'Personalaufwand', key: 'personalaufwand', type: 'eur',
-            tip: function(k) { return 'L\u00f6hne + Geh\u00e4lter + Sozialaufwand\n(negativer Wert = Aufwand)'; } },
-          { label: 'Abschreibungen', key: 'abschreibungen', type: 'eur',
-            tip: function(k) { return 'Abschreibungen auf Sachanlagen\nund immaterielle Anlagen\n(negativer Wert = Aufwand)'; } },
-          { label: 'Betriebsergebnis', key: 'betriebsergebnis', type: 'eur',
-            tip: function(k) { return 'Betriebsergebnis (EBIT)\nErgebnis aus dem operativen Gesch\u00e4ft'; } },
-          { label: 'EGT', key: 'egt', type: 'eur',
+          { label: 'Anlageverm\u00f6gen', key: 'anlageverm\u00f6gen', type: 'eur', prio: 16,
+            tip: function(k) { return 'Langfristig gebundenes Verm\u00f6gen'; } },
+          { label: 'Umlaufverm\u00f6gen', key: 'umlaufverm\u00f6gen', type: 'eur', prio: 14,
+            tip: function(k) { return 'Kurzfristig verf\u00fcgbares Verm\u00f6gen'; } },
+          { label: 'EGT', key: 'egt', type: 'eur', prio: 12,
             tip: function(k) { return 'Ergebnis der gew\u00f6hnlichen Gesch\u00e4ftst\u00e4tigkeit\nBetriebsergebnis + Finanzergebnis'; } },
-          { label: 'Jahres\u00fcberschuss', key: 'jahresergebnis', type: 'eur',
-            tip: function(k) { return 'Jahres\u00fcberschuss / -fehlbetrag\nNach au\u00dferordentlichen Posten und Steuern'; } },
-          { label: 'Umsatzrendite', key: 'umsatzrendite', type: 'pct',
-            tip: function(k) {
-              var l = 'Jahresergebnis ' + D + ' Umsatz ' + X + ' 100';
-              var je = ev(k.jahresergebnis), u = ev(k.umsatz);
-              if (je && u) l += '\n= ' + je + ' ' + D + ' ' + u + ' ' + X + ' 100';
-              return l;
-            } },
-          { label: 'ROE', key: 'roe', type: 'pct',
-            tip: function(k) {
-              var l = 'Eigenkapitalrendite\nJahresergebnis ' + D + ' Eigenkapital ' + X + ' 100';
-              var je = ev(k.jahresergebnis), ek = ev(k.eigenkapital);
-              if (je && ek) l += '\n= ' + je + ' ' + D + ' ' + ek + ' ' + X + ' 100';
-              return l;
-            } },
-          { label: 'ROA', key: 'roa', type: 'pct',
-            tip: function(k) {
-              var l = 'Gesamtkapitalrendite\nJahresergebnis ' + D + ' Bilanzsumme ' + X + ' 100';
-              var je = ev(k.jahresergebnis), bs = ev(k.bilanzsumme);
-              if (je && bs) l += '\n= ' + je + ' ' + D + ' ' + bs + ' ' + X + ' 100';
-              return l;
-            } },
+          { label: 'Personalaufwand', key: 'personalaufwand', type: 'eur', prio: 10,
+            tip: function(k) { return 'L\u00f6hne + Geh\u00e4lter + Sozialaufwand'; } },
+          { label: 'Abschreibungen', key: 'abschreibungen', type: 'eur', prio: 8,
+            tip: function(k) { return 'AfA Sachanlagen + immat. Anlagen'; } },
+          { label: 'R\u00fcckstellungen', key: 'r\u00fcckstellungen', type: 'eur', prio: 6,
+            tip: function(k) { return 'Ungewisse Verbindlichkeiten\n(Abfertigungen, Steuerr\u00fcckstellungen etc.)'; } },
+          { label: 'Fl\u00fcssige Mittel', key: 'fl\u00fcssigeMittel', type: 'eur', prio: 4,
+            tip: function(k) { return 'Kasse + Bankguthaben'; } },
+          { label: 'Forderungen', key: 'forderungen', type: 'eur', prio: 2,
+            tip: function(k) { return 'Forderungen aus L+L sowie\nsonstige Forderungen'; } },
         ];
 
+        /* ── Score: Priorität + Bonus für Abweichung vom Richtwert */
+        var scored = candidates
+          .filter(function(c) {
+            var kpi = kpis[c.key];
+            return kpi && (kpi.betrag !== null || kpi.betragVJ !== null);
+          })
+          .map(function(c) {
+            var level = bl(kpis[c.key].betrag, c.bench);
+            var bonus = level === 0 ? 50 : level === 2 ? 15 : 0;
+            return { c: c, score: c.prio + bonus, level: level };
+          })
+          .sort(function(a, b) { return b.score - a.score; })
+          .slice(0, 8);
+
         var html = '<div class="kpi-grid">';
-        cards.forEach(function (c) {
-          var kpi = kpis[c.key];
-          if (!kpi || (kpi.betrag === null && kpi.betragVJ === null)) return;
+        scored.forEach(function(item) {
+          var c = item.c, kpi = kpis[c.key];
           var tip = c.tip ? escAttr(c.tip(kpis)) : '';
+          var benchHtml = item.level >= 0
+            ? '<span class="kz-bench ' + BC[item.level] + '" data-tooltip="' + escAttr(benchTip(c.bench, c.type)) + '">' + BL[item.level] + '</span>'
+            : '';
           html += '<div class="kpi-card">';
           html += '<div class="kpi-card-header">';
           html += '<div class="kpi-label">' + c.label + '</div>';
@@ -311,14 +331,237 @@ block content
           if (kpi.betragVJ !== null && kpi.betragVJ !== undefined) {
             html += '<div class="kpi-vj">VJ\u202f' + fmt(kpi.betragVJ, c.type) + '</div>';
           }
+          html += benchHtml;
           html += '</div>';
         });
         html += '</div>';
 
-        if (html === '<div class="kpi-grid"></div>') {
+        if (scored.length === 0) {
           html = '<p class="kpi-error">Keine Kennzahlen verf\u00fcgbar.</p>';
         }
         kpiCards.innerHTML = html;
+        renderBilanz(kpis, data.positions || {});
+        renderGuV(kpis, data.positions || {});
+      }
+
+      function renderBilanz(kpis, pos) {
+        var bilanzEl = document.getElementById('bilanz');
+        if (!bilanzEl) return;
+        pos = pos || {};
+
+        function b(key)    { var k = kpis[key]; return k && k.betrag   != null ? k.betrag   : null; }
+        function bvj(key)  { var k = kpis[key]; return k && k.betragVJ != null ? k.betragVJ : null; }
+        function p(code)   { var k = pos[code];  return k && k.betrag   != null ? k.betrag   : null; }
+        function pvj(code) { var k = pos[code];  return k && k.betragVJ != null ? k.betragVJ : null; }
+
+        var bs = b('bilanzsumme'), bsVJ = bvj('bilanzsumme');
+        if (bs === null) { bilanzEl.innerHTML = ''; return; }
+
+        var hasVJ = [bsVJ, bvj('anlageverm\u00f6gen'), bvj('eigenkapital'), bvj('verbindlichkeiten')]
+          .some(function(v) { return v !== null; });
+
+        function row(label, val, vjVal, indent, total) {
+          if (val === null) return '';
+          var cls = 'bilanz__row';
+          if (indent) cls += ' bilanz__row--indent';
+          if (total)  cls += ' bilanz__row--total';
+          var h = '<div class="' + cls + '">';
+          h += '<span class="bilanz__label">' + label + '</span>';
+          h += '<span class="bilanz__value">' + fmt(val, 'eur') + '</span>';
+          if (hasVJ) h += '<span class="bilanz__vj-val">' + fmt(vjVal, 'eur') + '</span>';
+          h += '</div>';
+          return h;
+        }
+
+        // Paired helper: renders one side; shows empty placeholder if val is null
+        function pairSide(label, val, vjVal, total) {
+          var cls = 'bilanz__row' + (total ? ' bilanz__row--total' : '');
+          if (val === null && !total) return '<div class="bilanz__row bilanz__row--empty"></div>';
+          var h = '<div class="' + cls + '">';
+          if (val !== null) {
+            h += '<span class="bilanz__label">' + label + '</span>';
+            h += '<span class="bilanz__value">' + fmt(val, 'eur') + '</span>';
+            if (hasVJ) h += '<span class="bilanz__vj-val">' + fmt(vjVal, 'eur') + '</span>';
+          }
+          h += '</div>';
+          return h;
+        }
+
+        // ── AKTIVA (RAP + latSt + BS → paired section below) ────
+        var aktiva = '';
+        aktiva += row('Anlageverm\u00f6gen',                    b('anlageverm\u00f6gen'),  bvj('anlageverm\u00f6gen'));
+        aktiva += row('Immaterielle Verm\u00f6gensgegenst\u00e4nde', p('HGB_224_2_A_I'),   pvj('HGB_224_2_A_I'),   true);
+        aktiva += row('Sachanlagen',                             p('HGB_224_2_A_II'),  pvj('HGB_224_2_A_II'),  true);
+        aktiva += row('Finanzanlagen',                           p('HGB_224_2_A_III'), pvj('HGB_224_2_A_III'), true);
+        aktiva += row('Umlaufverm\u00f6gen',                    b('umlaufverm\u00f6gen'),  bvj('umlaufverm\u00f6gen'));
+        aktiva += row('Vorr\u00e4te',                           p('HGB_224_2_B_I'),   pvj('HGB_224_2_B_I'),   true);
+        aktiva += row('Forderungen',                             p('HGB_224_2_B_II'),  pvj('HGB_224_2_B_II'),  true);
+        aktiva += row('Wertpapiere',                             p('HGB_224_2_B_III'), pvj('HGB_224_2_B_III'), true);
+        aktiva += row('Fl\u00fcssige Mittel',                   p('HGB_224_2_B_IV'),  pvj('HGB_224_2_B_IV'),  true);
+
+        // ── PASSIVA (RAP + latSt + BS → paired section below) ───
+        var passiva = '';
+        passiva += row('Eigenkapital',                 b('eigenkapital'),      bvj('eigenkapital'));
+        passiva += row('Nennkapital',                  p('HGB_224_3_A_I'),   pvj('HGB_224_3_A_I'),   true);
+        passiva += row('Kapitalr\u00fccklagen',        p('HGB_224_3_A_II'),  pvj('HGB_224_3_A_II'),  true);
+        passiva += row('Gewinnr\u00fccklagen',         p('HGB_224_3_A_III'), pvj('HGB_224_3_A_III'), true);
+        passiva += row('Bilanzgewinn/-verlust',         p('HGB_224_3_A_IV'),  pvj('HGB_224_3_A_IV'),  true);
+        passiva += row('R\u00fcckstellungen',           b('r\u00fcckstellungen'),   bvj('r\u00fcckstellungen'));
+        passiva += row('Abfertigungsr\u00fcckstellungen', p('HGB_224_3_B_1'), pvj('HGB_224_3_B_1'),  true);
+        passiva += row('Pensionsr\u00fcckstellungen',     p('HGB_224_3_B_2'), pvj('HGB_224_3_B_2'),  true);
+        passiva += row('Steuerr\u00fcckstellungen',       p('HGB_224_3_B_3'), pvj('HGB_224_3_B_3'),  true);
+        passiva += row('Verbindlichkeiten',             b('verbindlichkeiten'), bvj('verbindlichkeiten'));
+        passiva += row('davon kurzfristig\u202f(<\u202f1\u202fJ.)', b('kurzfristigeVerbindlichkeiten'), bvj('kurzfristigeVerbindlichkeiten'), true);
+        passiva += row('davon langfristig\u202f(>\u202f5\u202fJ.)', b('langfristigeVerbindlichkeiten'), bvj('langfristigeVerbindlichkeiten'), true);
+        passiva += row('Anleihen',                              p('HGB_224_3_D_1'), pvj('HGB_224_3_D_1'), true);
+        passiva += row('Verbindlichkeiten gg\u00fc. KI',        p('HGB_224_3_D_2'), pvj('HGB_224_3_D_2'), true);
+        passiva += row('Erhaltene Anzahlungen',                 p('HGB_224_3_D_3'), pvj('HGB_224_3_D_3'), true);
+        passiva += row('Verbindlichkeiten aus L+L',             p('HGB_224_3_D_4'), pvj('HGB_224_3_D_4'), true);
+        passiva += row('Verbindlichkeiten aus Wechseln',        p('HGB_224_3_D_5'), pvj('HGB_224_3_D_5'), true);
+        passiva += row('Verbindlichkeiten gg\u00fc. verbundenen Unternehmen', p('HGB_224_3_D_6'), pvj('HGB_224_3_D_6'), true);
+        passiva += row('Verbindlichkeiten gg\u00fc. Beteiligungen', p('HGB_224_3_D_7'), pvj('HGB_224_3_D_7'), true);
+        passiva += row('Sonstige Verbindlichkeiten',            p('HGB_224_3_D_8'), pvj('HGB_224_3_D_8'), true);
+
+        // ── PAIRED ROWS (aligned across both columns) ─────────────
+        var arap = p('HGB_224_2_C'), arapVJ = pvj('HGB_224_2_C');
+        var prap = p('HGB_224_3_C'), prapVJ = pvj('HGB_224_3_C');
+        var alat = p('HGB_224_2_D'), alatVJ = pvj('HGB_224_2_D');
+        var plat = p('HGB_224_3_E'), platVJ = pvj('HGB_224_3_E');
+
+        var pairs = '';
+        if (arap !== null || prap !== null) {
+          pairs += '<div class="bilanz__pair">';
+          pairs += '<div class="bilanz__pair-left">'  + pairSide('Aktive Rechnungsabgrenzung',  arap, arapVJ) + '</div>';
+          pairs += '<div class="bilanz__pair-right">' + pairSide('Passive Rechnungsabgrenzung', prap, prapVJ) + '</div>';
+          pairs += '</div>';
+        }
+        if (alat !== null || plat !== null) {
+          pairs += '<div class="bilanz__pair">';
+          pairs += '<div class="bilanz__pair-left">'  + pairSide('Aktive latente Steuern',  alat, alatVJ) + '</div>';
+          pairs += '<div class="bilanz__pair-right">' + pairSide('Passive latente Steuern', plat, platVJ) + '</div>';
+          pairs += '</div>';
+        }
+        pairs += '<div class="bilanz__pair">';
+        pairs += '<div class="bilanz__pair-left">'  + pairSide('Bilanzsumme', bs, bsVJ, true) + '</div>';
+        pairs += '<div class="bilanz__pair-right">' + pairSide('Bilanzsumme', bs, bsVJ, true) + '</div>';
+        pairs += '</div>';
+
+        var vjHead = hasVJ ? '<span class="bilanz__vj-head">VJ</span>' : '';
+        var h = '<div class="bilanz">';
+        h += '<div class="bilanz__cols">';
+        h += '<div class="bilanz__col"><div class="bilanz__col-head">Aktiva' + vjHead + '</div>' + aktiva + '</div>';
+        h += '<div class="bilanz__col"><div class="bilanz__col-head">Passiva' + vjHead + '</div>' + passiva + '</div>';
+        h += '</div>';
+        h += pairs;
+        h += '</div>';
+        bilanzEl.innerHTML = h;
+      }
+
+      function renderGuV(kpis, pos) {
+        var guvEl = document.getElementById('guv');
+        if (!guvEl) return;
+        pos = pos || {};
+
+        function b(key)    { var k = kpis[key]; return k && k.betrag   != null ? k.betrag   : null; }
+        function bvj(key)  { var k = kpis[key]; return k && k.betragVJ != null ? k.betragVJ : null; }
+        function p(code)   { var k = pos[code]; return k && k.betrag   != null ? k.betrag   : null; }
+        function pvj(code) { var k = pos[code]; return k && k.betragVJ != null ? k.betragVJ : null; }
+
+        var uz = p('HGB_231_2_1') !== null ? p('HGB_231_2_1') : b('umsatz');
+        var uzVJ = p('HGB_231_2_1') !== null ? pvj('HGB_231_2_1') : bvj('umsatz');
+        var be = b('betriebsergebnis'), beVJ = bvj('betriebsergebnis');
+        var je = b('jahresergebnis'),   jeVJ = bvj('jahresergebnis');
+        if (be === null && je === null && uz === null) { guvEl.innerHTML = ''; return; }
+
+        var hasVJ = [beVJ, bvj('umsatz'), jeVJ].some(function(v) { return v !== null; });
+
+        function row(sign, label, val, vjVal, indent, result) {
+          if (val === null) return '';
+          var cls = 'guv__row';
+          if (indent) cls += ' guv__row--indent';
+          if (result) cls += ' guv__row--result';
+          var h = '<div class="' + cls + '">';
+          if (!indent) h += '<span class="guv__sign">' + (sign || '') + '</span>';
+          h += '<span class="guv__label">' + label + '</span>';
+          h += '<span class="guv__value">' + fmt(val, 'eur') + '</span>';
+          if (hasVJ) h += '<span class="guv__vj-val">' + fmt(vjVal, 'eur') + '</span>';
+          h += '</div>';
+          return h;
+        }
+
+        var html = '';
+
+        // ── Betriebliche Erträge ─────────────────────────────────
+        html += row('+', 'Umsatzerlöse', uz, uzVJ);
+        html += row('\u00b1', 'Bestandsver\u00e4nderungen', p('HGB_231_2_2'), pvj('HGB_231_2_2'));
+        html += row('+', 'Aktivierte Eigenleistungen',     p('HGB_231_2_3'), pvj('HGB_231_2_3'));
+        html += row('+', 'Sonstige betr. Ertr\u00e4ge',   p('HGB_231_2_4'), pvj('HGB_231_2_4'));
+        html += row('', 'davon Ertr\u00e4ge aus AV-Abgang',      p('HGB_231_2_4_A'), pvj('HGB_231_2_4_A'), true);
+        html += row('', 'davon Ertr\u00e4ge aus RS-Aufl\u00f6sung', p('HGB_231_2_4_B'), pvj('HGB_231_2_4_B'), true);
+        html += row('', 'davon \u00fcbrige',               p('HGB_231_2_4_C'), pvj('HGB_231_2_4_C'), true);
+
+        // ── Betriebliche Aufwendungen ────────────────────────────
+        html += row('\u2212', 'Materialaufwand',           p('HGB_231_2_5'),   pvj('HGB_231_2_5'));
+        html += row('', 'davon Roh-/Hilfs-/Betriebsstoffe', p('HGB_231_2_5_A'), pvj('HGB_231_2_5_A'), true);
+        html += row('', 'davon bezogene Leistungen',       p('HGB_231_2_5_B'), pvj('HGB_231_2_5_B'), true);
+
+        var pa  = p('HGB_231_2_6') !== null ? p('HGB_231_2_6')   : b('personalaufwand');
+        var paVJ= p('HGB_231_2_6') !== null ? pvj('HGB_231_2_6') : bvj('personalaufwand');
+        html += row('\u2212', 'Personalaufwand', pa, paVJ);
+        html += row('', 'davon L\u00f6hne',         p('HGB_231_2_6_A'), pvj('HGB_231_2_6_A'), true);
+        html += row('', 'davon Geh\u00e4lter',      p('HGB_231_2_6_B'), pvj('HGB_231_2_6_B'), true);
+        var abf   = p('HGB_231_2_6_G') !== null ? p('HGB_231_2_6_G')   : p('HGB_231_2_6_C');
+        var abfVJ = p('HGB_231_2_6_G') !== null ? pvj('HGB_231_2_6_G') : pvj('HGB_231_2_6_C');
+        html += row('', 'davon Abfertig./MVK',       abf,  abfVJ,  true);
+        html += row('', 'davon Altersversorgung',    p('HGB_231_2_6_D'), pvj('HGB_231_2_6_D'), true);
+        html += row('', 'davon Sozialabgaben',       p('HGB_231_2_6_E'), pvj('HGB_231_2_6_E'), true);
+        html += row('', 'davon sonstige Sozialaufw.',p('HGB_231_2_6_F'), pvj('HGB_231_2_6_F'), true);
+
+        var afa  = p('HGB_231_2_7') !== null ? p('HGB_231_2_7')   : b('abschreibungen');
+        var afaVJ= p('HGB_231_2_7') !== null ? pvj('HGB_231_2_7') : bvj('abschreibungen');
+        html += row('\u2212', 'Abschreibungen', afa, afaVJ);
+        html += row('', 'davon auf immat. VG u. Sachanlagen', p('HGB_231_2_7_A'), pvj('HGB_231_2_7_A'), true);
+        html += row('', 'davon auf Umlaufverm\u00f6gen',      p('HGB_231_2_7_B'), pvj('HGB_231_2_7_B'), true);
+
+        html += row('\u2212', 'Sonstige betr. Aufwendungen', p('HGB_231_2_8'), pvj('HGB_231_2_8'));
+        html += row('', 'davon Steuern', p('HGB_231_2_8_A'), pvj('HGB_231_2_8_A'), true);
+        html += row('', 'davon \u00fcbrige', p('HGB_231_2_8_B'), pvj('HGB_231_2_8_B'), true);
+
+        // ── Betriebsergebnis ─────────────────────────────────────
+        html += row('=', 'Betriebsergebnis', be, beVJ, false, true);
+
+        // ── Finanzergebnis ───────────────────────────────────────
+        var finCodes = ['HGB_231_2_10','HGB_231_2_11','HGB_231_2_12','HGB_231_2_13','HGB_231_2_14','HGB_231_2_15'];
+        if (finCodes.some(function(c) { return p(c) !== null; }) || p('HGB_231_2_16') !== null) {
+          html += row('+', 'Beteiligungsertr\u00e4ge',                  p('HGB_231_2_10'), pvj('HGB_231_2_10'));
+          html += row('+', 'Wertpapierertr\u00e4ge',                    p('HGB_231_2_11'), pvj('HGB_231_2_11'));
+          html += row('+', 'Zinsen und \u00e4hnliche Ertr\u00e4ge',     p('HGB_231_2_12'), pvj('HGB_231_2_12'));
+          html += row('+', 'Ertr\u00e4ge aus FA-Abgang/Zuschreibung',   p('HGB_231_2_13'), pvj('HGB_231_2_13'));
+          html += row('\u2212', 'Aufwendungen aus Finanzanlagen',        p('HGB_231_2_14'), pvj('HGB_231_2_14'));
+          html += row('\u2212', 'Zinsen und \u00e4hnliche Aufwendungen', p('HGB_231_2_15'), pvj('HGB_231_2_15'));
+          html += row('=', 'Finanzergebnis', p('HGB_231_2_16'), pvj('HGB_231_2_16'), false, true);
+        }
+
+        // ── EGT ─────────────────────────────────────────────────
+        html += row('=', 'Ergebnis der gew. Gesch\u00e4ftst\u00e4tigkeit (EGT)', b('egt'), bvj('egt'), false, true);
+
+        // ── Steuern & Jahresergebnis ─────────────────────────────
+        html += row('\u2212', 'Steuern vom Einkommen und Ertrag', p('HGB_231_2_18'), pvj('HGB_231_2_18'));
+        html += row('=', 'Jahresergebnis', je, jeVJ, false, true);
+
+        // ── Rücklagenbewegung & Bilanzgewinn ─────────────────────
+        var bg = p('HGB_231_2_28');
+        if (bg !== null) {
+          html += row('+', 'Aufl\u00f6sung Kapitalr\u00fccklagen',  p('HGB_231_2_21'), pvj('HGB_231_2_21'));
+          html += row('+', 'Aufl\u00f6sung Gewinnr\u00fccklagen',   p('HGB_231_2_22'), pvj('HGB_231_2_22'));
+          html += row('\u2212', 'Zuweisung Gewinnr\u00fccklagen',   p('HGB_231_2_23'), pvj('HGB_231_2_23'));
+          html += row('\u2212', 'Zuweisung Kapitalr\u00fccklagen',  p('HGB_231_2_24'), pvj('HGB_231_2_24'));
+          html += row('\u00b1', 'Gewinn-/Verlustvortrag aus VJ',    p('HGB_231_2_25'), pvj('HGB_231_2_25'));
+          html += row('=', 'Bilanzgewinn/-verlust', bg, pvj('HGB_231_2_28'), false, true);
+        }
+
+        var vjHead = hasVJ ? '<span class="bilanz__vj-head">VJ</span>' : '';
+        guvEl.innerHTML = '<div class="guv"><div class="guv__head">GuV \u2013 Gesamtkostenverfahren' + vjHead + '</div>' + html + '</div>';
       }
 
       function loadKpis(key) {

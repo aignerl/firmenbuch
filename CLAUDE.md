@@ -30,7 +30,7 @@ This is an Express.js web application (Node.js) intended to integrate with the A
 4. `views/` — Pug templates rendered by route handlers
 
 **Routes:**
-- `GET /` → renders `views/index.pug` (search form)
+- `GET /` → renders `views/in[demo.html](demo.html)dex.pug` (search form)
 - `POST /suchen` → calls `sucheFirma`, renders `views/suche-ergebnis.pug`
 - `GET /firma/:fnr` → calls `getAuszug`, renders `views/firma.pug`
 - `GET /api/firma/suchen?name=` → JSON search results

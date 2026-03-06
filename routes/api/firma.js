@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const { sucheFirma, getAuszug, sucheUrkunde, getUrkunde, getOwnershipTree } = require('../../services/firmenbuch');
-const { parseJahresabschluss } = require('../../services/jahresabschluss');
+const { parseJahresabschluss, extractKpis } = require('../../services/jahresabschluss');
 const db = require('../../services/db');
 
 router.get('/suchen', async (req, res) => {
@@ -120,7 +120,11 @@ router.get('/:fnr/jahresabschluss', async (req, res) => {
     // Cache-Check (nur für normale Anfragen, nicht für raw-Debug)
     if (raw !== '1') {
       const cached = db.getJahresabschluss(key);
-      if (cached) return res.json(cached);
+      if (cached) {
+        // KPIs aus gecachten positions neu berechnen (damit neue KPI-Felder enthalten sind)
+        cached.kpis = cached.positions ? extractKpis(cached.positions) : cached.kpis;
+        return res.json(cached);
+      }
     }
 
     const { content } = await getUrkunde({ key });
