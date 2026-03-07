@@ -1502,6 +1502,15 @@ thead th.bl-rank { color: inherit; }
   background: #fff;
   color: var(--md-on-surface);
 }
+.props-list { display: flex; flex-direction: column; gap: 2px; }
+.props-list-item {
+  font-size: .8rem;
+  color: var(--md-text);
+  padding: 2px 0;
+  border-bottom: 1px solid var(--md-divider);
+}
+.props-list-item:last-child { border-bottom: none; }
+.props-list-empty { font-size: .8rem; color: var(--md-secondary-text); }
 .editor-field input[readonly],
 .editor-field textarea[readonly] {
   background: var(--md-background);

@@ -13,6 +13,10 @@
     return 'manual:' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
   }
 
+  function parseLines(text) {
+    return (text || '').split('\n').map(function(l) { return l.trim(); }).filter(Boolean);
+  }
+
   function downloadJson(obj, filename) {
     var blob = new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' });
     var url = URL.createObjectURL(blob);
@@ -256,12 +260,17 @@
       document.getElementById('props-node-delete-btn').style.display = isManual ? '' : 'none';
       document.getElementById('props-node-save-btn').style.display = '';
       document.getElementById('props-node-delete-btn').onclick = function () { ele.remove(); hidePropsPanel(); };
+      document.getElementById('pn-gf').value = (ele.data('geschaeftsfuehrer') || []).join('\n');
+      document.getElementById('pn-vorstand').value = (ele.data('vorstand') || []).join('\n');
+
       document.getElementById('props-node-save-btn').onclick = function () {
         var v = document.getElementById('pn-name').value.trim();
         if (v) ele.data('name', v);
         ele.data('fnr', document.getElementById('pn-fnr').value.trim() || null);
         ele.data('land', document.getElementById('pn-land').value.trim() || null);
         ele.data('rechtsform', document.getElementById('pn-rechtsform').value.trim() || null);
+        ele.data('geschaeftsfuehrer', parseLines(document.getElementById('pn-gf').value));
+        ele.data('vorstand', parseLines(document.getElementById('pn-vorstand').value));
         ele.data('note', document.getElementById('pn-note').value.trim() || null);
         checkPersonengesellschaft(ele);
       };
@@ -339,6 +348,8 @@
     document.getElementById('an-fnr').value = '';
     document.getElementById('an-land').value = '';
     document.getElementById('an-rechtsform').value = '';
+    document.getElementById('an-gf').value = '';
+    document.getElementById('an-vorstand').value = '';
     document.getElementById('an-note').value = '';
     updateAddNodeModalFields();
     setTimeout(function () { document.getElementById('an-name').focus(); }, 50);
@@ -363,6 +374,8 @@
         type: typ,
         land: typ === 'firma' ? (document.getElementById('an-land').value.trim() || null) : null,
         rechtsform: rechtsform,
+        geschaeftsfuehrer: typ === 'firma' ? parseLines(document.getElementById('an-gf').value) : [],
+        vorstand: typ === 'firma' ? parseLines(document.getElementById('an-vorstand').value) : [],
         note: document.getElementById('an-note').value.trim() || null,
         source: 'manual',
       },

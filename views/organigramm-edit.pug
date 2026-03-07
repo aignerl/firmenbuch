@@ -7,7 +7,7 @@ html(lang="de")
     link(rel='preconnect', href='https://fonts.googleapis.com')
     link(rel='preconnect', href='https://fonts.gstatic.com', crossorigin)
     link(rel='stylesheet', href='https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap')
-    link(rel='stylesheet', href='/stylesheets/style.css?v=42')
+    link(rel='stylesheet', href='/stylesheets/style.css?v=44')
     style.
       html, body { height: 100%; overflow: hidden; }
   body
@@ -46,6 +46,12 @@ html(lang="de")
         .editor-field
           label(for="pn-note") Notiz
           textarea#pn-note(rows="3")
+        .editor-field
+          label(for="pn-gf") Geschäftsführung
+          textarea#pn-gf(rows="2" placeholder="Ein Name pro Zeile")
+        .editor-field
+          label(for="pn-vorstand") Vorstand
+          textarea#pn-vorstand(rows="2" placeholder="Ein Name pro Zeile")
         button#props-node-save-btn.editor-btn.editor-btn--primary(type="button") Speichern
         button#props-node-delete-btn.editor-btn.editor-btn--danger(type="button" style="display:none; margin-top:8px") Löschen
       form#props-edge-form(hidden)
@@ -81,6 +87,12 @@ html(lang="de")
         .editor-field.an-firma-field
           label(for="an-rechtsform") Rechtsform
           input#an-rechtsform(type="text" autocomplete="off" placeholder="z.B. GmbH, OG, KG")
+        .editor-field.an-firma-field
+          label(for="an-gf") Geschäftsführung
+          textarea#an-gf(rows="2" placeholder="Ein Name pro Zeile")
+        .editor-field.an-firma-field
+          label(for="an-vorstand") Vorstand
+          textarea#an-vorstand(rows="2" placeholder="Ein Name pro Zeile")
         .editor-field
           label(for="an-note") Notiz
           textarea#an-note(rows="2")
