@@ -86,3 +86,162 @@ block scripts
         });
       }
     })();
+
+  if isBirthday
+    script.
+      (function () {
+        // ── Konfetti-Canvas ────────────────────────────────────────
+        var canvas = document.createElement('canvas');
+        canvas.id = 'confetti-canvas';
+        canvas.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999';
+        document.body.appendChild(canvas);
+
+        var ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        window.addEventListener('resize', function () {
+          canvas.width = window.innerWidth;
+          canvas.height = window.innerHeight;
+        });
+
+        var COLORS = ['#1a73e8','#e8453c','#f9ab00','#0f9d58','#c026d3','#ff6d00','#00bcd4'];
+        var SHAPES = ['rect','circle','triangle'];
+        var particles = [];
+
+        function rand(a, b) { return Math.random() * (b - a) + a; }
+
+        function Particle() {
+          this.reset(true);
+        }
+        Particle.prototype.reset = function (init) {
+          this.x = rand(0, canvas.width);
+          this.y = init ? rand(-canvas.height, 0) : rand(-80, -10);
+          this.w = rand(8, 18);
+          this.h = rand(5, 12);
+          this.color = COLORS[Math.floor(rand(0, COLORS.length))];
+          this.shape = SHAPES[Math.floor(rand(0, SHAPES.length))];
+          this.vx = rand(-2, 2);
+          this.vy = rand(2, 6);
+          this.angle = rand(0, Math.PI * 2);
+          this.spin = rand(-0.15, 0.15);
+          this.alpha = 1;
+        };
+        Particle.prototype.update = function () {
+          this.x += this.vx + Math.sin(this.angle * 0.5) * 0.8;
+          this.y += this.vy;
+          this.angle += this.spin;
+          this.vy += 0.04; // gravity
+          if (this.y > canvas.height + 20) this.reset(false);
+        };
+        Particle.prototype.draw = function () {
+          ctx.save();
+          ctx.globalAlpha = this.alpha;
+          ctx.fillStyle = this.color;
+          ctx.translate(this.x, this.y);
+          ctx.rotate(this.angle);
+          if (this.shape === 'rect') {
+            ctx.fillRect(-this.w / 2, -this.h / 2, this.w, this.h);
+          } else if (this.shape === 'circle') {
+            ctx.beginPath();
+            ctx.arc(0, 0, this.w / 2, 0, Math.PI * 2);
+            ctx.fill();
+          } else {
+            ctx.beginPath();
+            ctx.moveTo(0, -this.h);
+            ctx.lineTo(this.w / 2, this.h / 2);
+            ctx.lineTo(-this.w / 2, this.h / 2);
+            ctx.closePath();
+            ctx.fill();
+          }
+          ctx.restore();
+        };
+
+        for (var i = 0; i < 120; i++) particles.push(new Particle());
+
+        var startTime = Date.now();
+        var DURATION = 6000;
+
+        function animate() {
+          var elapsed = Date.now() - startTime;
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          // Nach 4s ausblenden
+          var fade = elapsed > 4000 ? Math.max(0, 1 - (elapsed - 4000) / 2000) : 1;
+          ctx.globalAlpha = fade;
+          particles.forEach(function (p) { p.update(); p.draw(); });
+          if (elapsed < DURATION) {
+            requestAnimationFrame(animate);
+          } else {
+            canvas.remove();
+          }
+        }
+        animate();
+
+        // ── Emoji-Regen ────────────────────────────────────────────
+        var EMOJIS = ['🎉','🎊','🥳','🎈','🎂','🎁','🍾','🎶','✨','🪅'];
+        var container = document.createElement('div');
+        container.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:10000;overflow:hidden';
+        document.body.appendChild(container);
+
+        function spawnEmoji() {
+          var el = document.createElement('span');
+          el.textContent = EMOJIS[Math.floor(Math.random() * EMOJIS.length)];
+          var size = rand(1.4, 2.8);
+          var left = rand(0, 96);
+          var dur = rand(2, 4);
+          var delay = rand(0, 0.3);
+          el.style.cssText = 'position:absolute;top:-3rem;left:' + left + '%;font-size:' + size + 'rem;animation:emojifall ' + dur + 's ' + delay + 's linear forwards;';
+          container.appendChild(el);
+          setTimeout(function () { el.remove(); }, (dur + delay + 0.5) * 1000);
+        }
+
+        // CSS für emoji-fall
+        var style = document.createElement('style');
+        style.textContent = '@keyframes emojifall{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(110vh) rotate(720deg);opacity:0}}';
+        document.head.appendChild(style);
+
+        var spawnCount = 0;
+        var spawnInterval = setInterval(function () {
+          spawnEmoji();
+          spawnCount++;
+          if (spawnCount > 35) { clearInterval(spawnInterval); setTimeout(function(){ container.remove(); }, 5000); }
+        }, 150);
+
+        // ── Geburtstags-Toast ──────────────────────────────────────
+        var personName = !{JSON.stringify(name)};
+        var toast = document.createElement('div');
+        toast.innerHTML = '🥳 Alles Gute zum Geburtstag, ' + personName + '!';
+        toast.style.cssText = [
+          'position:fixed',
+          'top:5rem',
+          'left:50%',
+          'transform:translateX(-50%) scale(0)',
+          'background:linear-gradient(135deg,#1a73e8,#c026d3)',
+          'color:#fff',
+          'font-size:1.25rem',
+          'font-weight:600',
+          'padding:.85rem 2rem',
+          'border-radius:2rem',
+          'box-shadow:0 8px 32px rgba(0,0,0,.25)',
+          'z-index:10001',
+          'white-space:nowrap',
+          'transition:transform .4s cubic-bezier(.34,1.56,.64,1)',
+          'pointer-events:none',
+        ].join(';');
+        document.body.appendChild(toast);
+        setTimeout(function () { toast.style.transform = 'translateX(-50%) scale(1)'; }, 200);
+        setTimeout(function () { toast.style.transform = 'translateX(-50%) scale(0)'; }, 5000);
+        setTimeout(function () { toast.remove(); }, 5500);
+
+        // ── Geburtstags-Avatar-Glow (stoppt nach Animation) ───────
+        var avatar = document.querySelector('.person-avatar');
+        if (avatar) {
+          var gs = document.createElement('style');
+          gs.textContent = '@keyframes avatarglow{from{box-shadow:0 0 8px 2px #1a73e8}to{box-shadow:0 0 24px 8px #c026d3}}';
+          document.head.appendChild(gs);
+          avatar.style.animation = 'avatarglow 1s ease-in-out infinite alternate';
+          setTimeout(function () {
+            avatar.style.animation = 'none';
+            avatar.style.boxShadow = 'none';
+          }, 6000);
+        }
+      })()

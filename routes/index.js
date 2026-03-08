@@ -233,7 +233,14 @@ router.get('/person', function (req, res) {
     aliases = aliasRows.map(r => r.name).filter(n => n !== personName).sort();
   }
 
-  res.render('person', { title: personName, name: personName, geburtsdatum, firmen, aliases });
+  const isBirthday = (() => {
+    if (!geburtsdatum) return false;
+    const today = new Date();
+    const [, mm, dd] = geburtsdatum.split('-');
+    return parseInt(mm) === today.getMonth() + 1 && parseInt(dd) === today.getDate();
+  })();
+
+  res.render('person', { title: personName, name: personName, geburtsdatum, firmen, aliases, isBirthday });
 });
 
 router.get('/firma/:fnr', async function (req, res) {
