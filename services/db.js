@@ -171,6 +171,22 @@ function today() {
   return new Date().toISOString().slice(0, 10);
 }
 
+// Österreichische/deutsche akademische und Ehrentitel, die vor/nach dem Namen stehen
+const TITLE_PREFIX_RE = /^(?:Dr\.h\.c\.|Univ\.-Prof\.|ao\.Prof\.|em\.Prof\.|Priv\.-Doz\.|Dipl\.-Ing\.|Dipl\.Ing\.|Univ\.Doz\.|DDr\.|Mag\.iur\.|Mag\.rer\.nat\.|Mag\.phil\.|Mag\.theol\.|Mag\.|Dr\.|Ing\.|Prof\.|KommR\.|KommR|KR|HR|MR|OR|RR|Arch\.|DI\b|DI)\s+/i;
+const TITLE_SUFFIX_RE = /\s+(?:MBA|MSc|BSc|MA|LL\.M\.|LL\.B\.|MAS|MPH|MIM|MEd|PhD|e\.h\.)$/i;
+
+/**
+ * Normalisiert einen Personennamen: entfernt akademische/Ehrentitel am Anfang und Ende.
+ * "KR Ing. Peter Merten" → "Peter Merten"
+ */
+function normalizePersonName(name) {
+  let n = name.trim();
+  let prev;
+  do { prev = n; n = n.replace(TITLE_PREFIX_RE, ''); } while (n !== prev);
+  do { prev = n; n = n.replace(TITLE_SUFFIX_RE, ''); } while (n !== prev);
+  return n.trim();
+}
+
 /**
  * Gibt den aktuellen Namen einer Firma zurück.
  */
@@ -207,11 +223,15 @@ function upsertCompany(fnr, { name, rechtsform, sitz, status } = {}) {
     return true;
   }
 
-  // Stammdaten aktualisieren
+  // Stammdaten aktualisieren (nur überschreiben wenn neuer Wert vorhanden)
   db.prepare(`
-    UPDATE companies SET rechtsform = ?, sitz = ?, status = ?, updated_at = datetime('now')
+    UPDATE companies SET
+      rechtsform = CASE WHEN ? IS NOT NULL THEN ? ELSE rechtsform END,
+      sitz = CASE WHEN ? IS NOT NULL THEN ? ELSE sitz END,
+      status = CASE WHEN ? IS NOT NULL THEN ? ELSE status END,
+      updated_at = datetime('now')
     WHERE fnr = ?
-  `).run(rechtsform || null, sitz || null, status || 'aktiv', fnr);
+  `).run(rechtsform || null, rechtsform || null, sitz || null, sitz || null, status || null, status || null, fnr);
 
   // Name: nur neu eintragen wenn geändert
   if (name) {
@@ -237,8 +257,29 @@ function upsertCompany(fnr, { name, rechtsform, sitz, status } = {}) {
 function upsertPerson(name, geburtsdatum) {
   if (!geburtsdatum) return null;
   const db = getDb();
-  db.prepare(`INSERT OR IGNORE INTO personen (name, geburtsdatum) VALUES (?, ?)`).run(name, geburtsdatum);
-  return db.prepare(`SELECT id FROM personen WHERE name = ? AND geburtsdatum = ?`).get(name, geburtsdatum)?.id || null;
+  const normalized = normalizePersonName(name);
+  // Alle Personen mit gleichem Geburtsdatum laden und normalisiert vergleichen
+  // → verhindert Duplikate bei Titelunterschieden (z.B. "KR Ing. X" vs "Ing. X")
+  const candidates = db.prepare('SELECT id, name FROM personen WHERE geburtsdatum = ?').all(geburtsdatum);
+  for (const c of candidates) {
+    if (normalizePersonName(c.name) === normalized) return c.id;
+  }
+  // Neu eintragen mit normalisiertem Namen
+  db.prepare(`INSERT OR IGNORE INTO personen (name, geburtsdatum) VALUES (?, ?)`).run(normalized, geburtsdatum);
+  return db.prepare(`SELECT id FROM personen WHERE name = ? AND geburtsdatum = ?`).get(normalized, geburtsdatum)?.id || null;
+}
+
+/**
+ * Zusammenführen zweier Personen-Einträge: alle Referenzen von deleteId → keepId,
+ * dann deleteId löschen.
+ */
+function mergePersons(keepId, deleteId) {
+  const db = getDb();
+  db.transaction(() => {
+    db.prepare(`UPDATE personen_rollen SET personen_id = ? WHERE personen_id = ?`).run(keepId, deleteId);
+    db.prepare(`UPDATE gesellschafter SET personen_id = ? WHERE personen_id = ?`).run(keepId, deleteId);
+    db.prepare(`DELETE FROM personen WHERE id = ?`).run(deleteId);
+  })();
 }
 
 /**
@@ -493,6 +534,8 @@ module.exports = {
   getDb,
   upsertCompany,
   upsertPerson,
+  mergePersons,
+  normalizePersonName,
   updateGesellschafter,
   updatePersonenRollen,
   updateAdressen,

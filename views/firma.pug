@@ -4,7 +4,10 @@ block content
   if !firma
     p Keine Daten gefunden.
   else
-    h1= firma.namen.join(' ') || firma.fnr
+    .firma-title-row
+      h1= firma.namen.join(' ') || firma.fnr
+      if firma.geloescht
+        .status-badge.status-badge--geloescht Firma gelöscht
 
     table.kv-table
       thead
@@ -17,7 +20,7 @@ block content
           td= firma.fnr
         tr
           td Stichtag
-          td= firma.stichtag
+          td= formatDate(firma.stichtag)
         tr
           td Umfang
           td= firma.umfang
@@ -47,7 +50,8 @@ block content
             th Name
         tbody
           each f in firma.funktionen
-            tr(class=f.fnr ? 'row-link' : '' onclick=f.fnr ? "window.location='/firma/" + f.fnr + "'" : undefined)
+            - var personUrl = f.fnr ? '/firma/' + f.fnr : (f.personen_id ? '/person?id=' + f.personen_id : (f.name ? '/person?name=' + encodeURIComponent(f.name) : null))
+            tr(class=personUrl ? 'row-link' : '' onclick=personUrl ? "window.location='" + personUrl + "'" : undefined)
               td= f.fkentext
               td
                 | #{f.name}
@@ -105,7 +109,7 @@ block content
           tbody
             each u in urkunden
               tr.row-link(onclick="if(!event.target.closest('a'))this.querySelector('a.btn,a.btn-icon').click()")
-                td(data-sort=u.datumSort)= u.stichtag || u.dokumentendatum || '—'
+                td(data-sort=u.datumSort)= formatDate(u.stichtag || u.dokumentendatum)
                 td
                   | #{u.dokumentart || '—'}
                   if u.bemerkung

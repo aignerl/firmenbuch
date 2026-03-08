@@ -357,6 +357,31 @@ button:hover,
 }
 .back-fab:hover::after { opacity: 1; }
 
+/* ── Status Badge ─────────────────────────────────────────────── */
+.firma-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+.firma-title-row h1 {
+  margin: 0;
+}
+.status-badge {
+  display: inline-block;
+  padding: .3rem .7rem;
+  border-radius: 4px;
+  font-size: .8rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.status-badge--geloescht {
+  background: #fce8e6;
+  color: #c62828;
+  border: 1px solid #f5c6c4;
+}
+
 /* ── Tables ───────────────────────────────────────────────────── */
 table {
   width: 100%;
@@ -424,6 +449,74 @@ td, th {
 .badge--active  { background: #e6f4ea; color: #137333; }
 .badge--deleted { background: #fce8e6; color: #c5221f; }
 .badge--history { background: #fef7e0; color: #b06000; }
+.badge--alias   { background: var(--md-primary-light); color: var(--md-primary-dark); }
+
+/* ── Person header card ───────────────────────────────────────── */
+.person-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
+  background: var(--md-surface);
+  border: 1px solid var(--md-divider);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  margin-bottom: 1.75rem;
+  box-shadow: var(--md-shadow-1);
+}
+
+.person-avatar {
+  flex-shrink: 0;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  background: var(--md-primary-light);
+  color: var(--md-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.person-meta { flex: 1; min-width: 0; }
+
+.person-meta h1 {
+  font-size: 1.5rem;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.person-dob {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--md-secondary-text);
+  font-size: 0.875rem;
+  margin-bottom: 0.75rem;
+}
+
+.person-aliases {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin-top: 0.5rem;
+}
+
+.person-aliases__label {
+  font-size: 0.8125rem;
+  color: var(--md-secondary-text);
+  white-space: nowrap;
+}
+
+/* ── Section label ────────────────────────────────────────────── */
+.section-label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--md-secondary-text);
+  margin: 1.5rem 0 0.5rem;
+}
+.section-label--muted { margin-top: 2rem; }
 
 /* ── Error / info messages ────────────────────────────────────── */
 .error {

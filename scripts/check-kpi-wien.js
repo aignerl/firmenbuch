@@ -1,0 +1,10 @@
+'use strict';
+const { extractKpis } = require('../services/jahresabschluss');
+const db = require('../services/db').getDb();
+const row = db.prepare('SELECT positions FROM jahresabschluesse WHERE company_fnr = ? ORDER BY gj_jahr DESC LIMIT 1').get('215854h');
+const pos = JSON.parse(row.positions);
+const kpis = extractKpis(pos);
+const ok   = Object.entries(kpis).filter(([, v]) => v && (v.betrag !== null || v.betragVJ !== null));
+const miss = Object.entries(kpis).filter(([, v]) => !v || (v.betrag === null && v.betragVJ === null));
+console.log('Verfügbar (' + ok.length + '):', ok.map(([k]) => k).join(', '));
+console.log('\nFehlt     (' + miss.length + '):', miss.map(([k]) => k).join(', '));

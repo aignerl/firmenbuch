@@ -3,6 +3,7 @@ var express = require('express');
 var router = express.Router();
 var { sucheFirma, getAuszug, sucheUrkunde, getUrkunde, scrapeEviGesellschafter, getOwnershipTree } = require('../services/firmenbuch');
 var db = require('../services/db');
+var { normalizePersonName } = db;
 
 
 function toArr(v) {
@@ -30,6 +31,9 @@ function buildFirmaView(auszug) {
   const rechtsform = toArr(firma['FI_DKZ07'])
     .map((d) => d['RECHTSFORM'] && d['RECHTSFORM']['TEXT'])
     .find(Boolean) || '';
+
+  // Status: gelöscht wenn MIT_FIRMA_GELOESCHT_DURCH_VNR gesetzt
+  const geloescht = toArr(firma['FI_DKZ02']).some((d) => d['$'] && d['$']['MIT_FIRMA_GELOESCHT_DURCH_VNR']);
 
   // Adressen (FI_DKZ03)
   const adressen = toArr(firma['FI_DKZ03'])
@@ -73,6 +77,7 @@ function buildFirmaView(auszug) {
     namen,
     sitz,
     rechtsform,
+    geloescht,
     adressen,
     funktionen,
   };
@@ -94,10 +99,10 @@ router.post('/suchen', async function (req, res) {
     const q = `%${personenwortlaut.trim()}%`;
     const d = db.getDb();
     // Gibt eindeutige Personen zurück: konsolidierte (personen-Tabelle) + nicht-konsolidierte (nur Name)
+    // Konsolidierte Personen: je eine Zeile pro Person (nicht nach Name gruppieren!)
+    // Nicht-konsolidierte: nach Name zusammengefasst (personen_id IS NULL)
     const ergebnisse = d.prepare(`
-      SELECT MAX(personen_id) AS personen_id, name, MAX(geburtsdatum) AS geburtsdatum,
-             SUM(firmen_count) AS firmen_count
-      FROM (
+      SELECT personen_id, name, geburtsdatum, firmen_count FROM (
         SELECT p.id AS personen_id, p.name, p.geburtsdatum,
           (SELECT COUNT(DISTINCT company_fnr) FROM personen_rollen WHERE personen_id = p.id AND valid_to IS NULL) +
           (SELECT COUNT(DISTINCT company_fnr) FROM gesellschafter  WHERE personen_id = p.id AND valid_to IS NULL AND gesellschafter_fnr IS NULL) AS firmen_count
@@ -109,12 +114,13 @@ router.post('/suchen', async function (req, res) {
           SELECT name, company_fnr FROM personen_rollen WHERE valid_to IS NULL AND personen_id IS NULL AND name LIKE ?
           UNION ALL
           SELECT name, company_fnr FROM gesellschafter  WHERE valid_to IS NULL AND personen_id IS NULL AND gesellschafter_fnr IS NULL AND name LIKE ?
-        ) GROUP BY name
+        ) sub
+        WHERE name NOT IN (SELECT name FROM personen WHERE name LIKE ?)
+        GROUP BY name
       )
-      GROUP BY name
-      HAVING SUM(firmen_count) > 0
-      ORDER BY name
-    `).all(q, q, q);
+      WHERE firmen_count > 0
+      ORDER BY name, geburtsdatum
+    `).all(q, q, q, q);
     return res.render('personen-ergebnis', {
       title: 'Personensuche', ergebnisse, personenwortlaut: personenwortlaut.trim(),
     });
@@ -163,30 +169,42 @@ router.get('/person', function (req, res) {
         SELECT name, company_fnr, fkentext AS rolle_text
         FROM personen_rollen WHERE personen_id = ? AND valid_to IS NULL
         UNION ALL
-        SELECT name, company_fnr, fkentext AS rolle_text
-        FROM personen_rollen WHERE personen_id IS NULL AND name = ? AND valid_to IS NULL
-        UNION ALL
         SELECT name, company_fnr, 'Gesellschafter/in' AS rolle_text
         FROM gesellschafter WHERE personen_id = ? AND valid_to IS NULL AND gesellschafter_fnr IS NULL
-        UNION ALL
-        SELECT name, company_fnr, 'Gesellschafter/in' AS rolle_text
-        FROM gesellschafter WHERE personen_id IS NULL AND name = ? AND valid_to IS NULL AND gesellschafter_fnr IS NULL
       ) p
       LEFT JOIN company_names cn ON cn.company_fnr = p.company_fnr AND cn.valid_to IS NULL
       LEFT JOIN companies c ON c.fnr = p.company_fnr
       ORDER BY cn.name
-    `).all(id, personName, id, personName);
+    `).all(id, id);
   } else if (name?.trim()) {
     personName = name.trim();
     geburtsdatum = null;
+    // Wenn konsolidierte Personen mit diesem Namen existieren → per ID aufrufen
+    // Auch normalisierten Namen prüfen (z.B. "Ing. Peter Merten" → "Peter Merten")
+    const normalizedName = normalizePersonName(personName);
+    const konsolidierte = d.prepare(`SELECT id FROM personen WHERE name = ? OR name = ?`).all(personName, normalizedName);
+    if (konsolidierte.length === 1) {
+      return res.redirect(`/person?id=${konsolidierte[0].id}`);
+    } else if (konsolidierte.length > 1) {
+      // Mehrere konsolidierte Personen → Disambiguierungsseite
+      const ergebnisse = konsolidierte.map((p) => {
+        const per = d.prepare(`SELECT name, geburtsdatum FROM personen WHERE id = ?`).get(p.id);
+        const firmen_count =
+          d.prepare(`SELECT COUNT(DISTINCT company_fnr) AS n FROM personen_rollen WHERE personen_id = ? AND valid_to IS NULL`).get(p.id).n +
+          d.prepare(`SELECT COUNT(DISTINCT company_fnr) AS n FROM gesellschafter WHERE personen_id = ? AND valid_to IS NULL AND gesellschafter_fnr IS NULL`).get(p.id).n;
+        return { personen_id: p.id, name: per.name, geburtsdatum: per.geburtsdatum, firmen_count };
+      });
+      return res.render('personen-ergebnis', { title: personName, ergebnisse, personenwortlaut: personName });
+    }
+    // Nur nicht-konsolidierte Einträge anzeigen
     rows = d.prepare(`
       SELECT p.name, p.company_fnr, cn.name AS company_name, c.rechtsform, c.sitz, c.status, p.rolle_text
       FROM (
         SELECT name, company_fnr, fkentext AS rolle_text
-        FROM personen_rollen WHERE valid_to IS NULL AND personen_id IS NULL AND name = ?
+        FROM personen_rollen WHERE valid_to IS NULL AND name = ? AND personen_id IS NULL
         UNION ALL
         SELECT name, company_fnr, 'Gesellschafter/in' AS rolle_text
-        FROM gesellschafter WHERE valid_to IS NULL AND personen_id IS NULL AND gesellschafter_fnr IS NULL AND name = ?
+        FROM gesellschafter WHERE valid_to IS NULL AND gesellschafter_fnr IS NULL AND name = ? AND personen_id IS NULL
       ) p
       LEFT JOIN company_names cn ON cn.company_fnr = p.company_fnr AND cn.valid_to IS NULL
       LEFT JOIN companies c ON c.fnr = p.company_fnr
@@ -203,11 +221,26 @@ router.get('/person', function (req, res) {
     seen.add(key);
     return true;
   });
-  res.render('person', { title: personName, name: personName, geburtsdatum, firmen });
+
+  // Alle Namensvarianten (Aliases) aus personen_rollen + gesellschafter
+  let aliases = [];
+  if (id) {
+    const aliasRows = d.prepare(`
+      SELECT DISTINCT name FROM personen_rollen WHERE personen_id = ?
+      UNION
+      SELECT DISTINCT name FROM gesellschafter WHERE personen_id = ?
+    `).all(id, id);
+    aliases = aliasRows.map(r => r.name).filter(n => n !== personName).sort();
+  }
+
+  res.render('person', { title: personName, name: personName, geburtsdatum, firmen, aliases });
 });
 
 router.get('/firma/:fnr', async function (req, res) {
   const { fnr } = req.params;
+  const fnrNorm = fnr.replace(/ /g, '').replace(/^0+/, '') || fnr;
+  // Weiterleitung wenn FNR führende Nullen enthält
+  if (fnr !== fnrNorm) return res.redirect(301, `/firma/${fnrNorm}`);
   try {
     const [raw, urkundenRaw, eviGesellschafter] = await Promise.all([
       getAuszug({ fnr }),
@@ -215,7 +248,40 @@ router.get('/firma/:fnr', async function (req, res) {
       scrapeEviGesellschafter({ fnr }).catch(() => []),
     ]);
     const firma = buildFirmaView(raw);
-    firma.funktionen.push(...eviGesellschafter);
+
+    // Gesellschafter: EVI live bevorzugt, sonst DB-Fallback
+    const gesellschafter = eviGesellschafter.length > 0
+      ? eviGesellschafter
+      : db.getGesellschafter(fnrNorm).map((g) => ({
+          name: g.name,
+          fnr: g.fnr || null,
+          fkentext: 'Gesellschafter/in',
+          quelle: g.quelle,
+        }));
+    firma.funktionen.push(...gesellschafter);
+
+    // personen_id aus DB nachladen (nach gesellschafter-Push!) → direkter /person?id= Link
+    {
+      const d = db.getDb();
+      // Aus personen_rollen UND gesellschafter-Tabelle
+      const rollenRows = d.prepare(
+        `SELECT name, personen_id FROM personen_rollen WHERE company_fnr = ? AND valid_to IS NULL AND personen_id IS NOT NULL`
+      ).all(fnrNorm);
+      const gsRows = d.prepare(
+        `SELECT name, personen_id FROM gesellschafter WHERE company_fnr = ? AND valid_to IS NULL AND personen_id IS NOT NULL`
+      ).all(fnrNorm);
+      const personenIdMap = new Map();
+      for (const r of [...rollenRows, ...gsRows]) {
+        if (!personenIdMap.has(r.name)) personenIdMap.set(r.name, r.personen_id);
+        const norm = normalizePersonName(r.name);
+        if (!personenIdMap.has(norm)) personenIdMap.set(norm, r.personen_id);
+      }
+      for (const f of firma.funktionen) {
+        if (!f.fnr) { // nur natürliche Personen, nicht Firmenbeteiligungen
+          f.personen_id = personenIdMap.get(f.name) || personenIdMap.get(normalizePersonName(f.name)) || null;
+        }
+      }
+    }
 
     // Stammdaten + Adressen in DB persistieren (fire-and-forget)
     try {

@@ -21,7 +21,7 @@ block content
           tr.row-link(onclick=`window.location='${href}'`)
             td
               a(href=href onclick="event.stopPropagation()")= r.name
-            td= r.geburtsdatum || '—'
+            td= formatDate(r.geburtsdatum)
             td= r.firmen_count
 
   a.back-fab(href="/" data-tooltip="Neue Suche")

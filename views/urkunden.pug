@@ -23,8 +23,8 @@ block content
               if u.bemerkung
                 br
                 small= u.bemerkung
-            td= u.stichtag || u.dokumentendatum || '—'
-            td= u.eingereicht || '—'
+            td= formatDate(u.stichtag || u.dokumentendatum)
+            td= formatDate(u.eingereicht)
             td
               span.badge(class=u.dateiendung === 'pdf' ? 'badge--active' : 'badge--history')
                 = u.dateiendung.toUpperCase()

@@ -1,34 +1,74 @@
 extends layout
 
 block content
-  h1= name
-  if geburtsdatum
-    p.feedback-intro geb. #{geburtsdatum}
+  .person-header
+    .person-avatar
+      svg(xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round")
+        circle(cx="12" cy="8" r="4")
+        path(d="M4 20c0-4 3.6-7 8-7s8 3 8 7")
+    .person-meta
+      h1= name
+      if geburtsdatum
+        p.person-dob
+          svg(xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round")
+            rect(x="3" y="4" width="18" height="18" rx="2")
+            line(x1="16" y1="2" x2="16" y2="6")
+            line(x1="8" y1="2" x2="8" y2="6")
+            line(x1="3" y1="10" x2="21" y2="10")
+          | &nbsp;geb. #{formatDate(geburtsdatum)}
+      if aliases && aliases.length > 0
+        .person-aliases
+          span.person-aliases__label Auch bekannt als:
+          each alias in aliases
+            span.badge.badge--alias= alias
 
   if firmen.length === 0
     div.error
       p Keine Einträge in der lokalen Datenbank gefunden.
   else
-    p.feedback-intro #{firmen.length} Eintrag#{firmen.length === 1 ? '' : 'träge'} in lokalen Firmen.
-    table.funk-table
-      thead
-        tr
-          th Funktion
-          th Firma
-      tbody
-        each f in firmen
-          tr.row-link(onclick=`window.location='/firma/${f.company_fnr}'`)
-            td= f.rolle_text || '—'
-            td
-              a(href=`/firma/${f.company_fnr}` onclick="event.stopPropagation()")= f.company_name || f.company_fnr
-              if f.rechtsform
-                |
-                small= f.rechtsform
-              if f.sitz
-                br
-                small= f.sitz
-              if f.status === 'gelöscht'
-                |
+    - var aktiv = firmen.filter(f => f.status !== 'gelöscht')
+    - var geloescht = firmen.filter(f => f.status === 'gelöscht')
+
+    if aktiv.length > 0
+      .section-label Aktive Funktionen (#{aktiv.length})
+      table.funk-table
+        thead
+          tr
+            th Funktion
+            th Firma
+        tbody
+          each f in aktiv
+            tr.row-link(onclick=`window.location='/firma/${f.company_fnr}'`)
+              td= f.rolle_text || '—'
+              td
+                a(href=`/firma/${f.company_fnr}` onclick="event.stopPropagation()")= f.company_name || f.company_fnr
+                if f.rechtsform
+                  |&ensp;
+                  small= f.rechtsform
+                if f.sitz
+                  br
+                  small= f.sitz
+
+    if geloescht.length > 0
+      .section-label.section-label--muted Ehemalige Funktionen (#{geloescht.length})
+      table.funk-table.funk-table--muted
+        thead
+          tr
+            th Funktion
+            th Firma
+        tbody
+          each f in geloescht
+            tr.row-link(onclick=`window.location='/firma/${f.company_fnr}'`)
+              td= f.rolle_text || '—'
+              td
+                a(href=`/firma/${f.company_fnr}` onclick="event.stopPropagation()")= f.company_name || f.company_fnr
+                if f.rechtsform
+                  |&ensp;
+                  small= f.rechtsform
+                if f.sitz
+                  br
+                  small= f.sitz
+                |&ensp;
                 span.badge.badge--deleted gelöscht
 
   a.back-fab(href="/" data-tooltip="Zurück")
