@@ -7,7 +7,7 @@ block content
         circle(cx="12" cy="8" r="4")
         path(d="M4 20c0-4 3.6-7 8-7s8 3 8 7")
     .person-meta
-      h1= name
+      h1= displayName || name
       if geburtsdatum
         p.person-dob
           svg(xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round")
@@ -16,10 +16,11 @@ block content
             line(x1="8" y1="2" x2="8" y2="6")
             line(x1="3" y1="10" x2="21" y2="10")
           | &nbsp;geb. #{formatDate(geburtsdatum)}
-      if aliases && aliases.length > 0
+      - var allAliases = [...new Set([...(aliases || []), ...(name !== displayName ? [name] : [])])].filter(a => a !== displayName)
+      if allAliases.length > 0
         .person-aliases
           span.person-aliases__label Auch bekannt als:
-          each alias in aliases
+          each alias in allAliases
             span.badge.badge--alias= alias
 
   if firmen.length === 0
@@ -207,7 +208,7 @@ block scripts
         }, 150);
 
         // ── Geburtstags-Toast ──────────────────────────────────────
-        var personName = !{JSON.stringify(name)};
+        var personName = !{JSON.stringify(displayName || name)};
         var toast = document.createElement('div');
         toast.innerHTML = '🥳 Alles Gute zum Geburtstag, ' + personName + '!';
         toast.style.cssText = [

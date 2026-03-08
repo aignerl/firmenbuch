@@ -240,7 +240,9 @@ router.get('/person', function (req, res) {
     return parseInt(mm) === today.getMonth() + 1 && parseInt(dd) === today.getDate();
   })();
 
-  res.render('person', { title: personName, name: personName, geburtsdatum, firmen, aliases, isBirthday });
+  const displayName = normalizePersonName(personName);
+
+  res.render('person', { title: displayName || personName, name: personName, displayName, geburtsdatum, firmen, aliases, isBirthday });
 });
 
 router.get('/firma/:fnr', async function (req, res) {

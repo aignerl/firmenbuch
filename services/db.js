@@ -172,7 +172,7 @@ function today() {
 }
 
 // Österreichische/deutsche akademische und Ehrentitel, die vor/nach dem Namen stehen
-const TITLE_PREFIX_RE = /^(?:Dr\.h\.c\.|Univ\.-Prof\.|ao\.Prof\.|em\.Prof\.|Priv\.-Doz\.|Dipl\.-Ing\.|Dipl\.Ing\.|Univ\.Doz\.|DDr\.|Mag\.iur\.|Mag\.rer\.nat\.|Mag\.phil\.|Mag\.theol\.|Mag\.|Dr\.|Ing\.|Prof\.|KommR\.|KommR|KR|HR|MR|OR|RR|Arch\.|DI\b|DI)\s+/i;
+const TITLE_PREFIX_RE = /^(?:Dr\.h\.c\.|Univ\.-Prof\.|ao\.Prof\.|em\.Prof\.|Priv\.-Doz\.|Dipl\.-Ing\.|Dipl\.Ing\.|Univ\.Doz\.|DDr\.|Mag\.iur\.|Mag\.rer\.nat\.|Mag\.phil\.|Mag\.theol\.|Mag\.|Dr\.|Ing\.|Prof\.|KommR\.|KommR|KR|HR|MR|OR|RR|Arch\.|DI\b|DI|\([A-ZÄÖÜ]{1,6}\))\s+/i;
 const TITLE_SUFFIX_RE = /\s+(?:MBA|MSc|BSc|MA|LL\.M\.|LL\.B\.|MAS|MPH|MIM|MEd|PhD|e\.h\.)$/i;
 
 /**
